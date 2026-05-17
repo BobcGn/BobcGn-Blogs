@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/bobcgn/**)",
+      "Read(//Users/bobcgn/Markdown_Notes/**)",
+      "Bash(git -C /Users/bobcgn/AAA_Codings/quartz-myblogs/ status)",
+      "Bash(npm --version)",
+      "WebSearch",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:quartz.jzhao.xyz)",
+      "Bash(chmod +x /Users/bobcgn/Markdown-Notes/publish.sh)",
+      "Bash(git init *)",
+      "Bash(git checkout *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git reset *)",
+      "Bash(npm install *)",
+      "Bash(npx quartz *)"
+    ]
+  }
+}
