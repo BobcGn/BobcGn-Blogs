@@ -16,7 +16,7 @@ const config: QuartzConfig = {
       provider: "plausible",
     },
     locale: "zh-CN",
-    baseUrl: "bobcgn.github.io/Markdown-Notes",
+    baseUrl: "bobcgn.github.io/quartz-myblogs",
     ignorePatterns: ["private", "templates", ".obsidian"],
     defaultDateType: "modified",
     theme: {
@@ -88,8 +88,8 @@ const config: QuartzConfig = {
       Plugin.Static(),
       Plugin.Favicon(),
       Plugin.NotFoundPage(),
-      // Comment out CustomOgImages to speed up build time
-      Plugin.CustomOgImages(),
+      // CustomOgImages 已禁用：emoji 映射不完整 + 加速构建
+      // Plugin.CustomOgImages(),
     ],
   },
 }

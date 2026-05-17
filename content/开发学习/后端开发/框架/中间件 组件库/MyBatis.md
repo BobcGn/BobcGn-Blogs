@@ -1,3 +1,9 @@
+---
+title: "MyBatis"
+date: 2025-01-01
+tags: []
+---
+
 > [!tip] 先导内容
 > [[MySQL知识点梳理|MySQL]]
 

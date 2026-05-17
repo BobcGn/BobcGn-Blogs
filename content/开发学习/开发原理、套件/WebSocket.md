@@ -1,3 +1,9 @@
+---
+title: "WebSocket"
+date: 2025-01-01
+tags: []
+---
+
 # 0. Web 开发那点事
 > [!note] WebSocket的起源
 > # *WebSocket之前的那点“痛”*

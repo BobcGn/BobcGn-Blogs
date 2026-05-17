@@ -1,3 +1,9 @@
+---
+title: "Android开发基础"
+date: 2025-01-01
+tags: []
+---
+
 > [!tip] 前置知识
 > [[Kotlin知识点快速梳理|Kotlin基础]] · 本篇是 [[Compose Multiplatform]] 系列的先导篇
 
