@@ -1,9 +1,3 @@
----
-title: "Model_Context_Protocol_MCP"
-date: 2025-01-01
-tags: []
----
-
 # 0. 概述
 
 > [!summary] 本文面向读者

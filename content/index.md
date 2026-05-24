@@ -1,5 +1,5 @@
 ---
-title: "BobcGn的博客网站"
+title: BobcGn的博客网站
 date: 2026-05-17
 tags: []
 ---

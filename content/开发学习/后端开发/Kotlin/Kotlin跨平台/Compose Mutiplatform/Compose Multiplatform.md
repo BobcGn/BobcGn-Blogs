@@ -1,9 +1,3 @@
----
-title: "Compose Multiplatform"
-date: 2025-01-01
-tags: []
----
-
 > [!tip] 相关内容
 > [[Android开发基础|Android 前置知识（零基础友好）]] ← **先读这篇** · [[Kotlin知识点快速梳理|Kotlin]] · [[Kotlin Multiplatform]]
 

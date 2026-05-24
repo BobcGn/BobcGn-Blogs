@@ -1,9 +1,3 @@
----
-title: "JavaWeb"
-date: 2025-01-01
-tags: []
----
-
 # 0. 认识JavaWeb
 > [!note]
 > 先导内容: [[Java知识点总结|Java]]

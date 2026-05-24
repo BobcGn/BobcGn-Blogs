@@ -32,7 +32,11 @@
       "Bash(git push *)",
       "Bash(git restore *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(gh api *)",
+      "Bash(xxd /Users/bobcgn/AAA_Codings/quartz-myblogs/content/算法学习/LeeCode练习题/算法/3443.K次修改后的最大曼哈顿距离.md)",
+      "Bash(node *)",
+      "Bash(xxd \"/Users/bobcgn/Markdown-Notes/Public/算法学习/LeeCode练习题/算法/3443.K次修改后的最大曼哈顿距离.md\")"
     ]
   },
   "enableAllProjectMcpServers": true,

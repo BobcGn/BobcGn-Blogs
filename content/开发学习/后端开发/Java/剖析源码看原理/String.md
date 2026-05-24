@@ -1,9 +1,3 @@
----
-title: "String"
-date: 2025-01-01
-tags: []
----
-
 # 1. 引言
 > [!note] 
 > String在Java中具有举足轻重的地位, 是Java中最常用也是最重要的类之一

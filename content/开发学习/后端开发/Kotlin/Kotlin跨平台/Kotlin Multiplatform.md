@@ -1,9 +1,3 @@
----
-title: "Kotlin Multiplatform"
-date: 2025-01-01
-tags: []
----
-
 > [!tip] 相关内容
 > [[Kotlin知识点快速梳理|Kotlin]] · [[Kotlin Native]] · [[Compose Multiplatform]]
 >

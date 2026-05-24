@@ -1,9 +1,3 @@
----
-title: "RabbitMQ"
-date: 2025-01-01
-tags: []
----
-
 # 0. RabbitMQ 简介
 > [!question] RabbitMQ 是什么？
 > RabbitMQ 是一个实现 AMQP 协议的消息代理（Message Broker）。
