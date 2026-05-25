@@ -12,19 +12,13 @@ tags: []
 
 ## 订阅更新
 
-关注 GitHub 仓库，每次内容更新你会收到 GitHub 通知：
-
 <p>
   <a href="https://github.com/BobcGn/quartz-myblogs" target="_blank">
     <img src="https://img.shields.io/github/stars/BobcGn/quartz-myblogs?style=social" alt="GitHub Stars">
   </a>
-  &nbsp;
-  <a href="/index.xml" target="_blank">
-    <img src="https://img.shields.io/badge/RSS-订阅-orange?style=social&logo=rss" alt="RSS">
-  </a>
 </p>
 
-**订阅方式**：点击右上角 ⭐ **Star** 收藏仓库，然后 **Watch** → **Custom** → 勾选 **Releases**，即可在 GitHub 铃铛收到更新通知。
+**订阅方式**：点击 ⭐ **Star** 收藏仓库，然后 **Watch** → **Custom** → 勾选 **Releases**，每次内容更新你将在 GitHub 铃铛收到通知。
 
 ### 内容分类
 

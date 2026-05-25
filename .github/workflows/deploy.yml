@@ -112,7 +112,6 @@ jobs:
 
           ---
           🌐 [访问博客](${{ needs.deploy.outputs.page_url }})
-          📡 [RSS 订阅](${{ needs.deploy.outputs.page_url }}/index.xml)
           ⭐ [Star 仓库](https://github.com/BobcGn/quartz-myblogs)
           NOTES_EOF
 
