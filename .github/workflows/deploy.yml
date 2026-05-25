@@ -39,7 +39,78 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  release:
+    needs: deploy
+    if: "startsWith(github.event.head_commit.message, 'blog: auto publish')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract changed articles
+        id: changes
+        run: |
+          PAGE_URL="${{ needs.deploy.outputs.page_url }}"
+
+          # 提取本次提交中变更的 content/*.md 文件
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            FILES=$(git diff --name-only HEAD~1..HEAD -- 'content/**.md' 2>/dev/null || echo "")
+          else
+            FILES=""
+          fi
+
+          if [ -z "$FILES" ]; then
+            echo "notes<<EOF" >> "$GITHUB_OUTPUT"
+            echo "内容同步更新" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+            echo "has_articles=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "has_articles=true" >> "$GITHUB_OUTPUT"
+
+          # 将文件路径转换为 Markdown 链接列表
+          echo "notes<<EOF" >> "$GITHUB_OUTPUT"
+          while IFS= read -r file; do
+            # 去掉 content/ 前缀和 .md 后缀
+            slug="${file#content/}"
+            slug="${slug%.md}"
+            # 提取文件名作为显示标题
+            title=$(basename "$slug")
+            dir=$(dirname "$slug")
+            if [ "$dir" = "." ]; then
+              echo "- [$title](${PAGE_URL}/${title})" >> "$GITHUB_OUTPUT"
+            else
+              echo "- **${dir}** → [$title](${PAGE_URL}/${slug})" >> "$GITHUB_OUTPUT"
+            fi
+          done <<< "$FILES"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release notes file
+        run: |
+          cat > /tmp/release-notes.md << 'NOTES_EOF'
+          ${{ steps.changes.outputs.notes }}
+
+          ---
+          🌐 [访问博客](${{ needs.deploy.outputs.page_url }})
+          📡 [RSS 订阅](${{ needs.deploy.outputs.page_url }}/index.xml)
+          ⭐ [Star 仓库](https://github.com/BobcGn/quartz-myblogs)
+          NOTES_EOF
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "publish-$(date -u +'%Y%m%d-%H%M%S')" \
+            --title "📝 内容更新 — $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M')" \
+            --notes-file /tmp/release-notes.md
