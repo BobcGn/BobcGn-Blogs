@@ -19,6 +19,8 @@ env:
 
 jobs:
   build:
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -38,6 +40,8 @@ jobs:
 
   deploy:
     needs: build
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -53,6 +57,8 @@ jobs:
     needs: deploy
     if: "startsWith(github.event.head_commit.message, 'blog: auto publish')"
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     permissions:
       contents: write
     steps:
