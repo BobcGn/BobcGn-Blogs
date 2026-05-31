@@ -1,5 +1,5 @@
 ---
-title: BobcGn的博客网站
+title: 'index'
 date: 2026-05-17
 tags: []
 ---

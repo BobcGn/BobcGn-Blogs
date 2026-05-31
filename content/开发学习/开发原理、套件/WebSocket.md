@@ -1,3 +1,11 @@
+---
+title: 'WebSocket'
+date: 2026-04-28
+tags:
+  - 开发学习
+  - 开发学习/开发原理、套件
+---
+
 # 0. Web 开发那点事
 > [!note] WebSocket的起源
 > # *WebSocket之前的那点“痛”*

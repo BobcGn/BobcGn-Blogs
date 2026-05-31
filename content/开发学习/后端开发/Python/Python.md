@@ -1,3 +1,11 @@
+---
+title: 'Python'
+date: 2026-04-28
+tags:
+  - 开发学习
+  - 开发学习/后端开发/Python
+---
+
 # 0 Python简介
 > [!note] Python
 > Python是一种**高级、解释型**的编程语言，以简洁明了的语法和强大的功能而闻名。相比于Java，Python代码更简洁，开发效率更高；相比于C/C++，Python更容易上手，适合快速原型开发。

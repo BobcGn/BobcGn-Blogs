@@ -1,3 +1,11 @@
+---
+title: 'JavaWeb'
+date: 2026-04-30
+tags:
+  - 开发学习
+  - 开发学习/后端开发/Java
+---
+
 # 0. 认识JavaWeb
 > [!note]
 > 先导内容: [[Java知识点总结|Java]]

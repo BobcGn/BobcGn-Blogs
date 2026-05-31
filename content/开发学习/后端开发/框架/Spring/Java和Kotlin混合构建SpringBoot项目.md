@@ -1,3 +1,11 @@
+---
+title: 'Java和Kotlin混合构建SpringBoot项目'
+date: 2026-04-28
+tags:
+  - 开发学习
+  - 开发学习/后端开发/框架
+---
+
 > [!summary] 先导内容
 > [[Java知识点总结|Java]]，[[Kotlin知识点快速梳理|Kotlin]]，[[Spring]]
 

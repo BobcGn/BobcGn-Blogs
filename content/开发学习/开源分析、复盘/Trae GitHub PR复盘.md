@@ -1,3 +1,11 @@
+---
+title: 'Trae GitHub PR复盘'
+date: 2026-05-26
+tags:
+  - 开发学习
+  - 开发学习/开源分析、复盘
+---
+
 # Trae Agent 架构重构复盘文档
 
 > [!summary] 文档信息

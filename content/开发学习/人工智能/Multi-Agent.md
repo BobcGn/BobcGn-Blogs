@@ -1,3 +1,11 @@
+---
+title: 'Multi-Agent'
+date: 2026-05-24
+tags:
+  - 开发学习
+  - 开发学习/人工智能
+---
+
 # Multi-Agent 的架构解析与工程实践
 
 > [!summary] 本文面向读者

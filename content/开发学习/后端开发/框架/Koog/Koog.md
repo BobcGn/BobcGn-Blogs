@@ -1,3 +1,11 @@
+---
+title: 'Koog'
+date: 2026-04-28
+tags:
+  - 开发学习
+  - 开发学习/后端开发/框架
+---
+
 # 0. Koog 简介
 > [!question] 为什么选择Koog？
 > ## *与 JVM 和 Kotlin 应用程序集成*

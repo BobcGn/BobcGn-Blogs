@@ -1,3 +1,11 @@
+---
+title: 'RabbitMQ'
+date: 2026-04-28
+tags:
+  - 开发学习
+  - 开发学习/后端开发/框架
+---
+
 # 0. RabbitMQ 简介
 > [!question] RabbitMQ 是什么？
 > RabbitMQ 是一个实现 AMQP 协议的消息代理（Message Broker）。

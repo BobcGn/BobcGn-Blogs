@@ -1,3 +1,11 @@
+---
+title: 'KuiklyUI工程实践方案'
+date: 2026-05-18
+tags:
+  - 开发学习
+  - 开发学习/后端开发/Kotlin
+---
+
 # KuiklyUI 工程实践——基于 KMP 的全方位跨平台 UI 同步方案
 
 > [!summary] 文章导读
