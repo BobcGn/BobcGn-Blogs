@@ -626,7 +626,7 @@ flowchart TB
 >         D[半自主 Agent<br/>Cursor Agent / Windsurf Cascade]
 >     end
 >
-> >     subgraph L5["Level 5"]
+>     subgraph L5["Level 5"]
 >         E[自主工程 Agent<br/>Claude Code / OpenClaw Code Agent<br/>理解→规划→修改→测试→迭代→交付]
 >     end
 >
