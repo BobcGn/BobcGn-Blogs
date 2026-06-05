@@ -1,5 +1,5 @@
 ---
-title: 'BobcGn的知识花园'
+title: 'index'
 date: 2026-05-17
 tags: []
 ---
