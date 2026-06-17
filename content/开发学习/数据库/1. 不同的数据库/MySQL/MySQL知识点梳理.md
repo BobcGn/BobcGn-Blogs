@@ -1746,7 +1746,31 @@ SELECT * FROM menu; -- 锁定整个菜单表
 
 ## 2.1 存储引擎
 ### MySQL体系结构
-![[MySQL体系结构]]
+```mermaid
+flowchart TB
+    subgraph 连接层["连接层"]
+        A["客户端连接器<br/>Native C API, JDBC, ODBC, PHP..."]
+        B["连接池"]
+    end
+    
+    subgraph 服务层["服务层"]
+        C["SQL接口"]
+        D["解析器"]
+        E["查询优化器"]
+        F["缓存"]
+        G["系统管理和控制工具"]
+    end
+    
+    subgraph 引擎层["引擎层"]
+        H["可插拔存储引擎<br/>InnoDB, MyISAM, NDB, Archive..."]
+    end
+    
+    subgraph 存储层["存储层"]
+        I["系统文件 文件和日志"]
+    end
+    
+    连接层 --> 服务层 --> 引擎层 --> 存储层
+```
 ####  连接层
 主要接收客户端的连接, 完成一些连接的处理,认证授权,是否超过最大连接数等内容
 ####  服务层
