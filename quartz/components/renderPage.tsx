@@ -25,10 +25,11 @@ interface RenderComponents {
 const headerRegex = new RegExp(/h[1-6]/)
 export function pageResources(
   baseDir: FullSlug | RelativeURL,
+  buildId: string,
   staticResources: StaticResources,
 ): StaticResources {
   const contentIndexPath = joinSegments(baseDir, "static/contentIndex.json")
-  const contentIndexScript = `const fetchData = fetch("${contentIndexPath}").then(data => data.json())`
+  const contentIndexScript = `const fetchData = fetch("${contentIndexPath}?v=${buildId}").then(data => data.json())`
 
   const resources: StaticResources = {
     css: [

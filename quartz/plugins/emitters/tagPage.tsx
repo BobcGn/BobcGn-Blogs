@@ -73,7 +73,7 @@ async function processTagPage(
   const slug = joinSegments("tags", tag) as FullSlug
   const [tree, file] = tagContent
   const cfg = ctx.cfg.configuration
-  const externalResources = pageResources(pathToRoot(slug), resources)
+  const externalResources = pageResources(pathToRoot(slug), ctx.buildId, resources)
   const componentData: QuartzComponentProps = {
     ctx,
     fileData: file.data,
