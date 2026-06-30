@@ -6,8 +6,9 @@ export const sharedPageComponents: SharedLayout = {
   head: Component.Head(),
   header: [],
   afterBody: [
-    Component.Utterances({
+    Component.Feedback({
       repo: "BobcGn/quartz-myblogs" as `${string}/${string}`,
+      repoId: "",
     }),
   ],
   footer: Component.Footer({

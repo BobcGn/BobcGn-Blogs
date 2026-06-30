@@ -22,6 +22,7 @@ import RecentNotes from "./RecentNotes"
 import Breadcrumbs from "./Breadcrumbs"
 import Comments from "./Comments"
 import Utterances from "./Utterances"
+import Feedback from "./Feedback"
 import Flex from "./Flex"
 import ConditionalRender from "./ConditionalRender"
 
@@ -50,6 +51,7 @@ export {
   Breadcrumbs,
   Comments,
   Utterances,
+  Feedback,
   Flex,
   ConditionalRender,
 }
