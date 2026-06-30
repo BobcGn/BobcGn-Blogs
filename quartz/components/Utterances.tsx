@@ -11,7 +11,7 @@ type Options = {
 }
 
 const defaultOptions: Options = {
-  repo: "OWNER/REPO",
+  repo: "BobcGn/quartz-myblogs",
   issueTerm: "title",
   theme: "preferred-color-scheme",
 }
