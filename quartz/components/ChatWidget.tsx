@@ -247,30 +247,28 @@ const chatWidgetCss = `
 /* ── Message Bubbles ── */
 .chat-msg {
   max-width: 85%;
-  padding: 0.55rem 0.8rem;
+  padding: 0.5rem 1rem;
   border-radius: 10px;
   font-size: 0.88rem;
   line-height: 1.55;
+  /* Ensure proper text wrapping for all bubbles */
   word-break: break-word;
   overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 .chat-msg--user {
   align-self: flex-end;
   background: var(--secondary);
   color: var(--light);
   border-bottom-right-radius: 3px;
-  white-space: pre-wrap;
 }
 .chat-msg--assistant {
   align-self: flex-start;
   background: var(--lightgray);
   color: var(--darkgray);
   border-bottom-left-radius: 3px;
-  width: 100%;
-  max-width: 85%;
-}
-.chat-msg--assistant .chat-msg-body {
-  white-space: pre-wrap;
+  /* This is the key: allow the bubble to size to its content */
+  width: fit-content;
 }
 .chat-msg--assistant .chat-msg-body p {
   margin: 0.3em 0;
