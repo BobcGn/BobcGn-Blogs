@@ -6,7 +6,6 @@
 
   // ── State ──
   let isProcessing = false
-  let cooldownTimer: ReturnType<typeof setTimeout> | null = null
   let cooldownRemaining = 0
   let cooldownInterval: ReturnType<typeof setInterval> | null = null
   const messages: Array<{ role: string; content: string }> = []
@@ -55,20 +54,6 @@
         cooldownEl.textContent = `⏳ 冷却中 ${cooldownRemaining}s`
       }
     }, 1000)
-  }
-
-  /** Clear any running cooldown */
-  function clearCooldown() {
-    if (cooldownTimer) {
-      clearTimeout(cooldownTimer)
-      cooldownTimer = null
-    }
-    if (cooldownInterval) {
-      clearInterval(cooldownInterval)
-      cooldownInterval = null
-    }
-    cooldownRemaining = 0
-    cooldownEl.style.display = "none"
   }
 
   /** Extract current page article text for context (max 8000 chars) */
