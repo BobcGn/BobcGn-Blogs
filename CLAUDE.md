@@ -51,6 +51,7 @@ Images live in `content/image/` (synced from `Markdown-Notes/image/`). In Obsidi
 ### Content Frontmatter
 
 Each Markdown file should include at minimum:
+
 ```yaml
 ---
 title: "Post Title"
@@ -69,6 +70,7 @@ tags: [tag1, tag2]
 ## Deployment
 
 GitHub Actions workflow at `.github/workflows/deploy.yml`:
+
 - Triggers on push to `main` branch
 - Builds with Node 22 via `npx quartz build`
 - Deploys `public/` via `actions/deploy-pages@v4`

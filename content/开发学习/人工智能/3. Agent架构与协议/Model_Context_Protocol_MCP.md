@@ -1,5 +1,5 @@
 ---
-title: 'Model_Context_Protocol_MCP'
+title: "Model_Context_Protocol_MCP"
 date: 2026-05-04
 tags:
   - 开发学习
@@ -93,11 +93,11 @@ flowchart TB
 
 > [!compare] 三层角色职责
 
-| 角色 | 职责 | 类比 | 示例 |
-| :--- | :--- | :--- | :--- |
-| **MCP Host** | 协调和管理多个 MCP Client，提供用户界面 | 操作系统 | Claude Desktop、VS Code、Cursor |
-| **MCP Client** | 维护与单个 MCP Server 的连接，交换数据 | 设备驱动 | 每个 Server 对应一个 Client 实例 |
-| **MCP Server** | 提供上下文数据（工具、资源、提示模板） | 外接设备 | 文件系统服务器、数据库服务器 |
+| 角色           | 职责                                    | 类比     | 示例                             |
+| :------------- | :-------------------------------------- | :------- | :------------------------------- |
+| **MCP Host**   | 协调和管理多个 MCP Client，提供用户界面 | 操作系统 | Claude Desktop、VS Code、Cursor  |
+| **MCP Client** | 维护与单个 MCP Server 的连接，交换数据  | 设备驱动 | 每个 Server 对应一个 Client 实例 |
+| **MCP Server** | 提供上下文数据（工具、资源、提示模板）  | 外接设备 | 文件系统服务器、数据库服务器     |
 
 > [!important] 关键理解
 > **MCP Server 指的是"提供上下文数据的程序"**，不区分本地或远程。本地运行的 filesystem server 和远程的 Sentry MCP server 都是 MCP Server，只是传输方式不同。
@@ -126,10 +126,10 @@ flowchart TB
     DataLayer --> TransportLayer
 ```
 
-| 层级 | 职责 | 技术基础 |
-| :--- | :--- | :--- |
-| **数据层** | 定义消息结构、通信语义、核心原语 | JSON-RPC 2.0 |
-| **传输层** | 管理连接建立、消息帧传输、认证 | stdio / HTTP + SSE |
+| 层级       | 职责                             | 技术基础           |
+| :--------- | :------------------------------- | :----------------- |
+| **数据层** | 定义消息结构、通信语义、核心原语 | JSON-RPC 2.0       |
+| **传输层** | 管理连接建立、消息帧传输、认证   | stdio / HTTP + SSE |
 
 > [!note] 两层分离的设计意义
 > 数据层与传输层分离，意味着**相同的 JSON-RPC 消息可以在不同传输方式上运行**。本地开发用 stdio 追求低延迟，生产部署用 HTTP 支持远程连接，数据层的代码完全不需要修改。
@@ -160,10 +160,10 @@ flowchart LR
 
 **协议操作：**
 
-| 方法 | 用途 | 返回 |
-| :--- | :--- | :--- |
+| 方法         | 用途         | 返回                           |
+| :----------- | :----------- | :----------------------------- |
 | `tools/list` | 发现可用工具 | 工具定义列表（含 JSON Schema） |
-| `tools/call` | 执行特定工具 | 工具执行结果 |
+| `tools/call` | 执行特定工具 | 工具执行结果                   |
 
 **典型 Tool 定义示例：**
 
@@ -184,6 +184,7 @@ flowchart LR
 ```
 
 > [!tip] 关键设计特点
+>
 > - **模型控制**：模型决定何时调用工具，基于用户请求和上下文
 > - **Schema 驱动**：使用 JSON Schema 定义输入参数，支持类型校验
 > - **可动态发现**：Client 通过 `tools/list` 发现 Server 提供的所有工具
@@ -206,21 +207,21 @@ flowchart LR
 
 **协议操作：**
 
-| 方法 | 用途 | 返回 |
-| :--- | :--- | :--- |
-| `resources/list` | 列出可用直接资源 | 资源描述数组 |
-| `resources/templates/list` | 发现资源模板 | 模板定义数组 |
-| `resources/read` | 读取资源内容 | 资源数据+元数据 |
-| `resources/subscribe` | 订阅资源变更 | 订阅确认 |
+| 方法                       | 用途             | 返回            |
+| :------------------------- | :--------------- | :-------------- |
+| `resources/list`           | 列出可用直接资源 | 资源描述数组    |
+| `resources/templates/list` | 发现资源模板     | 模板定义数组    |
+| `resources/read`           | 读取资源内容     | 资源数据+元数据 |
+| `resources/subscribe`      | 订阅资源变更     | 订阅确认        |
 
 > [!compare] Tools vs Resources
 
-| 维度 | Tools | Resources |
-| :--- | :--- | :--- |
-| 控制方 | **模型**控制（主动调用） | **应用**控制（获取上下文） |
-| 操作方式 | 执行动作（写操作） | 读取信息（读操作） |
+| 维度     | Tools                            | Resources                            |
+| :------- | :------------------------------- | :----------------------------------- |
+| 控制方   | **模型**控制（主动调用）         | **应用**控制（获取上下文）           |
+| 操作方式 | 执行动作（写操作）               | 读取信息（读操作）                   |
 | 典型用途 | 搜索航班、发送邮件、创建日历事件 | 读取文件、获取数据库Schema、查阅文档 |
-| 副作用 | 可能有副作用 | 无副作用 |
+| 副作用   | 可能有副作用                     | 无副作用                             |
 
 ---
 
@@ -231,10 +232,10 @@ flowchart LR
 
 **协议操作：**
 
-| 方法 | 用途 | 返回 |
-| :--- | :--- | :--- |
-| `prompts/list` | 发现可用提示模板 | 模板描述数组 |
-| `prompts/get` | 获取模板详情 | 完整模板定义+参数 |
+| 方法           | 用途             | 返回              |
+| :------------- | :--------------- | :---------------- |
+| `prompts/list` | 发现可用提示模板 | 模板描述数组      |
+| `prompts/get`  | 获取模板详情     | 完整模板定义+参数 |
 
 > [!tip] Prompts 的实用价值
 > 在 MCP 生态中，Prompts 让 Server 可以"告诉"AI 应用如何最好地使用它的能力和资源。一个好的 prompts 设计，能大幅降低用户的学习成本。
@@ -246,12 +247,12 @@ flowchart LR
 > [!note] 不仅仅是服务器有原语——客户端也提供关键能力
 > 除了服务器暴露的三大原语，MCP 还定义了客户端可以提供给服务器的能力，让 Server 构建更丰富的交互。
 
-| 客户端能力 | 说明 | 类比 |
-| :--- | :--- | :--- |
-| **Sampling** | 服务器通过客户端请求 LLM 补全 | Server 说"帮我问问 AI" |
-| **Elicitation** | 服务器向用户请求额外信息 | Server 说"我需要用户确认" |
-| **Roots** | 客户端告诉服务器文件系统边界 | 客户端说"你只能在目录 X 下操作" |
-| **Logging** | 服务器向客户端发送日志 | Server 说"记录这个事件" |
+| 客户端能力      | 说明                          | 类比                            |
+| :-------------- | :---------------------------- | :------------------------------ |
+| **Sampling**    | 服务器通过客户端请求 LLM 补全 | Server 说"帮我问问 AI"          |
+| **Elicitation** | 服务器向用户请求额外信息      | Server 说"我需要用户确认"       |
+| **Roots**       | 客户端告诉服务器文件系统边界  | 客户端说"你只能在目录 X 下操作" |
+| **Logging**     | 服务器向客户端发送日志        | Server 说"记录这个事件"         |
 
 > [!important] Sampling 的重要性
 > Sampling 允许 MCP Server 在有需要时请求客户端代为调用 LLM。这意味着 Server **不需要直接集成任何 AI SDK**，通过客户端间接获得 AI 能力——这对于保持 Server 的模型无关性非常关键。
@@ -306,11 +307,11 @@ sequenceDiagram
 
 **stdio 传输特点：**
 
-| 特性 | 说明 |
-| :--- | :--- |
-| **性能** | 零网络开销，延迟最低 |
-| **安全** | 进程隔离，不暴露网络端口 |
-| **场景** | 本地开发工具、桌面应用集成 |
+| 特性     | 说明                             |
+| :------- | :------------------------------- |
+| **性能** | 零网络开销，延迟最低             |
+| **安全** | 进程隔离，不暴露网络端口         |
+| **场景** | 本地开发工具、桌面应用集成       |
 | **限制** | 一个 Client 对应一个 Server 进程 |
 
 #### 2.4.2 Streamable HTTP 传输
@@ -345,13 +346,13 @@ sequenceDiagram
 
 **关键特性：**
 
-| 特性 | 说明 |
-| :--- | :--- |
-| **会话管理** | 通过 `MCP-Session-Id` Header 维持状态 |
-| **流式支持** | 通过 SSE 实现 Server 推送 |
-| **断线重连** | SSE 支持 `Last-Event-ID` 恢复 |
-| **认证** | 支持 OAuth 2.1、Bearer Token、API Key |
-| **安全** | Server 必须验证 Origin Header 防止 DNS rebinding |
+| 特性         | 说明                                             |
+| :----------- | :----------------------------------------------- |
+| **会话管理** | 通过 `MCP-Session-Id` Header 维持状态            |
+| **流式支持** | 通过 SSE 实现 Server 推送                        |
+| **断线重连** | SSE 支持 `Last-Event-ID` 恢复                    |
+| **认证**     | 支持 OAuth 2.1、Bearer Token、API Key            |
+| **安全**     | Server 必须验证 Origin Header 防止 DNS rebinding |
 
 > [!important] Streamable HTTP 是推荐的远程传输方案
 > 它取代了早期版本（2024-11-05）的 HTTP+SSE 传输，提供了更统一的端点设计和更完善的会话管理。对于远程 MCP Server，**Streamable HTTP 是最佳选择**。
@@ -367,11 +368,11 @@ sequenceDiagram
 
 **三种消息类型：**
 
-| 类型 | 包含 id | 需要响应 | 用途 |
-| :--- | :--- | :--- | :--- |
-| **Request** | ✅ | ✅ | 请求对方执行操作 |
-| **Response** | ✅ (匹配 Request) | ❌ | 对 Request 的响应 |
-| **Notification** | ❌ | ❌ | 单向通知，不需回复 |
+| 类型             | 包含 id           | 需要响应 | 用途               |
+| :--------------- | :---------------- | :------- | :----------------- |
+| **Request**      | ✅                | ✅       | 请求对方执行操作   |
+| **Response**     | ✅ (匹配 Request) | ❌       | 对 Request 的响应  |
+| **Notification** | ❌                | ❌       | 单向通知，不需回复 |
 
 ### 3.2 生命周期
 
@@ -448,6 +449,7 @@ sequenceDiagram
 ```
 
 > [!important] 初始化完成了三件事情
+>
 > 1. **协议版本协商**：确保双方使用兼容的协议版本
 > 2. **能力发现**：双方声明支持的功能（Tools、Resources、Prompts 等）
 > 3. **身份交换**：Client 和 Server 互相告知身份信息
@@ -457,11 +459,11 @@ sequenceDiagram
 
 #### 3.2.2 运行与关闭
 
-| 阶段 | 行为 | 说明 |
-| :--- | :--- | :--- |
-| **运行** | 按约定的能力进行正常通信 | 双方遵守协商结果 |
-| **关闭 (stdio)** | Client 关闭 stdin → 等待退出 → SIGTERM → SIGKILL | 逐级升级终止 |
-| **关闭 (HTTP)** | 关闭 HTTP 连接 | 也可通过 HTTP DELETE 通知 |
+| 阶段             | 行为                                             | 说明                      |
+| :--------------- | :----------------------------------------------- | :------------------------ |
+| **运行**         | 按约定的能力进行正常通信                         | 双方遵守协商结果          |
+| **关闭 (stdio)** | Client 关闭 stdin → 等待退出 → SIGTERM → SIGKILL | 逐级升级终止              |
+| **关闭 (HTTP)**  | 关闭 HTTP 连接                                   | 也可通过 HTTP DELETE 通知 |
 
 ### 3.3 通知机制
 
@@ -476,6 +478,7 @@ sequenceDiagram
 ```
 
 > [!tip] 通知的设计价值
+>
 > - **无需轮询**：Server 变化时主动通知，而不是 Client 反复查询
 > - **实时同步**：Client 收到通知后立即刷新工具列表
 > - **条件启用**：仅在初始化时声明了 `listChanged: true` 的 Server 才会发送
@@ -508,6 +511,7 @@ sequenceDiagram
 
 > [!note] 实际场景
 > 一个旅行预订 Server 在最终确认订单前，可以通过 Elicitation 让用户确认：
+>
 > - 是否确认预订（机票+酒店 = $3,000）
 > - 座位偏好（靠窗/过道）
 > - 是否添加旅行保险
@@ -580,31 +584,32 @@ flowchart TB
 
 > [!compare] MCP vs 传统 API 集成
 
-| 维度 | 传统 API 集成 | MCP |
-| :--- | :--- | :--- |
-| **连接方式** | 每个 API 独立实现 HTTP 调用 | 标准化协议，Server 声明能力 |
-| **认证** | 各自实现（API Key / OAuth / Basic） | 统一 OAuth 2.1 支持 |
-| **发现机制** | 需查阅文档，手动编码 | `*/list` 方法自动发现所有能力 |
-| **变更管理** | 需手动更新集成代码 | 通过通知自动感知变更 |
-| **复用性** | 每应用重复实现 | 一次开发，任意 MCP Host 可用 |
-| **类型安全** | 依赖文档和手动校验 | JSON Schema 自动校验输入 |
+| 维度         | 传统 API 集成                       | MCP                           |
+| :----------- | :---------------------------------- | :---------------------------- |
+| **连接方式** | 每个 API 独立实现 HTTP 调用         | 标准化协议，Server 声明能力   |
+| **认证**     | 各自实现（API Key / OAuth / Basic） | 统一 OAuth 2.1 支持           |
+| **发现机制** | 需查阅文档，手动编码                | `*/list` 方法自动发现所有能力 |
+| **变更管理** | 需手动更新集成代码                  | 通过通知自动感知变更          |
+| **复用性**   | 每应用重复实现                      | 一次开发，任意 MCP Host 可用  |
+| **类型安全** | 依赖文档和手动校验                  | JSON Schema 自动校验输入      |
 
 ### 4.3 MCP vs Function Calling
 
 > [!compare] MCP vs Function Calling（Tool Use）
 
-| 维度 | Function Calling | MCP |
-| :--- | :--- | :--- |
-| **范围** | 模型输出结构化工具调用的能力 | 端到端的协议标准 |
-| **定位** | LLM 的底层能力 | AI 应用与外部系统的集成协议 |
-| **提供方** | 每个模型各自实现 | 协议层统一，跨模型兼容 |
-| **功能** | 只定义"如何调用" | 定义发现、调用、通知、资源访问完整协议 |
-| **生态** | 独立的工具定义 | 可注册、可发现、可组合的 Server 生态 |
+| 维度       | Function Calling             | MCP                                    |
+| :--------- | :--------------------------- | :------------------------------------- |
+| **范围**   | 模型输出结构化工具调用的能力 | 端到端的协议标准                       |
+| **定位**   | LLM 的底层能力               | AI 应用与外部系统的集成协议            |
+| **提供方** | 每个模型各自实现             | 协议层统一，跨模型兼容                 |
+| **功能**   | 只定义"如何调用"             | 定义发现、调用、通知、资源访问完整协议 |
+| **生态**   | 独立的工具定义               | 可注册、可发现、可组合的 Server 生态   |
 
 > [!tip] 关系
 > Function Calling 是 LLM 的"肌肉记忆"——模型知道怎么调用函数。MCP 是"神经系统"——定义了函数在哪里、怎么连接、数据怎么传输。
 >
 > 在实际 Agent 系统中，两者协同工作：
+>
 > 1. MCP 提供统一的 Tool Registry（通过 `tools/list`）
 > 2. Agent 将所有工具的描述注入 LLM 上下文
 > 3. LLM 使用 Function Calling 能力选择并调用工具
@@ -619,29 +624,29 @@ flowchart TB
 > [!note] 开发工具是 MCP 最活跃的应用领域
 > AI IDE 和编码 Agent 通过 MCP 连接各种开发工具，极大提升了开发效率。
 
-| 应用 | MCP 作用 | 典型 Server |
-| :--- | :--- | :--- |
-| **Cursor** | Composer 中使用 MCP Tool | 文件系统、Git、GitHub |
-| **VS Code + Copilot** | Agent 模式通过 MCP 扩展能力 | 代码搜索、Issue 管理 |
-| **Claude Code** | 全功能 MCP Host，可使用 Resource/Prompt/Tool | GitHub、文件系统 |
-| **Windsurf** | Cascade 中集成 MCP Tool | 数据库、API 调试 |
-| **Zed** | 通过 Prompt 模板和 Tool 增强编码 | 代码审查、部署 |
+| 应用                  | MCP 作用                                     | 典型 Server           |
+| :-------------------- | :------------------------------------------- | :-------------------- |
+| **Cursor**            | Composer 中使用 MCP Tool                     | 文件系统、Git、GitHub |
+| **VS Code + Copilot** | Agent 模式通过 MCP 扩展能力                  | 代码搜索、Issue 管理  |
+| **Claude Code**       | 全功能 MCP Host，可使用 Resource/Prompt/Tool | GitHub、文件系统      |
+| **Windsurf**          | Cascade 中集成 MCP Tool                      | 数据库、API 调试      |
+| **Zed**               | 通过 Prompt 模板和 Tool 增强编码             | 代码审查、部署        |
 
 #### 5.1.1 官方参考 Server
 
 > [!note] MCP 官方提供了一系列参考 Server 实现
 > 这些 Server 是 MCP 功能的示范实现，也是开发者构建自己 Server 的起点：
 
-| Server | 功能 | 使用场景 |
-| :--- | :--- | :--- |
-| **Filesystem** | 安全的文件操作，可配置访问控制 | Agent 读写项目文件 |
-| **Git** | 读取、搜索、操作 Git 仓库 | Agent 管理版本控制 |
-| **GitHub** | 仓库、Issue、PR 管理 | Agent 操作 GitHub 工作流 |
-| **Memory** | 基于知识图谱的持久化记忆 | Agent 长期记忆系统 |
-| **Fetch** | 网页内容获取和转换 | Agent 获取网络信息 |
-| **Sequential Thinking** | 动态和反思性问题求解 | Agent 复杂推理过程 |
-| **Time** | 时间和时区转换 | Agent 时间相关操作 |
-| **Everything** | 参考/测试 Server，包含所有原语 | Server 开发测试 |
+| Server                  | 功能                           | 使用场景                 |
+| :---------------------- | :----------------------------- | :----------------------- |
+| **Filesystem**          | 安全的文件操作，可配置访问控制 | Agent 读写项目文件       |
+| **Git**                 | 读取、搜索、操作 Git 仓库      | Agent 管理版本控制       |
+| **GitHub**              | 仓库、Issue、PR 管理           | Agent 操作 GitHub 工作流 |
+| **Memory**              | 基于知识图谱的持久化记忆       | Agent 长期记忆系统       |
+| **Fetch**               | 网页内容获取和转换             | Agent 获取网络信息       |
+| **Sequential Thinking** | 动态和反思性问题求解           | Agent 复杂推理过程       |
+| **Time**                | 时间和时区转换                 | Agent 时间相关操作       |
+| **Everything**          | 参考/测试 Server，包含所有原语 | Server 开发测试          |
 
 #### 5.1.2 快速配置示例
 
@@ -653,11 +658,7 @@ flowchart TB
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/path/to/allowed/files"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/files"]
     },
     "github": {
       "command": "npx",
@@ -681,25 +682,25 @@ flowchart TB
 
 **典型数据源 Server：**
 
-| 数据源 | MCP Server 职责 | 价值 |
-| :--- | :--- | :--- |
-| **文件系统** | 读取/写入文件、目录遍历 | AI IDE 操作项目文件 |
-| **数据库** | 查询 Schema、执行 SQL、获取数据 | 自然语言查询数据库 |
-| **向量数据库** | 语义搜索、知识检索 | RAG 系统后端 |
-| **Notion/Google Docs** | 文档读写、搜索 | AI 助手访问知识库 |
-| **Sentry** | 错误日志、性能数据 | AI 调试生产问题 |
+| 数据源                 | MCP Server 职责                 | 价值                |
+| :--------------------- | :------------------------------ | :------------------ |
+| **文件系统**           | 读取/写入文件、目录遍历         | AI IDE 操作项目文件 |
+| **数据库**             | 查询 Schema、执行 SQL、获取数据 | 自然语言查询数据库  |
+| **向量数据库**         | 语义搜索、知识检索              | RAG 系统后端        |
+| **Notion/Google Docs** | 文档读写、搜索                  | AI 助手访问知识库   |
+| **Sentry**             | 错误日志、性能数据              | AI 调试生产问题     |
 
 ### 5.3 业务系统集成
 
 > [!note] 企业级场景中的 MCP
 > 在企业环境中，MCP 可以作为 AI 助手的"万能接口"，连接 CRM、项目管理、人力资源等系统：
 
-| 场景 | 连接的 MCP Server | 效果 |
-| :--- | :--- | :--- |
-| **客服** | CRM + 知识库 + 工单系统 | AI 助理一站式处理客户问题 |
-| **开发运维** | GitHub + Sentry + Docker + Slack | AI 自动排查故障、修复、通知 |
-| **数据分析** | 数据库 + BI 工具 + 报表服务 | 自然语言查询 → 自动生成报表 |
-| **项目管理** | Jira + Notion + Calendar | AI 跟进项目进度、自动更新任务 |
+| 场景         | 连接的 MCP Server                | 效果                          |
+| :----------- | :------------------------------- | :---------------------------- |
+| **客服**     | CRM + 知识库 + 工单系统          | AI 助理一站式处理客户问题     |
+| **开发运维** | GitHub + Sentry + Docker + Slack | AI 自动排查故障、修复、通知   |
+| **数据分析** | 数据库 + BI 工具 + 报表服务      | 自然语言查询 → 自动生成报表   |
+| **项目管理** | Jira + Notion + Calendar         | AI 跟进项目进度、自动更新任务 |
 
 ### 5.4 多方协作场景
 
@@ -747,15 +748,15 @@ sequenceDiagram
 > [!note] MCP 提供多种语言的官方 SDK
 > MCP 的设计目标是语言无关的协议，官方提供了主流语言的 SDK：
 
-| SDK | 语言 | 维护状态 | 使用场景 |
-| :--- | :--- | :--- | :--- |
-| **Python SDK** | Python | 官方维护（Tier 1） | 数据科学、后端服务 |
-| **TypeScript SDK** | TypeScript/JavaScript | 官方维护（Tier 1） | 前端工具、Node.js 服务 |
-| **Java SDK** | Java | 官方维护 | 企业后端、Spring 生态 |
-| **Kotlin SDK** | Kotlin | 官方维护 | Android、KMP 项目 |
-| **C# SDK** | .NET/C# | 社区维护 | .NET 生态集成 |
-| **Rust SDK** | Rust | 社区维护 | 高性能 Server、CLI 工具 |
-| **Go SDK** | Go | 社区维护 | 云原生服务 |
+| SDK                | 语言                  | 维护状态           | 使用场景                |
+| :----------------- | :-------------------- | :----------------- | :---------------------- |
+| **Python SDK**     | Python                | 官方维护（Tier 1） | 数据科学、后端服务      |
+| **TypeScript SDK** | TypeScript/JavaScript | 官方维护（Tier 1） | 前端工具、Node.js 服务  |
+| **Java SDK**       | Java                  | 官方维护           | 企业后端、Spring 生态   |
+| **Kotlin SDK**     | Kotlin                | 官方维护           | Android、KMP 项目       |
+| **C# SDK**         | .NET/C#               | 社区维护           | .NET 生态集成           |
+| **Rust SDK**       | Rust                  | 社区维护           | 高性能 Server、CLI 工具 |
+| **Go SDK**         | Go                    | 社区维护           | 云原生服务              |
 
 > [!tip] 使用建议
 > 对于新项目，优先选择 **Python SDK** 或 **TypeScript SDK**（Tier 1 级别，功能最完整）。其他语言的 SDK 可能在功能完整性上有所差异。
@@ -767,8 +768,8 @@ sequenceDiagram
 > 使用 TypeScript SDK 可以快速构建功能完整的 MCP Server：
 
 ```typescript
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js"
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 // 1. 创建 Server 实例
 const server = new Server(
@@ -780,8 +781,8 @@ const server = new Server(
     capabilities: {
       tools: {},
     },
-  }
-);
+  },
+)
 
 // 2. 注册 Tool 定义
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -798,23 +799,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
   ],
-}));
+}))
 
 // 3. 实现 Tool 执行逻辑
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === "get_weather") {
-    const city = request.params.arguments?.city;
+    const city = request.params.arguments?.city
     // 查询天气 API 的逻辑...
     return {
       content: [{ type: "text", text: `${city} 当前温度 22°C，晴` }],
-    };
+    }
   }
-  throw new Error("Tool not found");
-});
+  throw new Error("Tool not found")
+})
 
 // 4. 连接传输层
-const transport = new StdioServerTransport();
-await server.connect(transport);
+const transport = new StdioServerTransport()
+await server.connect(transport)
 ```
 
 ### 6.3 调试工具
@@ -828,6 +829,7 @@ await server.connect(transport);
 > - 支持所有传输类型（stdio、SSE、Streamable HTTP）
 
 > [!note] 其他调试工具
+>
 > - **Apify MCP Tester**：基于 SSE 的 Server 测试
 > - **MCPJam Inspector**：支持 OAuth 调试的本地开发工具
 > - **Postman**：最新版本已支持 MCP Server 测试
@@ -843,56 +845,56 @@ await server.connect(transport);
 
 **AI 开发和编码类：**
 
-| 产品 | 类型 | MCP 支持 |
-| :--- | :--- | :--- |
-| **Claude Desktop** | AI 桌面应用 | Resources、Prompts、Tools、Roots、Apps |
-| **Claude.ai** | Web AI 助手 | Resources、Prompts、Tools、Apps |
-| **Claude Code** | 终端编码 Agent | Resources、Prompts、Tools、Roots |
-| **ChatGPT** | Web AI 助手 | Tools、Apps |
-| **Gemini CLI** | 终端 AI Agent | Prompts、Tools |
-| **GitHub Copilot** | IDE 编码助手 | Tools |
-| **VS Code** | 代码编辑器 | 全功能支持（11 项能力） |
-| **Cursor** | AI 代码编辑器 | Prompts、Tools、Roots、Elicitation |
-| **Windsurf** | AI IDE | Tools、Discovery |
-| **Zed** | 代码编辑器 | Prompts、Tools |
-| **Amazon Q** | 开发助手 | Tools |
-| **Augment Code** | 编码平台 | Tools |
-| **JetBrains AI** | IDE 插件 | Tools |
+| 产品               | 类型           | MCP 支持                               |
+| :----------------- | :------------- | :------------------------------------- |
+| **Claude Desktop** | AI 桌面应用    | Resources、Prompts、Tools、Roots、Apps |
+| **Claude.ai**      | Web AI 助手    | Resources、Prompts、Tools、Apps        |
+| **Claude Code**    | 终端编码 Agent | Resources、Prompts、Tools、Roots       |
+| **ChatGPT**        | Web AI 助手    | Tools、Apps                            |
+| **Gemini CLI**     | 终端 AI Agent  | Prompts、Tools                         |
+| **GitHub Copilot** | IDE 编码助手   | Tools                                  |
+| **VS Code**        | 代码编辑器     | 全功能支持（11 项能力）                |
+| **Cursor**         | AI 代码编辑器  | Prompts、Tools、Roots、Elicitation     |
+| **Windsurf**       | AI IDE         | Tools、Discovery                       |
+| **Zed**            | 代码编辑器     | Prompts、Tools                         |
+| **Amazon Q**       | 开发助手       | Tools                                  |
+| **Augment Code**   | 编码平台       | Tools                                  |
+| **JetBrains AI**   | IDE 插件       | Tools                                  |
 
 **AI Agent 和框架类：**
 
-| 产品 | 类型 | MCP 支持 |
-| :--- | :--- | :--- |
-| **Goose** | 开源 AI Agent | 全功能支持（11 项能力） |
-| **Cline** | VS Code 编码 Agent | Resources、Tools、Discovery |
-| **Roo Code** | 编码 Agent | Resources、Tools |
-| **OpenCode** | 开源编码 Agent | Resources、Prompts、Tools |
-| **Codex** | 终端编码 Agent | Resources、Tools、Elicitation |
-| **Continue** | 开源编码助手 | Resources、Prompts、Tools、Apps |
-| **Replit Agent** | 云端开发 | Tools |
-| **Kilo Code** | VS Code 编码 Agent | Resources、Tools、Discovery |
+| 产品             | 类型               | MCP 支持                        |
+| :--------------- | :----------------- | :------------------------------ |
+| **Goose**        | 开源 AI Agent      | 全功能支持（11 项能力）         |
+| **Cline**        | VS Code 编码 Agent | Resources、Tools、Discovery     |
+| **Roo Code**     | 编码 Agent         | Resources、Tools                |
+| **OpenCode**     | 开源编码 Agent     | Resources、Prompts、Tools       |
+| **Codex**        | 终端编码 Agent     | Resources、Tools、Elicitation   |
+| **Continue**     | 开源编码助手       | Resources、Prompts、Tools、Apps |
+| **Replit Agent** | 云端开发           | Tools                           |
+| **Kilo Code**    | VS Code 编码 Agent | Resources、Tools、Discovery     |
 
 **AI 聊天客户端类：**
 
-| 产品 | 类型 | MCP 支持 |
-| :--- | :--- | :--- |
-| **LibreChat** | 开源聊天 UI | Tools |
-| **Chatbox** | 桌面聊天客户端 | Tools |
-| **TypingMind** | LLM 前端 | Tools |
-| **BoltAI** | 原生聊天客户端 | Tools |
-| **LM Studio** | 本地模型运行 | Tools |
-| **Msty Studio** | 隐私优先 AI 平台 | Tools |
-| **Glama** | AI 工作区 | 全功能支持 |
+| 产品            | 类型             | MCP 支持   |
+| :-------------- | :--------------- | :--------- |
+| **LibreChat**   | 开源聊天 UI      | Tools      |
+| **Chatbox**     | 桌面聊天客户端   | Tools      |
+| **TypingMind**  | LLM 前端         | Tools      |
+| **BoltAI**      | 原生聊天客户端   | Tools      |
+| **LM Studio**   | 本地模型运行     | Tools      |
+| **Msty Studio** | 隐私优先 AI 平台 | Tools      |
+| **Glama**       | AI 工作区        | 全功能支持 |
 
 **企业平台类：**
 
-| 产品 | 类型 | MCP 支持 |
-| :--- | :--- | :--- |
-| **Langdock** | 企业 AI 平台 | Tools |
-| **Microsoft Copilot Studio** | 企业 Agent 平台 | Resources、Tools |
-| **IBM Bob** | AI SDLC 平台 | Resources、Tools |
-| **Archestra** | 企业 AI 平台 | Tools、Apps、OAuth |
-| **Tencent CloudBase** | 云 AI DevKit | Tools |
+| 产品                         | 类型            | MCP 支持           |
+| :--------------------------- | :-------------- | :----------------- |
+| **Langdock**                 | 企业 AI 平台    | Tools              |
+| **Microsoft Copilot Studio** | 企业 Agent 平台 | Resources、Tools   |
+| **IBM Bob**                  | AI SDLC 平台    | Resources、Tools   |
+| **Archestra**                | 企业 AI 平台    | Tools、Apps、OAuth |
+| **Tencent CloudBase**        | 云 AI DevKit    | Tools              |
 
 ### 7.2 MCP Registry
 
@@ -901,14 +903,15 @@ await server.connect(transport);
 
 **Registry 的核心功能：**
 
-| 功能 | 说明 |
-| :--- | :--- |
-| **命名空间管理** | 通过 DNS 验证确保 Server 来源可信 |
-| **REST API** | 供 MCP Client 和聚合器发现可用 Server |
+| 功能             | 说明                                              |
+| :--------------- | :------------------------------------------------ |
+| **命名空间管理** | 通过 DNS 验证确保 Server 来源可信                 |
+| **REST API**     | 供 MCP Client 和聚合器发现可用 Server             |
 | **标准化元数据** | 每个 Server 发布 `server.json` 描述安装和配置信息 |
-| **包类型支持** | npm、PyPI、Docker Hub 等 |
+| **包类型支持**   | npm、PyPI、Docker Hub 等                          |
 
 > [!tip] 生态关系
+>
 > - **包注册中心**（npm/PyPI/Docker）托管代码和二进制
 > - **MCP Registry** 托管指向这些包的元数据
 > - **下游聚合器**（如 Smithery、Glama）消费 Registry 数据，提供更多增值服务
@@ -959,17 +962,18 @@ await server.connect(transport);
 
 **短期方向（正在推进）：**
 
-| 方向 | SEP/项目 | 说明 |
-| :--- | :--- | :--- |
-| **MCP Apps** | SEP-2133 | Server 提供交互式 UI 组件 |
-| **Tasks** | SEP-1686 | 长时间运行任务的可持久化执行 |
-| **File Uploads** | 工作组 | 支持文件上传能力 |
-| **Skills over MCP** | 工作组 | 通过 MCP 暴露和管理技能 |
-| **Triggers & Events** | 工作组 | 事件驱动的 Server 触发机制 |
+| 方向                  | SEP/项目 | 说明                         |
+| :-------------------- | :------- | :--------------------------- |
+| **MCP Apps**          | SEP-2133 | Server 提供交互式 UI 组件    |
+| **Tasks**             | SEP-1686 | 长时间运行任务的可持久化执行 |
+| **File Uploads**      | 工作组   | 支持文件上传能力             |
+| **Skills over MCP**   | 工作组   | 通过 MCP 暴露和管理技能      |
+| **Triggers & Events** | 工作组   | 事件驱动的 Server 触发机制   |
 
 **长期方向：**
 
 > [!note] MCP 的演进趋势
+>
 > - **从工具到应用**：通过 MCP Apps，Server 可以提供完整的交互式界面
 > - **从同步到异步**：Tasks 让长时间运行的操作有了标准管理方式
 > - **从拉到推**：Triggers & Events 让 Server 可以主动响应外部变化
@@ -1004,6 +1008,7 @@ flowchart LR
 ```
 
 > [!quote] 在一个 AI Agent 无处不在的未来中
+>
 > - 一个 MCP Server = 一次开发，任意 Host 可用
 > - 一个 MCP Host = 即插即用所有 Server
 > - MCP 不是让 AI 更聪明，而是让 AI **更有用**

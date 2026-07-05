@@ -89,8 +89,7 @@ function cleanBodyText(raw: string): string {
  */
 export function getPageContext(): PageContext {
   // Title: first h1 inside article
-  const title =
-    document.querySelector<HTMLElement>("article h1")?.textContent?.trim() ?? ""
+  const title = document.querySelector<HTMLElement>("article h1")?.textContent?.trim() ?? ""
 
   // Tags: all <a> inside .tags or .content-meta containers
   const tagEls = document.querySelectorAll<HTMLElement>(

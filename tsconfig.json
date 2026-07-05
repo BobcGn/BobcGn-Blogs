@@ -4,6 +4,7 @@
     "experimentalDecorators": true,
     "module": "esnext",
     "target": "esnext",
+    "ignoreDeprecations": "6.0",
     "moduleResolution": "node",
     "strict": true,
     "incremental": true,

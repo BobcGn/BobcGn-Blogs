@@ -116,10 +116,12 @@ const THINK_RE = /<think>([\s\S]*?)<\/think>/g
 
 function parseAssistantMessage(raw: string): ParsedMessage {
   const thinks: string[] = []
-  const body = raw.replace(THINK_RE, (_m, content: string) => {
-    thinks.push(content.trim())
-    return ""
-  }).trim()
+  const body = raw
+    .replace(THINK_RE, (_m, content: string) => {
+      thinks.push(content.trim())
+      return ""
+    })
+    .trim()
   return { think: thinks.join("\n\n"), body }
 }
 
@@ -505,13 +507,7 @@ function renderAssistantMsg(raw: string): preact.ComponentChildren {
 }
 
 const ChatWidget: QuartzComponent = ({ displayClass }: QuartzComponentProps) => {
-  const {
-    uiMessages,
-    isLoading,
-    streamingContent,
-    sendMessage,
-    clearHistory,
-  } = useChat()
+  const { uiMessages, isLoading, streamingContent, sendMessage, clearHistory } = useChat()
 
   // ── Event Handlers ──
 
@@ -585,9 +581,7 @@ const ChatWidget: QuartzComponent = ({ displayClass }: QuartzComponentProps) => 
         <div class="chat-messages">
           {uiMessages.map((msg: UiMessage, i: number) => (
             <div key={i} class={`chat-msg chat-msg--${msg.role}`}>
-              {msg.role === "assistant"
-                ? renderAssistantMsg(msg.content)
-                : msg.content}
+              {msg.role === "assistant" ? renderAssistantMsg(msg.content) : msg.content}
             </div>
           ))}
           {/* Active streaming bubble */}

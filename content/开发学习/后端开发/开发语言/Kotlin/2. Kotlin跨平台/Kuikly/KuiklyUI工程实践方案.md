@@ -1,5 +1,5 @@
 ---
-title: 'KuiklyUI工程实践方案'
+title: "KuiklyUI工程实践方案"
 date: 2026-05-18
 tags:
   - 开发学习
@@ -103,14 +103,14 @@ flowchart TB
 
 ### 2.2 模块职责矩阵
 
-| 模块 | 职责 | 关键能力 |
-|------|------|---------|
-| `core` | 跨端基础能力 | 响应式 UI、布局算法、Bridge 通信、序列化 |
-| `compose` | Compose 跨端实现 | 基于 Jetpack Compose 1.7.3，包名替换为 `com.tencent.kuikly.compose` |
-| `core-annotations` | 注解定义 | `@Page` 页面注解 |
-| `core-ksp` | 注解处理器 | 按 target 生成 `KuiklyCoreEntry` |
-| `core-render-*` | 各平台渲染层 | Android View / UIKit / ArkUI / Web |
-| `*-App` | 宿主壳工程 | 生命周期托管、桥接适配 |
+| 模块               | 职责             | 关键能力                                                            |
+| ------------------ | ---------------- | ------------------------------------------------------------------- |
+| `core`             | 跨端基础能力     | 响应式 UI、布局算法、Bridge 通信、序列化                            |
+| `compose`          | Compose 跨端实现 | 基于 Jetpack Compose 1.7.3，包名替换为 `com.tencent.kuikly.compose` |
+| `core-annotations` | 注解定义         | `@Page` 页面注解                                                    |
+| `core-ksp`         | 注解处理器       | 按 target 生成 `KuiklyCoreEntry`                                    |
+| `core-render-*`    | 各平台渲染层     | Android View / UIKit / ArkUI / Web                                  |
+| `*-App`            | 宿主壳工程       | 生命周期托管、桥接适配                                              |
 
 ### 2.3 入口自动生成（KSP）
 
@@ -172,12 +172,12 @@ Kuikly 的做法是 **Profile 化**——按 Kotlin 版本/平台拆分为多套
 
 Kuikly 仓库内维护了成体系的版本化配置：
 
-| 配置文件 | Kotlin 版本 | 适用平台 |
-|---------|-------------|---------|
-| `settings.1.9.22.gradle.kts` | 1.9.22 | 历史兼容 |
-| `settings.2.0.21.gradle.kts` | 2.0.21 | 主线（默认） |
-| `settings.2.1.21.gradle.kts` | 2.1.21 | 当前主线 |
-| `settings.2.0.ohos.gradle.kts` | **2.0.21-KBA-010** | 鸿蒙专用 |
+| 配置文件                       | Kotlin 版本        | 适用平台     |
+| ------------------------------ | ------------------ | ------------ |
+| `settings.1.9.22.gradle.kts`   | 1.9.22             | 历史兼容     |
+| `settings.2.0.21.gradle.kts`   | 2.0.21             | 主线（默认） |
+| `settings.2.1.21.gradle.kts`   | 2.1.21             | 当前主线     |
+| `settings.2.0.ohos.gradle.kts` | **2.0.21-KBA-010** | 鸿蒙专用     |
 
 每个 profile 独立管理：
 
@@ -355,6 +355,7 @@ android {
 
 > [!tip] 版本号管理建议
 > 推荐使用 `gradle.properties` 或 `libs.versions.toml`（Version Catalog）统一管理版本号：
+>
 > ```properties
 > # gradle.properties
 > kuiklyVersion=2.17.0
@@ -579,9 +580,9 @@ generateWebpackConfig
 
 ```javascript
 // dist/app.js — 小程序宿主入口
-global.com = business.com;
-global.callKotlinMethod = business.callKotlinMethod;
-render.initApp();
+global.com = business.com
+global.callKotlinMethod = business.callKotlinMethod
+render.initApp()
 ```
 
 ```mermaid
@@ -741,10 +742,10 @@ kuikly.compilePluginEnabled=true
 
 ```typescript
 // entry/hvigorfile.ts
-import { kuiklyCompilePlugin, kuiklyCopyAssetsPlugin } from 'kuikly-ohos-compile-plugin';
+import { kuiklyCompilePlugin, kuiklyCopyAssetsPlugin } from "kuikly-ohos-compile-plugin"
 
 export default {
-    plugins: [kuiklyCompilePlugin(), kuiklyCopyAssetsPlugin()]
+  plugins: [kuiklyCompilePlugin(), kuiklyCopyAssetsPlugin()],
 }
 ```
 
@@ -789,12 +790,12 @@ flowchart TB
 
 > [!compare] iOS vs 鸿蒙桥接对比
 >
-> | 维度 | iOS | 鸿蒙 |
-> |------|-----|------|
-> | 跨语言边界定义 | `ios.def`（cinterop） | `ohos.def`（cinterop） |
-> | 值协议 | C/ObjC 头文件 | `KRRenderCValue.h` |
-> | 业务产物格式 | `.framework`（CocoaPods） | `.so + .h`（NAPI） |
-> | 宿主接入方式 | Podfile `pod 'OpenKuiklyIOSRender'` | CMake + ArkTS NAPI |
+> | 维度           | iOS                                 | 鸿蒙                   |
+> | -------------- | ----------------------------------- | ---------------------- |
+> | 跨语言边界定义 | `ios.def`（cinterop）               | `ohos.def`（cinterop） |
+> | 值协议         | C/ObjC 头文件                       | `KRRenderCValue.h`     |
+> | 业务产物格式   | `.framework`（CocoaPods）           | `.so + .h`（NAPI）     |
+> | 宿主接入方式   | Podfile `pod 'OpenKuiklyIOSRender'` | CMake + ArkTS NAPI     |
 >
 > 两者思路相同：**用 cinterop 定义跨语言边界，只是宿主生态一个是 Pod/ObjC，一个是 ArkTS/NAPI。**
 
@@ -857,23 +858,23 @@ fi
 
 **Gradle JDK 版本**
 
-| 场景 | JDK 版本 |
-|------|---------|
-| Android Studio < 2024.2.1 | JDK 17 |
+| 场景                      | JDK 版本                         |
+| ------------------------- | -------------------------------- |
+| Android Studio < 2024.2.1 | JDK 17                           |
 | Android Studio ≥ 2024.2.1 | 默认 JDK 21，**必须切回 JDK 17** |
-| 鸿蒙 DevEco Studio | JDK 17 |
+| 鸿蒙 DevEco Studio        | JDK 17                           |
 
 ### 5.4 产物契约标准化
 
 各平台最终产物保持强契约：
 
-| 平台 | 产物格式 | 分发方式 |
-|------|---------|---------|
-| Android | `.aar` | Gradle 依赖 |
-| iOS/macOS | `.framework` | CocoaPods / SPM |
-| Web/H5 | `.js` | webpack |
-| 小程序 | `.js` | dist 拷贝 |
-| 鸿蒙 | `libshared.so` + `libshared_api.h` | NAPI 桥接 |
+| 平台      | 产物格式                           | 分发方式        |
+| --------- | ---------------------------------- | --------------- |
+| Android   | `.aar`                             | Gradle 依赖     |
+| iOS/macOS | `.framework`                       | CocoaPods / SPM |
+| Web/H5    | `.js`                              | webpack         |
+| 小程序    | `.js`                              | dist 拷贝       |
+| 鸿蒙      | `libshared.so` + `libshared_api.h` | NAPI 桥接       |
 
 ---
 
@@ -897,14 +898,14 @@ fi
 
 > [!compare] 什么场景该用，什么场景该放弃
 >
-> | 场景 | 推荐方案 | 理由 |
-> |------|---------|------|
-> | 需要覆盖 4+ 平台，动态化需求强 | ✅ **Kuikly 类架构** | KMP 共享 + 原生渲染，性价比最高 |
-> | 已有 KMP 基础，需要跨多端 | ✅ **Kuikly 类架构** | 复用 Kotlin 工程师和基础设施 |
-> | 电商首页/信息流 50%+ 页面动态化 | ✅ **Kuikly 类架构** | 不发版即可更新 UI |
-> | 管理后台/表单类 | ⚠️ **H5 / React Native** | 动态化需求强，但渲染要求低 |
-> | 视频/直播/绘图类 | ❌ **纯原生开发** | 性能要求苛刻，动态化无价值 |
-> | 轻量工具类 App | ❌ **纯原生 / Flutter** | 包体积增量不可接受 |
+> | 场景                            | 推荐方案                 | 理由                            |
+> | ------------------------------- | ------------------------ | ------------------------------- |
+> | 需要覆盖 4+ 平台，动态化需求强  | ✅ **Kuikly 类架构**     | KMP 共享 + 原生渲染，性价比最高 |
+> | 已有 KMP 基础，需要跨多端       | ✅ **Kuikly 类架构**     | 复用 Kotlin 工程师和基础设施    |
+> | 电商首页/信息流 50%+ 页面动态化 | ✅ **Kuikly 类架构**     | 不发版即可更新 UI               |
+> | 管理后台/表单类                 | ⚠️ **H5 / React Native** | 动态化需求强，但渲染要求低      |
+> | 视频/直播/绘图类                | ❌ **纯原生开发**        | 性能要求苛刻，动态化无价值      |
+> | 轻量工具类 App                  | ❌ **纯原生 / Flutter**  | 包体积增量不可接受              |
 
 ### 6.3 未来展望
 

@@ -1,5 +1,5 @@
 ---
-title: 'Kotlin Toolchain'
+title: "Kotlin Toolchain"
 date: 2026-05-24
 tags:
   - 开发学习
@@ -18,6 +18,7 @@ Kotlin Toolchain 的核心理念是 **"约定大于配置"**——它提供了�
 
 > [!question] 它解决了什么痛点？
 > 传统的 Gradle 构建脚本虽然功能强大，但在日常开发中暴露了以下问题：
+>
 > - **样板代码过多**：一个简单的 KMP 项目动辄数百行 `build.gradle.kts`
 > - **多平台配置分散**：JVM / Android / iOS 的配置散落在不同 DSL 块中，心智负担重
 > - **版本管理混乱**：依赖版本、插件版本、编译器版本需要手动对齐
@@ -66,6 +67,7 @@ settings:
 ```
 
 > [!summary] 为什么值得关注？
+>
 > - **开发效率提升**：配置量减少 70% 以上，专注于业务而非构建脚本
 > - **跨平台体验统一**：一套 YAML 描述所有平台，无需在 Groovy/Kotlin DSL 之间切换
 > - **内置工具链管理**：自动下载和管理 JDK、Kotlin 编译器、Android SDK 等
@@ -102,13 +104,14 @@ my-project/
 ```yaml
 # project.yaml —— 项目清单
 modules:
-  - ./modules/core        # 列出所有子模块路径
+  - ./modules/core # 列出所有子模块路径
   - ./modules/web
-plugins:                  # 可选：全局插件
+plugins: # 可选：全局插件
   - ./build-sources/my-plugin
 ```
 
 > [!tip] 说明
+>
 > - `project.yaml` 所在目录本身隐含为一个根模块，无需在 `modules` 中列出
 > - 单模块项目**不需要** `project.yaml`，仅用 `module.yaml` 即可
 > - 模块路径支持 glob 模式（如 `./libs/*`），但推荐显式列出
@@ -117,31 +120,31 @@ plugins:                  # 可选：全局插件
 
 ```yaml
 # module.yaml —— 模块构建描述
-product: jvm/app                                            # 产物类型
-dependencies:                                               # 依赖声明
+product: jvm/app # 产物类型
+dependencies: # 依赖声明
   - org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0
-  - ./modules/core                                          # 内部模块依赖
-  - $compose.material3                                      # 内置目录依赖
-settings:                                                   # 工具链配置
+  - ./modules/core # 内部模块依赖
+  - $compose.material3 # 内置目录依赖
+settings: # 工具链配置
   kotlin:
     languageVersion: "2.0"
   jvm:
     release: 21
-test-dependencies:                                          # 测试依赖
+test-dependencies: # 测试依赖
   - $kotlin.test
 ```
 
-| 配置段 | 作用 | 必需 |
-|:------:|:----|:----:|
-| `product` | 定义模块的产物类型和目标平台 | **是** |
-| `dependencies` | 外部 Maven 依赖 + 内部模块依赖 + 目录依赖 | 否 |
-| `test-dependencies` | 测试环境专属依赖 | 否 |
-| `settings` | Kotlin、JVM、Android、Compose 等工具链配置 | 否 |
-| `test-settings` | 测试环境的工具链配置覆盖 | 否 |
-| `apply` | 引用 `.module-template.yaml` 模板文件 | 否 |
-| `plugins` | 模块级插件配置 | 否 |
-| `repositories` | 自定义 Maven 仓库 | 否 |
-| `aliases` | 自定义平台分组别名（多模块） | 否 |
+|       配置段        | 作用                                       |  必需  |
+| :-----------------: | :----------------------------------------- | :----: |
+|      `product`      | 定义模块的产物类型和目标平台               | **是** |
+|   `dependencies`    | 外部 Maven 依赖 + 内部模块依赖 + 目录依赖  |   否   |
+| `test-dependencies` | 测试环境专属依赖                           |   否   |
+|     `settings`      | Kotlin、JVM、Android、Compose 等工具链配置 |   否   |
+|   `test-settings`   | 测试环境的工具链配置覆盖                   |   否   |
+|       `apply`       | 引用 `.module-template.yaml` 模板文件      |   否   |
+|      `plugins`      | 模块级插件配置                             |   否   |
+|   `repositories`    | 自定义 Maven 仓库                          |   否   |
+|      `aliases`      | 自定义平台分组别名（多模块）               |   否   |
 
 > [!warning] 注意
 > `settings` 中的配置会自动继承到 `test-settings`，测试环境只需覆盖需要不同的部分即可。
@@ -153,20 +156,20 @@ test-dependencies:                                          # 测试依赖
 
 ### 完整产品类型列表
 
-| 类型 | Schema 值 | 目标平台 | 说明 |
-|:----:|:----------|:---------|:----|
-| JVM 应用 | `jvm/app` | `jvm` | 可执行的 JVM 应用程序 |
-| JVM 库 | `jvm/lib` | `jvm` | JVM 专属库（Amper 0.8+） |
-| JVM 插件 | `jvm/amper-plugin` | `jvm` | Amper 构建插件 |
-| 多平台库 | `lib` | 所有叶平台 | 可导出为 KMP 库 |
-| Android 应用 | `android/app` | `android` | Android APK/AAB |
-| iOS 应用 | `ios/app` | `iosArm64`, `iosX64`, `iosSimulatorArm64` | iOS 应用 |
-| macOS 应用 | `macos/app` | `macosX64`, `macosArm64` | macOS 桌面应用 |
-| Linux 应用 | `linux/app` | `linuxX64`, `linuxArm64` | Linux 桌面应用 |
-| Windows 应用 | `windows/app` | `mingwX64` | Windows 桌面应用 |
-| JS 应用 | `js/app` | `js` | JavaScript 应用 |
-| Wasm JS 应用 | `wasm-js/app` | `wasmJs` | WebAssembly (JS) 应用 |
-| Wasm Wasi 应用 | `wasm-wasi/app` | `wasmWasi` | WebAssembly (WASI) 应用 |
+|      类型      | Schema 值          | 目标平台                                  | 说明                     |
+| :------------: | :----------------- | :---------------------------------------- | :----------------------- |
+|    JVM 应用    | `jvm/app`          | `jvm`                                     | 可执行的 JVM 应用程序    |
+|     JVM 库     | `jvm/lib`          | `jvm`                                     | JVM 专属库（Amper 0.8+） |
+|    JVM 插件    | `jvm/amper-plugin` | `jvm`                                     | Amper 构建插件           |
+|    多平台库    | `lib`              | 所有叶平台                                | 可导出为 KMP 库          |
+|  Android 应用  | `android/app`      | `android`                                 | Android APK/AAB          |
+|    iOS 应用    | `ios/app`          | `iosArm64`, `iosX64`, `iosSimulatorArm64` | iOS 应用                 |
+|   macOS 应用   | `macos/app`        | `macosX64`, `macosArm64`                  | macOS 桌面应用           |
+|   Linux 应用   | `linux/app`        | `linuxX64`, `linuxArm64`                  | Linux 桌面应用           |
+|  Windows 应用  | `windows/app`      | `mingwX64`                                | Windows 桌面应用         |
+|    JS 应用     | `js/app`           | `js`                                      | JavaScript 应用          |
+|  Wasm JS 应用  | `wasm-js/app`      | `wasmJs`                                  | WebAssembly (JS) 应用    |
+| Wasm Wasi 应用 | `wasm-wasi/app`    | `wasmWasi`                                | WebAssembly (WASI) 应用  |
 
 ### 简写语法
 
@@ -194,6 +197,7 @@ product:
 ```
 
 > [!tip] 选择指南
+>
 > - **纯 JVM 服务端应用** → `jvm/app` 或 `jvm/lib`
 > - **Android 原生应用** → `android/app`
 > - **KMP 共享库** → `lib`（多平台库，最灵活）
@@ -232,8 +236,8 @@ dependencies:
 
 ```yaml
 dependencies:
-  - ./modules/core          # 同项目下的子模块
-  - ../utilities/logger     # 父项目中的工具模块
+  - ./modules/core # 同项目下的子模块
+  - ../utilities/logger # 父项目中的工具模块
 ```
 
 ### 目录依赖（Catalogs）
@@ -243,28 +247,28 @@ dependencies:
 
 **内置目录一览：**
 
-| 目录名称 | 触发条件 | 示例 |
-|:--------:|:---------|:-----|
-| `$kotlin` | 始终可用 | `$kotlin.test`, `$kotlin.reflect`, `$kotlin.test.junit5` |
-| `$kotlin.serialization` | `settings.kotlin.serialization.enabled` | `$kotlin.serialization.json` |
-| `$compose` | `settings.compose.enabled` | `$compose.foundation`, `$compose.material3`, `$compose.runtime` |
-| `$ktor` | `settings.ktor.enabled` | `$ktor.server.core`, `$ktor.client.core`, `$ktor.bom` |
-| `$springBoot` | `settings.springBoot.enabled` | Spring Boot 相关依赖 |
+|        目录名称         | 触发条件                                | 示例                                                            |
+| :---------------------: | :-------------------------------------- | :-------------------------------------------------------------- |
+|        `$kotlin`        | 始终可用                                | `$kotlin.test`, `$kotlin.reflect`, `$kotlin.test.junit5`        |
+| `$kotlin.serialization` | `settings.kotlin.serialization.enabled` | `$kotlin.serialization.json`                                    |
+|       `$compose`        | `settings.compose.enabled`              | `$compose.foundation`, `$compose.material3`, `$compose.runtime` |
+|         `$ktor`         | `settings.ktor.enabled`                 | `$ktor.server.core`, `$ktor.client.core`, `$ktor.bom`           |
+|      `$springBoot`      | `settings.springBoot.enabled`           | Spring Boot 相关依赖                                            |
 
 ```yaml
 settings:
   kotlin:
-    serialization: json              # 启用序列化
-  compose: true                       # 启用 Compose
-  ktor:                               # 启用 Ktor
+    serialization: json # 启用序列化
+  compose: true # 启用 Compose
+  ktor: # 启用 Ktor
     enabled: true
     applyBom: true
 
 dependencies:
-  - $kotlin.test                      # 自动使用当前 Kotlin 版本匹配的 kotlin-test
-  - $kotlin.serialization.json        # 自动添加序列化库
-  - $compose.material3                # 自动使用当前 Compose 版本
-  - $ktor.client.core                 # 自动使用当前 Ktor 版本
+  - $kotlin.test # 自动使用当前 Kotlin 版本匹配的 kotlin-test
+  - $kotlin.serialization.json # 自动添加序列化库
+  - $compose.material3 # 自动使用当前 Compose 版本
+  - $ktor.client.core # 自动使用当前 Ktor 版本
 ```
 
 **Gradle 版本目录支持：**
@@ -273,7 +277,7 @@ dependencies:
 
 ```yaml
 dependencies:
-  - $libs.commons.lang3     # 对应 gradle/libs.versions.toml 中的 [libraries]
+  - $libs.commons.lang3 # 对应 gradle/libs.versions.toml 中的 [libraries]
 ```
 
 ### BOM 依赖
@@ -290,27 +294,27 @@ dependencies:
 
 ```yaml
 dependencies:
-  - com.google.guava:guava:33.0.0              # scope: all（默认）
+  - com.google.guava:guava:33.0.0 # scope: all（默认）
   - org.jetbrains:annotations:24.0.0:
-      scope: compile-only                        # 编译期可见，运行时不可见
+      scope: compile-only # 编译期可见，运行时不可见
   - com.mysql:mysql-connector-j:8.2.0:
-      scope: runtime-only                        # 运行时可见，编译期不可见
+      scope: runtime-only # 运行时可见，编译期不可见
 ```
 
-| 作用域 | 编译期 | 运行时 | 使用场景 |
-|:------:|:------:|:------:|:---------|
-| `all`（默认） | ✓ | ✓ | 常规依赖 |
-| `compile-only` | ✓ | ✗ | 注解库、编译期 API |
-| `runtime-only` | ✗ | ✓ | JDBC 驱动、SPI 实现 |
+|     作用域     | 编译期 | 运行时 | 使用场景            |
+| :------------: | :----: | :----: | :------------------ |
+| `all`（默认）  |   ✓    |   ✓    | 常规依赖            |
+| `compile-only` |   ✓    |   ✗    | 注解库、编译期 API  |
+| `runtime-only` |   ✗    |   ✓    | JDBC 驱动、SPI 实现 |
 
 ### 可见性控制（Exported）
 
 ```yaml
 dependencies:
   - com.fasterxml.jackson.core:jackson-databind:2.16.0:
-      exported: true      # 对外暴露——下游模块可访问（类似 Gradle 的 api()）
+      exported: true # 对外暴露——下游模块可访问（类似 Gradle 的 api()）
   - com.google.guava:guava:33.0.0:
-      exported: false     # 内部实现——对外隐藏（默认，类似 Gradle 的 implementation()）
+      exported: false # 内部实现——对外隐藏（默认，类似 Gradle 的 implementation()）
 ```
 
 ### 测试依赖
@@ -322,7 +326,7 @@ test-dependencies:
   - org.junit.jupiter:junit-jupiter:5.10.1
   - $kotlin.test.junit5
   - $libs.mockk
-  - ./test-utils                    # 测试工具模块
+  - ./test-utils # 测试工具模块
 ```
 
 ## 1.4 平台限定符（@platform）
@@ -355,24 +359,24 @@ dependencies:
 > [!important] 平台层次结构
 > Kotlin Toolchain 定义了**平台家族（Family）** 和**叶平台（Leaf Platform）** 两个层次。使用家族名限定等价于限定该家族下的所有叶平台。
 
-| 家族 | 包含的叶平台 |
-|:----:|:-------------|
-| `jvm` | `jvm` |
-| `android` | `android` |
-| `ios` | `iosArm64`, `iosX64`, `iosSimulatorArm64` |
-| `macos` | `macosX64`, `macosArm64` |
-| `linux` | `linuxX64`, `linuxArm64` |
-| `mingw` | `mingwX64` |
-| `js` | `js` |
-| `wasmJs` | `wasmJs` |
-| `wasmWasi` | `wasmWasi` |
+|    家族    | 包含的叶平台                              |
+| :--------: | :---------------------------------------- |
+|   `jvm`    | `jvm`                                     |
+| `android`  | `android`                                 |
+|   `ios`    | `iosArm64`, `iosX64`, `iosSimulatorArm64` |
+|  `macos`   | `macosX64`, `macosArm64`                  |
+|  `linux`   | `linuxX64`, `linuxArm64`                  |
+|  `mingw`   | `mingwX64`                                |
+|    `js`    | `js`                                      |
+|  `wasmJs`  | `wasmJs`                                  |
+| `wasmWasi` | `wasmWasi`                                |
 
 ```yaml
 # @ios 等价于同时限定 iosArm64 + iosX64 + iosSimulatorArm64
 dependencies:
   - org.jetbrains.skia:skia-ios:1.0.0@ios
 
-# 精确到具体架构
+  # 精确到具体架构
   - org.jetbrains.skia:skia-ios-arm64:1.0.0@iosArm64
 ```
 
@@ -400,14 +404,15 @@ settings:
 ```yaml
 # 在 module.yaml 中定义平台别名
 aliases:
-  - jvmAndAndroid: [jvm, android]                        # 自定义分组
-  - appleTargets: [iosArm64, iosSimulatorArm64, macosArm64]  # Apple 全平台
+  - jvmAndAndroid: [jvm, android] # 自定义分组
+  - appleTargets: [iosArm64, iosSimulatorArm64, macosArm64] # Apple 全平台
 
 dependencies:
-  - com.example:shared-lib:1.0.0@jvmAndAndroid           # 使用别名
+  - com.example:shared-lib:1.0.0@jvmAndAndroid # 使用别名
 ```
 
 > [!warning] 别名使用限制
+>
 > - 别名不能与已有平台名或家族名冲突
 > - 所有别名中的平台必须在模块的 `platforms` 列表中
 > - 不允许循环引用
@@ -428,6 +433,7 @@ src/
 ```
 
 > [!tip] 源代码目录的组织规则
+>
 > - `commonMain` 中的代码对所有平台可见
 > - 平台限定目录中的代码仅在该平台编译时包含
 > - 平台的优先级：精确平台名 > 家族名 > `commonMain`
@@ -513,6 +519,7 @@ test-dependencies:
 ```
 
 > [!note] 配置解读
+>
 > - `product: jvm/app` 告诉工具链生成一个可执行的 JVM 应用
 > - `settings.kotlin.serialization: json` 是 `serialization: { enabled: true, format: json }` 的简写
 > - `settings.junit: junit-5` 自动添加 `kotlin-test-junit5` 依赖
@@ -584,6 +591,7 @@ suspend fun main() {
 ```
 
 > [!tip] 运行效果
+>
 > ```
 > 🚀 Kotlin Toolchain Demo 启动
 > 正在获取数据...
@@ -609,6 +617,7 @@ flowchart LR
 ```
 
 > [!summary] 本节要点
+>
 > - 单模块 JVM 项目只需一个 `module.yaml` + `src/` 目录
 > - `product: jvm/app` 声明 JVM 应用类型
 > - `amper build` + `amper run` 完成构建和运行
@@ -723,10 +732,11 @@ settings:
 
 > [!tip] 导出控制
 > 核心模块的依赖应标记 `exported: true`，使下游模块可以直接使用：
+>
 > ```yaml
 > dependencies:
 >   - com.fasterxml.jackson.core:jackson-databind:2.16.0:
->       exported: true     # 对外暴露——下游模块可见
+>       exported: true # 对外暴露——下游模块可见
 > ```
 
 ## 3.2 多平台项目实战
@@ -793,13 +803,14 @@ settings:
 ```
 
 > [!compare] 多平台 vs 单平台配置对比
-> | 维度 | 单平台（jvm/app） | 多平台（lib） |
-> |:----:|:-----------------:|:-------------:|
-> | 配置文件 | 1 个平台段 | 多平台 + 限定符 |
-> | 源码目录 | `src/` | `src/commonMain/` + `src@platform/` |
-> | 依赖管理 | 全局声明 | 全局 + `@platform` 限定 |
-> | 产物 | JAR | JAR + AAR + Framework |
-> | 适用场景 | 纯后端/桌面 | 移动端共享 + 跨平台库 |
+>
+> |   维度   | 单平台（jvm/app） |            多平台（lib）            |
+> | :------: | :---------------: | :---------------------------------: |
+> | 配置文件 |    1 个平台段     |           多平台 + 限定符           |
+> | 源码目录 |      `src/`       | `src/commonMain/` + `src@platform/` |
+> | 依赖管理 |     全局声明      |       全局 + `@platform` 限定       |
+> |   产物   |        JAR        |        JAR + AAR + Framework        |
+> | 适用场景 |    纯后端/桌面    |        移动端共享 + 跨平台库        |
 
 ## 3.3 工具链配置最佳实践
 
@@ -809,18 +820,18 @@ settings:
 settings:
   # --- Kotlin 编译器设置 ---
   kotlin:
-    version: "2.0.21"              # 固定 Kotlin 版本，避免意外升级
-    languageVersion: "2.0"          # 语言兼容版本
-    apiVersion: "2.0"               # API 兼容版本
-    progressiveMode: true           # 渐进式严格模式——提前发现潜在问题
-    allWarningsAsErrors: true       # 警告即错误——保持代码质量
-    serialization: json             # 启用 kotlinx.serialization
+    version: "2.0.21" # 固定 Kotlin 版本，避免意外升级
+    languageVersion: "2.0" # 语言兼容版本
+    apiVersion: "2.0" # API 兼容版本
+    progressiveMode: true # 渐进式严格模式——提前发现潜在问题
+    allWarningsAsErrors: true # 警告即错误——保持代码质量
+    serialization: json # 启用 kotlinx.serialization
     optIns:
-      - "kotlinx.serialization.ExperimentalSerializationApi"  # 显式 opt-in
+      - "kotlinx.serialization.ExperimentalSerializationApi" # 显式 opt-in
 
   # --- JVM 设置 ---
   jvm:
-    release: 21                     # 目标 JVM 版本
+    release: 21 # 目标 JVM 版本
 
   # --- Android 设置 ---
   android:
@@ -831,8 +842,8 @@ settings:
 
   # --- Compose Multiplatform 设置 ---
   compose:
-    enabled: true                   # 启用 Compose 编译器插件和运行时
-    resources:                      # Compose 资源
+    enabled: true # 启用 Compose 编译器插件和运行时
+    resources: # Compose 资源
       packageName: "com.example.app"
 ```
 
@@ -847,10 +858,10 @@ settings:
 ```yaml
 # ❌ 不推荐：浮动版本
 dependencies:
-  - org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.+   # 可能意外升级
+  - org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.+ # 可能意外升级
 settings:
   kotlin:
-    version: "2.0"                   # 隐式为 2.0.x 最新，不可控
+    version: "2.0" # 隐式为 2.0.x 最新，不可控
 
 # ✅ 推荐：精确版本
 dependencies:
@@ -961,6 +972,7 @@ flowchart LR
 ### 迁移检查清单
 
 > [!summary] 迁移前需要确认的事项
+>
 > - [ ] Amper 版本是否支持项目所需的所有功能（如 KSP、Compose、iOS Framework 导出）
 > - [ ] 所有第三方依赖是否可通过 Maven 坐标或目录获取
 > - [ ] 自定义 Gradle Task 是否有 Amper 插件机制的等效方案
@@ -968,6 +980,7 @@ flowchart LR
 > - [ ] 团队是否已了解 YAML 配置的工作方式
 
 > [!danger] 已知局限
+>
 > - Amper 0.x **尚不支持的**：自定义 Task 图、复杂的多项目构建逻辑
 > - **独立模式**（非 Gradle 后端）是主要发展方向，Gradle 后端已被标记为弃用
 > - 部分 Gradle 插件可能没有 Amper 等效方案，需要等待社区或官方支持
@@ -977,24 +990,29 @@ flowchart LR
 > [!question] 常见问题
 
 **Q: `./amper build` 报 JDK 版本不匹配怎么办？**
+
 > 在 `module.yaml` 中指定正确的 JVM release 版本，或者通过环境变量 `AMPER_JAVA_HOME` 指定 JDK 路径。Amper 也会自动下载所需版本的 JDK。
 
 **Q: 如何添加自定义 Maven 仓库？**
+
 ```yaml
 repositories:
   - https://maven.pkg.jetbrains.space/public/p/compose/dev
-  - mavenCentral:  # 内置，无需显式声明
+  - mavenCentral: # 内置，无需显式声明
 ```
 
 **Q: 模块间循环依赖如何处理？**
+
 > 和 Gradle 一样，Kotlin Toolchain 不允许循环依赖。如果出现，需要重构模块结构——通常是将双方共同依赖的类型抽取到第三个模块中。
 
 **Q: 如何查看详细的构建日志？**
+
 ```bash
 ./amper build --verbose
 ```
 
 **Q: 测试报告在哪里查看？**
+
 ```bash
 # 测试结果默认输出到 build/test-results/ 目录
 ./amper test
@@ -1004,6 +1022,7 @@ cat build/test-results/*.xml
 ---
 
 > [!summary] 核心要点回顾
+>
 > ```text
 > Kotlin Toolchain（Amper）的核心价值：
 >
@@ -1016,6 +1035,7 @@ cat build/test-results/*.xml
 > ```
 
 > [!tip] 进阶阅读
+>
 > - [[Kotlin Multiplatform]] — KMP 项目架构与跨平台共享策略
 > - [[Kotlin知识点快速梳理|Kotlin]] — Kotlin 语言基础与特性速览
 > - [JetBrains Amper 官方文档](https://github.com/JetBrains/amper) — 最新的项目动态和完整配置参考

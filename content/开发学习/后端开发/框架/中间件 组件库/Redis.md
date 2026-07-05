@@ -1,5 +1,5 @@
 ---
-title: 'Redis'
+title: "Redis"
 date: 2026-04-28
 tags:
   - 开发学习
@@ -7,12 +7,14 @@ tags:
 ---
 
 # 0. Redis 简介
+
 > [!question] Redis 是什么？
 > Redis 是一个基于内存的数据结构存储系统，常用于缓存、分布式锁、计数器、限流、排行榜、消息通知等场景。
 >
 > 它不是“简单的 key-value 数据库”，而是一个高性能的数据结构服务器。
 
 > [!summary] Redis 常见用途
+>
 > - **缓存**：热点数据放内存，降低数据库压力
 > - **分布式锁**：控制多个服务实例对共享资源的并发访问
 > - **计数器**：点赞数、阅读数、接口调用次数
@@ -22,7 +24,9 @@ tags:
 > - **发布订阅**：轻量级消息通知
 
 # 1. Redis 架构
+
 > [!important] Redis 在后端系统中的位置
+>
 > ```mermaid
 > flowchart TD
 >     A[客户端请求] --> B[后端服务]
@@ -43,8 +47,10 @@ tags:
 > ```
 
 ## 1.1 单线程模型
+
 > [!note] Redis 为什么快？
 > Redis 的命令执行主要是单线程模型，但它仍然很快，原因是：
+>
 > - 数据主要在内存中
 > - 单线程避免了复杂锁竞争
 > - 使用 I/O 多路复用处理大量连接
@@ -62,21 +68,25 @@ flowchart LR
 ```
 
 ## 1.2 常用数据结构
-| 数据结构 | 常见命令 | 适合场景 |
-| :---: | :---: | :---: |
-| String | `GET` / `SET` / `INCR` | 缓存、计数器、验证码 |
-| Hash | `HGET` / `HSET` | 用户对象、配置对象 |
-| List | `LPUSH` / `BRPOP` | 简单队列 |
-| Set | `SADD` / `SISMEMBER` | 去重、标签、关注关系 |
-| Sorted Set | `ZADD` / `ZRANGE` | 排行榜、延迟任务 |
-| Stream | `XADD` / `XREADGROUP` | 可靠消息流 |
-| Bitmap | `SETBIT` / `BITCOUNT` | 签到、活跃统计 |
-| HyperLogLog | `PFADD` / `PFCOUNT` | UV 估算 |
+
+|  数据结构   |        常见命令        |       适合场景       |
+| :---------: | :--------------------: | :------------------: |
+|   String    | `GET` / `SET` / `INCR` | 缓存、计数器、验证码 |
+|    Hash     |    `HGET` / `HSET`     |  用户对象、配置对象  |
+|    List     |   `LPUSH` / `BRPOP`    |       简单队列       |
+|     Set     |  `SADD` / `SISMEMBER`  | 去重、标签、关注关系 |
+| Sorted Set  |   `ZADD` / `ZRANGE`    |   排行榜、延迟任务   |
+|   Stream    | `XADD` / `XREADGROUP`  |      可靠消息流      |
+|   Bitmap    | `SETBIT` / `BITCOUNT`  |    签到、活跃统计    |
+| HyperLogLog |  `PFADD` / `PFCOUNT`   |       UV 估算        |
 
 # 2. 缓存模式
+
 ## 2.1 Cache Aside
+
 > [!important] 最常用的缓存模式
 > Cache Aside 的流程是：
+>
 > 1. 先查 Redis
 > 2. 命中直接返回
 > 3. 未命中查数据库
@@ -104,9 +114,11 @@ sequenceDiagram
 ```
 
 ## 2.2 缓存更新策略
+
 > [!warning] 为什么通常是“更新数据库后删除缓存”？
 > 如果先更新缓存，再更新数据库，中途失败会导致缓存和数据库不一致。
 > 更常见做法是：
+>
 > - 先更新数据库
 > - 再删除缓存
 > - 下次查询重新回源加载
@@ -121,29 +133,36 @@ flowchart TD
 ```
 
 # 3. 缓存常见问题
+
 ## 3.1 缓存穿透
+
 > [!note] 问题
 > 请求的数据根本不存在，例如恶意请求 `user:-1`，每次都查不到缓存，然后打到数据库。
 >
 > 解决方案：
+>
 > - 缓存空值，并设置较短 TTL
 > - 参数校验
 > - 布隆过滤器
 
 ## 3.2 缓存击穿
+
 > [!note] 问题
 > 某个热点 Key 过期，大量请求同时打到数据库。
 >
 > 解决方案：
+>
 > - 热点 Key 不设置过短 TTL
 > - 使用互斥锁，只允许一个请求回源
 > - 后台主动刷新缓存
 
 ## 3.3 缓存雪崩
+
 > [!note] 问题
 > 大量 Key 同时过期，数据库瞬间承压。
 >
 > 解决方案：
+>
 > - TTL 加随机值
 > - 多级缓存
 > - 限流降级
@@ -159,24 +178,29 @@ flowchart TD
 ```
 
 # 4. 分布式锁
+
 > [!important] 分布式锁的用途
 > 当多个服务实例同时处理同一个资源时，需要保证同一时间只有一个实例执行关键逻辑。
 > 例如：
+>
 > - 防止重复下单
 > - 定时任务只由一个实例执行
 > - 热点缓存重建只允许一个线程回源
 
 ## 4.1 基础实现
+
 ```text
 SET lock:order:10001 requestId NX PX 30000
 ```
 
 含义：
+
 > - `NX`：只有 Key 不存在时才设置成功
 > - `PX 30000`：锁 30 秒后自动过期，避免死锁
 > - `requestId`：锁持有者标识，释放锁时必须校验
 
 ## 4.2 安全释放锁
+
 > [!warning] 不能直接 DEL
 > 如果业务执行超过锁过期时间，锁被别人重新拿到，此时旧线程再 `DEL`，会误删别人的锁。
 > 正确做法是用 Lua 脚本保证“判断持有者 + 删除”原子执行。
@@ -207,8 +231,11 @@ sequenceDiagram
 ```
 
 # 5. Redis 高可用
+
 ## 5.1 主从复制与哨兵
+
 > [!note] Sentinel 模式
+>
 > - 主节点负责写
 > - 从节点复制主节点数据
 > - Sentinel 监控主从状态
@@ -225,6 +252,7 @@ flowchart TD
 ```
 
 ## 5.2 Cluster 模式
+
 > [!note] Redis Cluster
 > Redis Cluster 通过 16384 个 Hash Slot 分片存储数据。
 > Key 会被映射到某个 Slot，再由对应节点负责。
@@ -241,6 +269,7 @@ flowchart LR
 ```
 
 # 6. Ktor 示例
+
 > [!example] Ktor + Lettuce 操作 Redis
 > Lettuce 是常用的 Redis Java/Kotlin 客户端，支持同步、异步和响应式 API。
 
@@ -341,6 +370,7 @@ fun Application.userRoutes() {
 > 生产环境中更推荐使用 Lettuce 异步 API；如果必须使用同步 API，应像示例一样把阻塞调用放入 `Dispatchers.IO`，避免影响请求调度线程。
 
 > [!example] Ktor 分布式锁示例
+
 ```kotlin
 // RedisLock.kt
 package com.example.redis
@@ -382,7 +412,9 @@ class RedisLock {
 ```
 
 # 7. SpringBoot 示例
+
 > [!example] 依赖配置
+
 ```kotlin
 // build.gradle.kts
 dependencies {
@@ -401,6 +433,7 @@ spring:
 ```
 
 > [!example] RedisTemplate 配置
+
 ```java
 // RedisConfig.java
 package com.example.redis;
@@ -439,6 +472,7 @@ public class RedisConfig {
 ```
 
 > [!example] 缓存查询接口
+
 ```java
 // UserController.java
 package com.example.redis;
@@ -480,6 +514,7 @@ public class UserController {
 ```
 
 > [!example] SpringBoot 分布式锁
+
 ```java
 // RedisLockService.java
 package com.example.redis;
@@ -527,7 +562,9 @@ public class RedisLockService {
 ```
 
 # 8. 最佳实践
+
 > [!summary] Redis 使用建议
+>
 > - Key 命名要有业务前缀，例如 `user:profile:10001`
 > - 热点缓存设置随机 TTL，避免同时过期
 > - 禁止线上使用 `KEYS *`，用 `SCAN` 替代

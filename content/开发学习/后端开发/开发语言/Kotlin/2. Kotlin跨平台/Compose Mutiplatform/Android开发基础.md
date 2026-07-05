@@ -1,5 +1,5 @@
 ---
-title: 'Android开发基础'
+title: "Android开发基础"
 date: 2026-05-06
 tags:
   - 开发学习
@@ -148,20 +148,21 @@ fun Counter() {
 ```
 
 > [!compare] 新旧思维对比
-> | 旧思维 (View 体系) | 新思维 (Compose) |
-> |---|---|
-> | `findViewById` 获取控件 | 无需引用控件，只管描述界面 |
-> | 手动 `setText()` / `setOnClickListener()` | 状态驱动，自动重组 |
-> | 需要 Adapter 填充列表 | `LazyColumn {}` 直接描述 |
-> | XML + Kotlin 两处维护 | 全部 Kotlin，一处维护 |
+>
+> | 旧思维 (View 体系)                        | 新思维 (Compose)           |
+> | ----------------------------------------- | -------------------------- |
+> | `findViewById` 获取控件                   | 无需引用控件，只管描述界面 |
+> | 手动 `setText()` / `setOnClickListener()` | 状态驱动，自动重组         |
+> | 需要 Adapter 填充列表                     | `LazyColumn {}` 直接描述   |
+> | XML + Kotlin 两处维护                     | 全部 Kotlin，一处维护      |
 
 ## 2.2 三大基础布局
 
-| 布局 | 方向 | 类比前端 |
-|------|------|---------|
-| **`Column`** | 纵向排列 | flex-direction: column |
-| **`Row`** | 横向排列 | flex-direction: row |
-| **`Box`** | 层叠堆叠 | position: absolute / flexbox 叠放 |
+| 布局         | 方向     | 类比前端                          |
+| ------------ | -------- | --------------------------------- |
+| **`Column`** | 纵向排列 | flex-direction: column            |
+| **`Row`**    | 横向排列 | flex-direction: row               |
+| **`Box`**    | 层叠堆叠 | position: absolute / flexbox 叠放 |
 
 ```kotlin
 @Composable
@@ -279,6 +280,7 @@ fun MainScreen(viewModel: MainViewModel) {
 ```
 
 > [!tip] KMP 最重要的架构启示
+>
 > - **ViewModel** 管理状态和业务逻辑 → 放入 `commonMain`
 > - **UI 层** 只负责渲染和事件转发 → 使用 `@Composable`
 > - **Repository** 处理数据源（网络/本地） → 放入 `commonMain`
@@ -305,15 +307,15 @@ fun MainScreen(viewModel: MainViewModel) {
 
 ## 技术栈对比
 
-| 领域 | ❌ 不推荐（Android 专属） | ✅ 推荐（KMP 友好） |
-|------|------------------------|-------------------|
-| 网络请求 | Retrofit + OkHttp | **Ktor Client** |
-| 依赖注入 | Hilt / Dagger | **Koin** |
-| 本地存储 | SharedPreferences | **DataStore** / **Room (KMP)** / **SQLDelight** |
-| 图片加载 | Glide / Picasso | **Coil 3** / **Kamel** |
-| 序列化 | Gson / Moshi | **kotlinx.serialization** |
-| 导航 | Android Navigation | **Voyager** / **Decompose** / **PreCompose** |
-| 异步 | RxJava | **kotlinx.coroutines + StateFlow** |
+| 领域     | ❌ 不推荐（Android 专属） | ✅ 推荐（KMP 友好）                             |
+| -------- | ------------------------- | ----------------------------------------------- |
+| 网络请求 | Retrofit + OkHttp         | **Ktor Client**                                 |
+| 依赖注入 | Hilt / Dagger             | **Koin**                                        |
+| 本地存储 | SharedPreferences         | **DataStore** / **Room (KMP)** / **SQLDelight** |
+| 图片加载 | Glide / Picasso           | **Coil 3** / **Kamel**                          |
+| 序列化   | Gson / Moshi              | **kotlinx.serialization**                       |
+| 导航     | Android Navigation        | **Voyager** / **Decompose** / **PreCompose**    |
+| 异步     | RxJava                    | **kotlinx.coroutines + StateFlow**              |
 
 > [!important] 原则
 > 永远问自己一个问题：**这个库支持 `commonMain` 吗？** 如果不支持，除非你确认它只在平台层使用，否则换一个。
@@ -340,6 +342,7 @@ fun MainScreen(viewModel: MainViewModel) {
 ## 下一篇预告
 
 在接下来的文章中，我们将：
+
 - 🛠 建立一个完整的 KMP 工程项目
 - 📱 把今天学的 Compose 知识，**无缝迁移到 iOS 和 Desktop 上**
 - 🔄 真正实现「一次编写，三端运行」

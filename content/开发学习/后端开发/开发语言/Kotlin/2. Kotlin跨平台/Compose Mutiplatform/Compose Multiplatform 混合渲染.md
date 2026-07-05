@@ -1,5 +1,5 @@
 ---
-title: 'Compose Multiplatform 混合渲染'
+title: "Compose Multiplatform 混合渲染"
 date: 2026-05-07
 tags:
   - 开发学习
@@ -16,19 +16,20 @@ tags:
 > [!important] CMP 不是万能的
 > Compose Multiplatform 基于 Skia 渲染引擎，理论上可以绘制任何 UI，但在以下场景必须"凿墙"回到原生渲染路径：
 
-| 场景 | 原因 | 典型案例 |
-|:----:|:----|:---------|
-| **地图** | 各平台地图 SDK（Google Maps / Apple Maps / 高德）只提供原生 SDK，不暴露 Skia 可用的绘制接口 | 外卖配送轨迹、门店定位 |
-| **WebView** | 平台 WebView 的渲染管线和 Skia 完全隔离——浏览器内核直接管理自己的绘制层 | 支付 H5 页面、用户协议 |
-| **视频播放器** | 平台解码器 + 硬件视频加速层（VideoToolbox / MediaCodec）不走 Skia 管线 | 短视频、直播 |
-| **AR/VR** | ARKit / ARCore / 华为 AR Engine 需要原生相机 + 传感器管线 | 虚拟试穿、AR 导航 |
-| **安全键盘** | 系统级安全输入不在应用进程内渲染 | 密码、支付密码输入 |
-| **平台 Widget** | iOS Widget / 鸿蒙卡片运行在独立进程中 | 桌面小组件 |
+|      场景       | 原因                                                                                        | 典型案例               |
+| :-------------: | :------------------------------------------------------------------------------------------ | :--------------------- |
+|    **地图**     | 各平台地图 SDK（Google Maps / Apple Maps / 高德）只提供原生 SDK，不暴露 Skia 可用的绘制接口 | 外卖配送轨迹、门店定位 |
+|   **WebView**   | 平台 WebView 的渲染管线和 Skia 完全隔离——浏览器内核直接管理自己的绘制层                     | 支付 H5 页面、用户协议 |
+| **视频播放器**  | 平台解码器 + 硬件视频加速层（VideoToolbox / MediaCodec）不走 Skia 管线                      | 短视频、直播           |
+|    **AR/VR**    | ARKit / ARCore / 华为 AR Engine 需要原生相机 + 传感器管线                                   | 虚拟试穿、AR 导航      |
+|  **安全键盘**   | 系统级安全输入不在应用进程内渲染                                                            | 密码、支付密码输入     |
+| **平台 Widget** | iOS Widget / 鸿蒙卡片运行在独立进程中                                                       | 桌面小组件             |
 
 > [!note] 核心理念
 > CMP 共享 UI 逻辑，原生组件提供"逃生舱"。混合渲染不是 CMP 的缺陷，而是 CMP 对平台能力的尊重——**该共享的共享，该下沉的下沉**。
 
 ---
+
 # 1. 三种混合策略对比
 
 > [!important] 按侵入程度从小到大排列
@@ -53,11 +54,11 @@ flowchart TD
     end
 ```
 
-| 策略 | 共享度 | 性能 | 维护成本 | 适用场景 |
-|:----:|:------:|:----:|:--------:|:--------|
-| **整页混编** | 低 | 最佳 | 低 | 支付页、AR 相机页、首次启动引导 |
-| **CMP 内嵌原生** | 中 | 良 | 中 | 地图、WebView、视频播放器、安全输入 |
-| **渲染后端替换** | 高 | 取决于实现 | 极高 | Figma 级别的基础设施（极少需要） |
+|       策略       | 共享度 |    性能    | 维护成本 | 适用场景                            |
+| :--------------: | :----: | :--------: | :------: | :---------------------------------- |
+|   **整页混编**   |   低   |    最佳    |    低    | 支付页、AR 相机页、首次启动引导     |
+| **CMP 内嵌原生** |   中   |     良     |    中    | 地图、WebView、视频播放器、安全输入 |
+| **渲染后端替换** |   高   | 取决于实现 |   极高   | Figma 级别的基础设施（极少需要）    |
 
 > [!tip] 推荐策略
 > 绝大多数项目选择**策略二**——在 CMP `@Composable` 树中通过 `UIKitView`（iOS）/ `AndroidView`（Android）插入原生组件。这是共享度与工程代价的最佳平衡点，也是本章讨论的重点。
@@ -103,6 +104,7 @@ CMP 渲染层（Skia）
 > 将 Skia 的绘制指令拦截并映射为平台原生控件，相当于为 CMP 实现一套全新的渲染后端。只有 Figma、Microsoft Office 等对像素级控制有极端需求的团队会考虑此路线。
 
 ---
+
 # 2. UIKitView / AndroidView 互操作实战
 
 ## 2.1 统一接口设计
@@ -207,6 +209,7 @@ actual fun NativeMapView(
 ```
 
 > [!warning] iOS 侧内存泄漏的高发区
+>
 > 1. `UIKitView` 内部持有的闭包引用了 Compose `State`，而 `State` 又关联到 `Composition`
 > 2. Swift 的高引用计数的对象持有 Kotlin 闭包 → Kotlin 侧对象无法被 GC 回收
 > 3. **三原则**：`DisposableEffect` 清 delegate / 不要直接传 `State` 给原生 / 弱引用原生回调
@@ -266,6 +269,7 @@ actual fun NativeMapView(
 ```
 
 > [!tip] Android 侧注意点
+>
 > - `MapView` 需要手动调用生命周期方法（`onCreate/onResume/onPause/onDestroy`）
 > - `AndroidView` 在 `Dispose` 时不会自动调用 `onDestroy`，需要 `DisposableEffect` 显式触发
 > - `LocalContext.current` 获取 Activity 级别的 Context，用于初始化 MapView
@@ -274,6 +278,7 @@ actual fun NativeMapView(
 
 > [!important] 鸿蒙的差异
 > 鸿蒙没有 `UIKitView` 或 `AndroidView` 的等价物。CMP 的 Skia 需要由：
+>
 > 1. 鸿蒙的 `NativeWindow` 接口承载
 > 2. 或者通过 **knoi** 将 CMP Composable 映射为 ArkUI 组件树
 > 3. 或者通过 **KuiklyUI** 用 Kotlin/Native DSL 直接调用 ArkUI NDK C API
@@ -309,11 +314,13 @@ actual fun NativeMapView(
 ```
 
 > [!note] 选型建议
+>
 > - **knoi**：适合希望最大化跨平台 UI 共享的团队。但 CMP → ArkUI 的映射层有性能损耗和兼容性风险
 > - **KuiklyUI**：适合鸿蒙侧追求原生性能的场景。不共享 UI 代码，只共享业务逻辑和状态
 > - **折中**：核心页面用 knoi 共享，鸿蒙特色页面（卡片、元服务）用 KuiklyUI 或 ArkTS
 
 ---
+
 # 3. 手势冲突的架构解法
 
 > [!question] 为什么混合渲染中手势是最难的问题？
@@ -338,18 +345,19 @@ flowchart TD
 ```
 
 > [!important] Gesture Arena 的核心原则
+>
 > 1. **延迟决策**：前 50-100ms 不立刻将事件分配给任何一方，收集触摸轨迹后决定
 > 2. **角度阈值**：dx/dy 比值区分水平滑动和垂直滑动
 > 3. **优先原生**：原生组件通常先消费事件，如果不消费再回退给 CMP
 
 ## 3.2 常见冲突场景与解决策略
 
-| 场景 | 冲突描述 | 解决策略 |
-|:----:|:---------|:--------|
-| **原生地图在 LazyColumn 中** | 垂直滑动触发列表滚动 vs 地图拖拽 | `NestedScrollConnection` 拦截：地图内部未消费的滚动传给列表 |
-| **WebView 水平翻页** | WebView 内部幻灯片水平滑动 vs CMP 页面滑动返回 | 角度阈值（dx/dy > 2 认定水平翻页 → 给 WebView） |
-| **视频播放器手势** | 音量/亮度滑动手势 vs 系统导航手势 | 全屏时禁用 CMP 侧滑动返回 |
-| **原生输入框** | 输入框获得焦点后键盘弹出 vs CMP 页面重新布局 | 监听 `keyboard` 事件，禁用重组直到键盘稳定 |
+|             场景             | 冲突描述                                       | 解决策略                                                    |
+| :--------------------------: | :--------------------------------------------- | :---------------------------------------------------------- |
+| **原生地图在 LazyColumn 中** | 垂直滑动触发列表滚动 vs 地图拖拽               | `NestedScrollConnection` 拦截：地图内部未消费的滚动传给列表 |
+|     **WebView 水平翻页**     | WebView 内部幻灯片水平滑动 vs CMP 页面滑动返回 | 角度阈值（dx/dy > 2 认定水平翻页 → 给 WebView）             |
+|      **视频播放器手势**      | 音量/亮度滑动手势 vs 系统导航手势              | 全屏时禁用 CMP 侧滑动返回                                   |
+|        **原生输入框**        | 输入框获得焦点后键盘弹出 vs CMP 页面重新布局   | 监听 `keyboard` 事件，禁用重组直到键盘稳定                  |
 
 ### 3.2.1 NestedScrollConnection 实战
 
@@ -436,12 +444,14 @@ enum class TouchResult { CONSUMED, NOT_CONSUMED, PENDING }
 ```
 
 > [!tip] 通用解决原则总结
+>
 > 1. **默认放行给原生组件**，它不消费再交给 CMP
 > 2. **明确的 hitTest 边界**：精确计算原生组件在 CMP 布局中的位置
 > 3. **dead zone 迟滞区**：前 50-100ms 什么都不做，收集触摸方向后再决策
 > 4. **角度阈值**：dx/dy > 2 → 水平 | dy/dx > 2 → 垂直 | 其他 → 按默认策略
 
 ---
+
 # 4. 生命周期桥接的底层机制
 
 > [!important] 最关键的问题：如何防止泄漏？
@@ -449,11 +459,11 @@ enum class TouchResult { CONSUMED, NOT_CONSUMED, PENDING }
 
 ## 4.1 生命周期对照表
 
-| CMP 阶段 | iOS 原生组件 | Android 原生组件 | HarmonyOS 组件 |
-|:--------:|:------------:|:----------------:|:--------------:|
-| `LaunchedEffect`（首次创建） | `init` / `viewDidLoad` | `onCreate` | `onInit` |
-| `DisposableEffect.onDispose`（离开树） | `deinit` / `viewDidDisappear` | `onDestroy` | `onDispose` |
-| 重组（状态更新） | `update` block | `update` block | `update` block |
+|                CMP 阶段                |         iOS 原生组件          | Android 原生组件 | HarmonyOS 组件 |
+| :------------------------------------: | :---------------------------: | :--------------: | :------------: |
+|      `LaunchedEffect`（首次创建）      |    `init` / `viewDidLoad`     |    `onCreate`    |    `onInit`    |
+| `DisposableEffect.onDispose`（离开树） | `deinit` / `viewDidDisappear` |   `onDestroy`    |  `onDispose`   |
+|            重组（状态更新）            |        `update` block         |  `update` block  | `update` block |
 
 ## 4.2 跨语言引用链的泄漏模式
 
@@ -482,6 +492,7 @@ DisposableEffect(Unit) {
 ```
 
 ---
+
 # 5. 混合渲染的性能评估
 
 > [!question] 混入原生组件后，性能是变好还是变差？
@@ -489,17 +500,18 @@ DisposableEffect(Unit) {
 
 ## 5.1 性能基准指标
 
-| 指标 | 测量方式 | 健康阈值 |
-|:----:|:--------|:--------:|
-| **帧率** | Android Profile GPU / Xcode Metal Debugger | ≥ 55fps |
-| **桥接延迟** | 从 CMP 状态变化到原生组件 UI 更新 | < 8ms |
-| **内存增量** | 嵌入原生组件前后对比 | < 50MB |
-| **首次加载** | `factory` 创建原生组件耗时 | < 100ms |
+|     指标     | 测量方式                                   | 健康阈值 |
+| :----------: | :----------------------------------------- | :------: |
+|   **帧率**   | Android Profile GPU / Xcode Metal Debugger | ≥ 55fps  |
+| **桥接延迟** | 从 CMP 状态变化到原生组件 UI 更新          |  < 8ms   |
+| **内存增量** | 嵌入原生组件前后对比                       |  < 50MB  |
+| **首次加载** | `factory` 创建原生组件耗时                 | < 100ms  |
 
 ## 5.2 避免常见的性能陷阱
 
 > [!warning] 不要在 `update` 中做耗时操作
 > `UIKitView.update` / `AndroidView.update` 在每次重组时都会调用。如果重组频率高（如动画），update 中不要做：
+>
 > - ❌ 创建新对象（`Bitmap`、`URLSessionTask`）
 > - ❌ I/O 操作
 > - ❌ 复杂计算
@@ -511,31 +523,37 @@ DisposableEffect(Unit) {
 > **解决方案**：给原生组件一个固定的 `Modifier.size()`，或使用 `Modifier.widthIn()` 限定范围。
 
 ---
+
 # 6. 最佳实践 Checklist
 
 > [!summary] 混合渲染落地检查清单
 
 **架构设计**
+
 - [ ] 是否用 `expect` / `actual` 封装了原生组件接口？
 - [ ] 原生组件的生命周期是否与 `DisposableEffect` 绑定？
 - [ ] 是否设计了统一的 GestureBridge 来处理跨平台手势冲突？
 
 **内存安全**
+
 - [ ] 原生组件的 delegate / listener 是否在 `onDispose` 中清理？
 - [ ] 是否避免了原生回调直接引用 CMP `State` 对象？
 - [ ] 长期存活的原生组件是否使用 `WeakReference` 持有 Composable 回调？
 
 **性能**
+
 - [ ] 原生组件的创建是否放在了 `remember` 中（不在重组中重复创建）？
 - [ ] `update` block 是否只做简单的属性赋值？
 - [ ] 原生组件是否有固定尺寸约束，避免布局抖动？
 
 **平台差异**
+
 - [ ] iOS 侧是否测试了 `UIKitView` 在不同 iOS 版本上的表现？
 - [ ] Android 侧是否正确处理了 `Activity` 重建（配置变更）场景？
 - [ ] 鸿蒙侧是否确认了 knoi / KuiklyUI 的稳定版本兼容范围？
 
 > [!tip] 关联进阶内容
+>
 > - [[Kotlin Multiplatform]] 的渲染管线章节 — 深入 CMP 重组与布局性能优化
 > - [[跨平台同步原理]] — 端云同步中的状态管理与离线架构
 > - [[Kotlin/Native 编译优化]] — 包体积治理与构建提速

@@ -57,11 +57,6 @@ function stripThink(raw: string): string {
   return visible.trimEnd()
 }
 
-/** Strip trailing \r\n from SSE tokens to prevent vertical layout */
-function cleanToken(s: string): string {
-  return s.replace(/\r?\n/g, "")
-}
-
 // ── LocalStorage Helpers ──
 
 function loadHistory(): UiMessage[] {
@@ -138,10 +133,7 @@ export function useChat(): UseChatReturn {
         content: m.role === "assistant" ? stripThink(m.content) : m.content,
       }))
 
-      const apiMessages = [
-        { role: "system" as const, content: systemContent },
-        ...historyForApi,
-      ]
+      const apiMessages = [{ role: "system" as const, content: systemContent }, ...historyForApi]
 
       // ── 3. Fetch with SSE streaming ──
       try {
@@ -201,10 +193,7 @@ export function useChat(): UseChatReturn {
               // Check for the end signal
               if (line === "[DONE]") {
                 // Finalize and exit reader loop
-                setUiMessages((prev) => [
-                  ...prev,
-                  { role: "assistant", content: fullContent },
-                ])
+                setUiMessages((prev) => [...prev, { role: "assistant", content: fullContent }])
                 setStreamingContent("")
                 reader.releaseLock()
                 return
@@ -227,11 +216,13 @@ export function useChat(): UseChatReturn {
             boundary = buffer.indexOf("\n\n")
           }
         }
-
       } catch (e) {
         setUiMessages((prev) => [
           ...prev,
-          { role: "system", content: `⚠️ 网络异常，请检查连接后重试。 ${e instanceof Error ? `(${e.message})` : ""}` },
+          {
+            role: "system",
+            content: `⚠️ 网络异常，请检查连接后重试。 ${e instanceof Error ? `(${e.message})` : ""}`,
+          },
         ])
       } finally {
         setIsLoading(false)

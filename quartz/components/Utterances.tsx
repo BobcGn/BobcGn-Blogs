@@ -19,7 +19,7 @@ const defaultOptions: Options = {
 export default ((opts?: Options) => {
   const options = { ...defaultOptions, ...opts }
 
-  const Utterances: QuartzComponent = ({ displayClass, cfg }: QuartzComponentProps) => {
+  const Utterances: QuartzComponent = ({ displayClass }: QuartzComponentProps) => {
     return (
       <div
         class={classNames(displayClass, "utterances")}

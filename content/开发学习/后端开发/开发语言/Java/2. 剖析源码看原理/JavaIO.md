@@ -1,5 +1,5 @@
 ---
-title: 'JavaIO'
+title: "JavaIO"
 date: 2026-03-11
 tags:
   - 开发学习
@@ -7,14 +7,17 @@ tags:
 ---
 
 # 0. JavaIO概述
+
 > [!note] 概述
 > Java 的输入输出（**I**nput/**O**utput，简称 I/O）系统是其标准库中最核心、最常用的模块之一。它不仅支撑了文件读写、网络通信、序列化等基本功能，也体现了 Java 在抽象设计、资源管理与跨平台兼容性方面的深厚功底。
-> 
+>
 > JavaIO的两大分支：
+>
 > - 字节流：操作原始字节，适用于所有数据类型（图片、音频、二进制文件）
 > - 字符流：基于字符编码操作，适合文本处理（如 UTF-8, GBK）
-> 
+>
 > 继承关系图如下
+
 ```mermaid
 graph TD
     A[InputStream] --> B[FileInputStream]
@@ -35,45 +38,58 @@ graph TD
     O --> Q[BufferedWriter]
     O --> R[StringWriter]
 ```
+
 > [!tip] JavaIO的核心设计模式：装饰器模式
 > 装饰器模式允许在不修改原有对象的前提下进行动态修改
 > 装饰器模式的本质：
+>
 > - 透明封装：包装一个流对象，提供额外功能
 > - 使用组合而非继承：通过构造函数传入被包装的流，实现灵活扩展
-> 
+>
 > 典型示例：BufferedInputStream
+>
 > ```java
 > BufferedInputStream bis = new BufferedInputStream(new FileInputStream("data.txt"));
 > ```
+>
 > 这里 `bis` 包装了一个 `FileInputStream`，为其添加了缓冲能力，而 `FileInputStream` 本身无需知道这一点
-> 
+>
 > 装饰器模式的优势：
+>
 > - 高内聚低耦合：每个流只关注单一职责
 > - 可组合性强：可以叠加多个装饰器，如
+>
 > ```java
-> BufferedReader br = new BufferedReader( 
-> 	new InputStreamReader( 
-> 		new BufferedInputStream( 
-> 			new FileInputStream("file.txt") 
-> 		) 
-> 	) 
+> BufferedReader br = new BufferedReader(
+> 	new InputStreamReader(
+> 		new BufferedInputStream(
+> 			new FileInputStream("file.txt")
+> 		)
+> 	)
 > );
 > ```
-> 
 
 > [!summary] 关键机制概览
+>
 > 1. 缓冲机制
-> 	- 目标：减少系统调用次数，提升性能
-> 	- 实现：内部维护一个 `byte[]` 缓冲区，批量读写
+>
+> - 目标：减少系统调用次数，提升性能
+> - 实现：内部维护一个 `byte[]` 缓冲区，批量读写
+>
 > 2. 关闭与资源管理
-> 	- 所有流都实现了`Closeable`接口
-> 	- 推荐使用 `try-with-resource`自动关闭资源
+>
+> - 所有流都实现了`Closeable`接口
+> - 推荐使用 `try-with-resource`自动关闭资源
+>
 > 3. 序列化支持
-> 	- `ObjectInputStream` / `ObjectOutputStream` 支持对象的持久化
-> 	- 依赖 `Serializable` 接口，底层基于 `DataInputStream` 写入字段值
+>
+> - `ObjectInputStream` / `ObjectOutputStream` 支持对象的持久化
+> - 依赖 `Serializable` 接口，底层基于 `DataInputStream` 写入字段值
 
 ---
+
 # 1. 输入输出流
+
 ## 抽象基类
 
 ## InputStream
@@ -82,12 +98,15 @@ graph TD
 > **该抽象类是所有表示字节输入流的类的超类。**
 >
 > **需要定义 InputStream 子类的应用程序，必须始终提供一个返回输入流中下一个字节的方法**
-### 源代码解析
-#### 接口声明
-```java
-package java.io;  
 
-import jdk.internal.util.ArraysSupport;  
+### 源代码解析
+
+#### 接口声明
+
+```java
+package java.io;
+
+import jdk.internal.util.ArraysSupport;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,34 +115,48 @@ import java.util.Objects;
 
 public abstract class InputStream implements Closeable
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 抽象类：表明它不能被直接实例化，只能作为子类的父类。这是 Java 中典型的“模板类”设计
-> 	- 公共访问权限：可以被任何其他包中的类继承或使用，体现了其基础性地位
-> 	- 命名语义：`InputStream` 字面意思是“输入流”，表示数据从外部源流向程序内存
-> 	- 面向字节：它处理的是原始 `byte` 数据，适用于任意二进制格式（图片、音频、压缩文件等）
+>
+> - 抽象类：表明它不能被直接实例化，只能作为子类的父类。这是 Java 中典型的“模板类”设计
+> - 公共访问权限：可以被任何其他包中的类继承或使用，体现了其基础性地位
+> - 命名语义：`InputStream` 字面意思是“输入流”，表示数据从外部源流向程序内存
+> - 面向字节：它处理的是原始 `byte` 数据，适用于任意二进制格式（图片、音频、压缩文件等）
+>
 > 2. 继承与实现
-> 	- `Closeable`：`Closeable` 是 Java 5 引入的一个标记接口，用于支持资源自动释放。这意味着：**所有 `InputStream` 子类都必须实现 `close()` 方法**，以确保资源（如文件句柄、网络连接）能够被正确释放
+>
+> - `Closeable`：`Closeable` 是 Java 5 引入的一个标记接口，用于支持资源自动释放。这意味着：**所有 `InputStream` 子类都必须实现 `close()` 方法**，以确保资源（如文件句柄、网络连接）能够被正确释放
+>
 > 3. 关键约束
-> 	- 必须提供`read()`方法族
-> 	- `close()` 必须安全且幂等
-> 	- `mark()` / `reset()` 支持可选，但需一致
+>
+> - 必须提供`read()`方法族
+> - `close()` 必须安全且幂等
+> - `mark()` / `reset()` 支持可选，但需一致
+
 #### 核心字段
+
 ```java
 // 这个常量定义了 skip(long n) 方法在内部实现时所使用的最大临时缓冲区大小
-private static final int MAX_SKIP_BUFFER_SIZE = 2048;  
+private static final int MAX_SKIP_BUFFER_SIZE = 2048;
 
 // 这个常量定义了 所有基于缓冲的输入流（如 BufferedInputStream）的默认缓冲区大小
 private static final int DEFAULT_BUFFER_SIZE = 16384;
 ```
 
 #### 关键方法
+
 ##### 构造方法
+
 ```java
 public InputStream() {}
 ```
+
 ##### 普通方法
+
 > [!note] 核心读取方法
+
 ```java
 /**
  * 从输入流中读取下一个字节的数据
@@ -180,6 +213,7 @@ public int read(byte[] b, int off, int len) throws IOException {
 ```
 
 > [!note] 读取所有字节方法
+
 ```java
 /**
  * 读取输入流中的所有剩余字节
@@ -279,6 +313,7 @@ public int readNBytes(byte[] b, int off, int len) throws IOException {
 ```
 
 > [!note] 跳过字节方法
+
 ```java
 /**
  * 跳过输入流中的n个字节
@@ -334,6 +369,7 @@ public void skipNBytes(long n) throws IOException {
 ```
 
 > [!note] 可用字节数方法
+
 ```java
 /**
  * 返回可以从输入流中无阻塞地读取的字节数的估计值
@@ -346,6 +382,7 @@ public int available() throws IOException {
 ```
 
 > [!note] 标记和重置方法
+
 ```java
 /**
  * 标记输入流中的当前位置
@@ -371,6 +408,7 @@ public boolean markSupported() {
 ```
 
 > [!note] 传输方法
+
 ```java
 /**
  * 将输入流中的所有剩余字节传输到指定的输出流
@@ -393,6 +431,7 @@ public long transferTo(OutputStream out) throws IOException {
 ```
 
 > [!note] 关闭方法
+
 ```java
 /**
  * 关闭输入流并释放与该流关联的所有系统资源
@@ -402,6 +441,7 @@ public void close() throws IOException {}
 ```
 
 > [!note] 空输入流方法
+
 ```java
 public static InputStream nullInputStream() {
     return new InputStream() {
@@ -486,7 +526,9 @@ public static InputStream nullInputStream() {
     };
 }
 ```
+
 > [!note] nullInputStream()说明
+>
 > 1. **方法作用**：返回一个空的输入流，它表示一个已经到达文件末尾（EOF）的流
 > 2. **核心特性**：
 >    - 使用匿名内部类实现
@@ -498,6 +540,7 @@ public static InputStream nullInputStream() {
 >    - API一致性：允许统一处理
 
 ### 使用示例
+
 ```java
 // 示例1：使用read()方法逐个字节读取
 public static void readByteByByte() throws IOException {
@@ -543,17 +586,17 @@ public static void markResetExample() throws IOException {
         byte[] buffer = new byte[10];
         is.read(buffer);
         System.out.println("First 10 bytes: " + new String(buffer));
-        
+
         // 标记当前位置
         is.mark(10);
-        
+
         // 读取接下来的10个字节
         is.read(buffer);
         System.out.println("Next 10 bytes: " + new String(buffer));
-        
+
         // 重置到标记位置
         is.reset();
-        
+
         // 再次读取10个字节（应该与上面的Next 10 bytes相同）
         is.read(buffer);
         System.out.println("Reset and read 10 bytes: " + new String(buffer));
@@ -561,15 +604,17 @@ public static void markResetExample() throws IOException {
 }
 ```
 
-
 ## OutputStream
 
 > [!note] 接口说明
 > **该抽象类是所有表示字节输出流的类的超类。**
 >
 > **输出流接收输出字节并将它们发送到某个接收器。**
+
 ### 源代码解析
+
 #### 接口声明
+
 ```java
 package java.io;
 
@@ -579,28 +624,39 @@ public abstract class OutputStream implements Closeable, Flushable {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 抽象类：不能直接实例化，只能作为子类的父类
-> 	- 公共访问权限：可以被任何包中的类继承或使用
-> 	- 命名语义：`OutputStream` 表示数据从程序内存流向外部目标
-> 	- 面向字节：处理原始 `byte` 数据，适用于任意二进制格式
+>
+> - 抽象类：不能直接实例化，只能作为子类的父类
+> - 公共访问权限：可以被任何包中的类继承或使用
+> - 命名语义：`OutputStream` 表示数据从程序内存流向外部目标
+> - 面向字节：处理原始 `byte` 数据，适用于任意二进制格式
+>
 > 2. 继承与实现
-> 	- `Closeable`：支持资源自动释放，必须实现 `close()` 方法
-> 	- `Flushable`：支持刷新操作，必须实现 `flush()` 方法
+>
+> - `Closeable`：支持资源自动释放，必须实现 `close()` 方法
+> - `Flushable`：支持刷新操作，必须实现 `flush()` 方法
+>
 > 3. 关键约束
-> 	- 必须提供`write()`方法族
-> 	- `close()` 必须安全且幂等
-> 	- `flush()` 确保所有缓冲数据被写入目标
+>
+> - 必须提供`write()`方法族
+> - `close()` 必须安全且幂等
+> - `flush()` 确保所有缓冲数据被写入目标
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 public OutputStream() {}
 ```
 
 ##### 普通方法
+
 > [!note] 核心写入方法
+
 ```java
 /**
  * 将指定的字节写入输出流
@@ -628,7 +684,7 @@ public void write(byte[] b) throws IOException {
 public void write(byte[] b, int off, int len) throws IOException {
     // 检查参数合法性
     Objects.checkFromIndexSize(off, len, b.length);
-    
+
     // 逐个字节写入
     for (int i = 0 ; i < len ; i++) {
         write(b[off + i]);
@@ -637,6 +693,7 @@ public void write(byte[] b, int off, int len) throws IOException {
 ```
 
 > [!note] 刷新方法
+
 ```java
 /**
  * 刷新输出流，确保所有缓冲的输出字节被写入目标
@@ -646,6 +703,7 @@ public void flush() throws IOException {}
 ```
 
 > [!note] 关闭方法
+
 ```java
 /**
  * 关闭输出流并释放与该流关联的所有系统资源
@@ -657,6 +715,7 @@ public void close() throws IOException {
 ```
 
 > [!note] 空输出流方法
+
 ```java
 /**
  * 返回一个空的输出流，写入到该流的数据会被忽略
@@ -698,6 +757,7 @@ public static OutputStream nullOutputStream() {
 ```
 
 ### 使用示例
+
 ```java
 // 示例1：使用write(int)方法逐个字节写入
 public static void writeByteByByte() throws IOException {
@@ -754,6 +814,7 @@ public static void nullOutputStreamExample() throws IOException {
 ```
 
 ---
+
 # 2. File类
 
 > [!note] 类说明
@@ -762,13 +823,16 @@ public static void nullOutputStreamExample() throws IOException {
 > File类提供了一系列方法来操作文件和目录，包括创建、删除、重命名、获取属性等，但**不提供文件内容的读写操作**。
 >
 > **核心功能**：
+>
 > - 表示文件和目录路径
 > - 创建、删除、重命名文件和目录
 > - 获取文件和目录的属性（大小、修改时间、权限等）
 > - 列出目录中的文件和子目录
 
 ### 源代码解析
+
 #### 接口声明
+
 ```java
 package java.io;
 
@@ -785,17 +849,23 @@ public class File implements Serializable, Comparable<File> {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 实现了Serializable：支持序列化
-> 	- 实现了Comparable：支持自然排序（按路径名）
+>
+> - 具体类：可以直接实例化
+> - 实现了Serializable：支持序列化
+> - 实现了Comparable：支持自然排序（按路径名）
+>
 > 2. 设计目的
-> 	- 提供平台无关的文件和目录操作
-> 	- 抽象化不同操作系统的路径分隔符差异
-> 	- 支持文件和目录的元数据操作
+>
+> - 提供平台无关的文件和目录操作
+> - 抽象化不同操作系统的路径分隔符差异
+> - 支持文件和目录的元数据操作
 
 #### 核心字段
+
 ```java
 // 路径分隔符，Windows使用"\\"，Unix/Linux使用"/"
 public static final String separator = "" + separatorChar;
@@ -817,7 +887,9 @@ public static final String userHome = System.getProperty("user.home");
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 通过将给定路径名字符串转换为抽象路径名来创建一个新的File实例
@@ -887,7 +959,9 @@ public File(URI uri) {
 ```
 
 ##### 普通方法
+
 > [!note] 文件和目录操作
+
 ```java
 /**
  * 创建一个新的空文件
@@ -941,6 +1015,7 @@ public boolean renameTo(File dest) {
 ```
 
 > [!note] 文件属性获取
+
 ```java
 /**
  * 测试此抽象路径名表示的文件或目录是否存在
@@ -992,6 +1067,7 @@ public long lastModified() {
 ```
 
 > [!note] 目录列表
+
 ```java
 /**
  * 返回此抽象路径名表示的目录中的文件和目录的名称数组
@@ -1029,6 +1105,7 @@ public File[] listFiles(FileFilter filter) {
 ```
 
 > [!note] 路径操作
+
 ```java
 /**
  * 返回此抽象路径名的父路径名的字符串表示
@@ -1098,6 +1175,7 @@ public File getCanonicalFile() throws IOException {
 ```
 
 > [!note] NIO Path转换
+
 ```java
 /**
  * 返回表示此抽象路径名的java.nio.file.Path对象
@@ -1110,19 +1188,20 @@ public Path toPath() {
 ```
 
 ### 使用示例
+
 ```java
 // 示例1：创建File对象
 public static void createFileObjects() {
     // 方法1：使用完整路径
     File file1 = new File("C:\\Users\\username\\test.txt");
-    
+
     // 方法2：使用父目录和子文件名
     File file2 = new File("C:\\Users\\username", "test.txt");
-    
+
     // 方法3：使用File父目录和子文件名
     File parent = new File("C:\\Users\\username");
     File file3 = new File(parent, "test.txt");
-    
+
     // 方法4：使用相对路径
     File file4 = new File("test.txt");
     File file5 = new File("./src/main/java");
@@ -1133,11 +1212,11 @@ public static void createFilesAndDirectories() throws IOException {
     // 创建单个目录
     File dir = new File("test_dir");
     dir.mkdir();
-    
+
     // 创建多级目录
     File nestedDir = new File("test_dir1/test_dir2/test_dir3");
     nestedDir.mkdirs();
-    
+
     // 创建文件
     File file = new File("test.txt");
     file.createNewFile();
@@ -1146,7 +1225,7 @@ public static void createFilesAndDirectories() throws IOException {
 // 示例3：获取文件属性
 public static void getFileAttributes() {
     File file = new File("test.txt");
-    
+
     System.out.println("文件是否存在: " + file.exists());
     System.out.println("是否是文件: " + file.isFile());
     System.out.println("是否是目录: " + file.isDirectory());
@@ -1160,7 +1239,7 @@ public static void getFileAttributes() {
 // 示例4：列出目录内容
 public static void listDirectoryContents() {
     File dir = new File(".");
-    
+
     // 列出所有文件和目录名称
     String[] files = dir.list();
     if (files != null) {
@@ -1169,7 +1248,7 @@ public static void listDirectoryContents() {
             System.out.println(fileName);
         }
     }
-    
+
     // 列出所有File对象
     File[] fileObjects = dir.listFiles();
     if (fileObjects != null) {
@@ -1178,7 +1257,7 @@ public static void listDirectoryContents() {
             System.out.println(f.getName() + (f.isDirectory() ? " [目录]" : " [文件]"));
         }
     }
-    
+
     // 使用过滤器列出特定文件
     File[] javaFiles = dir.listFiles((File pathname) -> pathname.getName().endsWith(".java"));
     if (javaFiles != null) {
@@ -1194,14 +1273,14 @@ public static void fileOperations() throws IOException {
     // 创建文件
     File source = new File("source.txt");
     source.createNewFile();
-    
+
     // 重命名文件
     File dest = new File("destination.txt");
     source.renameTo(dest);
-    
+
     // 删除文件
     dest.delete();
-    
+
     // 创建临时文件并在JVM退出时删除
     File temp = new File("temp.txt");
     temp.createNewFile();
@@ -1211,11 +1290,11 @@ public static void fileOperations() throws IOException {
 // 示例6：路径转换
 public static void pathConversion() throws IOException {
     File file = new File("test.txt");
-    
+
     // 获取规范路径
     String canonicalPath = file.getCanonicalPath();
     System.out.println("规范路径: " + canonicalPath);
-    
+
     // 转换为NIO Path对象
     java.nio.file.Path path = file.toPath();
     System.out.println("NIO Path: " + path);
@@ -1223,7 +1302,9 @@ public static void pathConversion() throws IOException {
 ```
 
 ---
+
 # 3. 文件输入输出流
+
 ## FileInputStream 和 FileOutputStream
 
 ### FileInputStream
@@ -1234,13 +1315,16 @@ public static void pathConversion() throws IOException {
 > FileInputStream用于读取诸如图像数据之类的原始字节流。要读取字符流，请考虑使用FileReader。
 >
 > **核心功能**：
+>
 > - 从文件中读取字节数据
 > - 支持按字节、字节数组读取
 > - 支持标记和重置操作
 > - 支持跳过字节
 
 #### 源代码解析
+
 ##### 接口声明
+
 ```java
 package java.io;
 
@@ -1251,17 +1335,23 @@ public class FileInputStream extends InputStream {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 继承自InputStream：实现了所有字节输入流的核心方法
-> 	- 用于读取文件：专门用于从文件系统读取字节数据
+>
+> - 具体类：可以直接实例化
+> - 继承自InputStream：实现了所有字节输入流的核心方法
+> - 用于读取文件：专门用于从文件系统读取字节数据
+>
 > 2. 设计目的
-> 	- 提供高效的文件字节读取能力
-> 	- 支持文件的随机访问
-> 	- 与FileChannel集成，支持NIO操作
+>
+> - 提供高效的文件字节读取能力
+> - 支持文件的随机访问
+> - 与FileChannel集成，支持NIO操作
 
 #### 核心字段
+
 ```java
 // 文件描述符，用于表示打开的文件
 private final FileDescriptor fd;
@@ -1275,7 +1365,9 @@ private FileChannel channel = null;
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 通过打开与实际文件的连接来创建一个FileInputStream，该文件由文件系统中的File对象file命名
@@ -1305,7 +1397,9 @@ public FileInputStream(FileDescriptor fdObj) {
 ```
 
 ##### 普通方法
+
 > [!note] 核心读取方法
+
 ```java
 /**
  * 从该输入流中读取一个字节的数据
@@ -1340,6 +1434,7 @@ public int read(byte[] b, int off, int len) throws IOException {
 ```
 
 > [!note] 跳过和可用方法
+
 ```java
 /**
  * 从输入流中跳过并丢弃n个字节的数据
@@ -1362,6 +1457,7 @@ public int available() throws IOException {
 ```
 
 > [!note] 关闭和文件描述符方法
+
 ```java
 /**
  * 关闭此文件输入流并释放与此流关联的所有系统资源
@@ -1397,13 +1493,16 @@ public FileChannel getChannel() {
 > FileOutputStream用于写入诸如图像数据之类的原始字节流。要写入字符流，请考虑使用FileWriter。
 >
 > **核心功能**：
+>
 > - 将字节数据写入文件
 > - 支持按字节、字节数组写入
 > - 支持追加模式
 > - 支持刷新操作
 
 #### 源代码解析
+
 ##### 接口声明
+
 ```java
 package java.io;
 
@@ -1414,17 +1513,23 @@ public class FileOutputStream extends OutputStream {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 继承自OutputStream：实现了所有字节输出流的核心方法
-> 	- 用于写入文件：专门用于向文件系统写入字节数据
+>
+> - 具体类：可以直接实例化
+> - 继承自OutputStream：实现了所有字节输出流的核心方法
+> - 用于写入文件：专门用于向文件系统写入字节数据
+>
 > 2. 设计目的
-> 	- 提供高效的文件字节写入能力
-> 	- 支持文件的追加写入
-> 	- 与FileChannel集成，支持NIO操作
+>
+> - 提供高效的文件字节写入能力
+> - 支持文件的追加写入
+> - 与FileChannel集成，支持NIO操作
 
 #### 核心字段
+
 ```java
 // 文件描述符，用于表示打开的文件
 private final FileDescriptor fd;
@@ -1441,7 +1546,9 @@ private final boolean append;
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个向具有指定File对象表示的文件中写入数据的文件输出流
@@ -1491,7 +1598,9 @@ public FileOutputStream(FileDescriptor fdObj) {
 ```
 
 ##### 普通方法
+
 > [!note] 核心写入方法
+
 ```java
 /**
  * 将指定的字节写入此文件输出流
@@ -1524,6 +1633,7 @@ public void write(byte[] b, int off, int len) throws IOException {
 ```
 
 > [!note] 关闭和文件描述符方法
+
 ```java
 /**
  * 关闭此文件输出流并释放与此流关联的所有系统资源
@@ -1554,6 +1664,7 @@ public FileChannel getChannel() {
 ### 使用示例
 
 #### FileInputStream示例
+
 ```java
 // 示例1：使用FileInputStream读取文件
 public static void readFileWithFileInputStream() throws IOException {
@@ -1580,7 +1691,7 @@ public static void readFileInBatches() throws IOException {
 public static void useAvailableMethod() throws IOException {
     try (FileInputStream fis = new FileInputStream("test.txt")) {
         System.out.println("Available bytes: " + fis.available());
-        
+
         byte[] buffer = new byte[fis.available()];
         fis.read(buffer);
         System.out.println("File content: " + new String(buffer));
@@ -1592,7 +1703,7 @@ public static void useSkipMethod() throws IOException {
     try (FileInputStream fis = new FileInputStream("test.txt")) {
         // 跳过前5个字节
         fis.skip(5);
-        
+
         int data;
         while ((data = fis.read()) != -1) {
             System.out.print((char) data);
@@ -1602,6 +1713,7 @@ public static void useSkipMethod() throws IOException {
 ```
 
 #### FileOutputStream示例
+
 ```java
 // 示例1：使用FileOutputStream写入文件
 public static void writeFileWithFileOutputStream() throws IOException {
@@ -1639,6 +1751,7 @@ public static void useFlushMethod() throws IOException {
 ```
 
 #### 综合示例：文件复制
+
 ```java
 // 使用FileInputStream和FileOutputStream复制文件
 public static void copyFile() throws IOException {
@@ -1664,12 +1777,15 @@ public static void copyFile() throws IOException {
 > FileReader使用默认的字符编码和默认的字节缓冲区大小从文件中读取字符。要指定字符编码或字节缓冲区大小，请考虑使用InputStreamReader。
 >
 > **核心功能**：
+>
 > - 从文件中读取字符数据
 > - 支持按字符、字符数组读取
 > - 继承自InputStreamReader，支持字符编码转换
 
 #### 源代码解析
+
 ##### 接口声明
+
 ```java
 package java.io;
 
@@ -1677,17 +1793,23 @@ public class FileReader extends InputStreamReader {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 继承自InputStreamReader：实现了字符流到字节流的转换
-> 	- 用于读取字符文件：专门用于从文件系统读取字符数据
+>
+> - 具体类：可以直接实例化
+> - 继承自InputStreamReader：实现了字符流到字节流的转换
+> - 用于读取字符文件：专门用于从文件系统读取字符数据
+>
 > 2. 设计目的
-> 	- 提供便捷的字符文件读取能力
-> 	- 自动处理字符编码转换
-> 	- 简化字符流的创建过程
+>
+> - 提供便捷的字符文件读取能力
+> - 自动处理字符编码转换
+> - 简化字符流的创建过程
 
 #### 核心构造方法
+
 ```java
 /**
  * 创建一个新的FileReader，给定要读取的File对象
@@ -1738,13 +1860,16 @@ public FileReader(String fileName, java.nio.charset.Charset cs) throws IOExcepti
 > FileWriter使用默认的字符编码和默认的字节缓冲区大小向文件中写入字符。要指定字符编码或字节缓冲区大小，请考虑使用OutputStreamWriter。
 >
 > **核心功能**：
+>
 > - 将字符数据写入文件
 > - 支持按字符、字符数组写入
 > - 支持追加模式
 > - 继承自OutputStreamWriter，支持字符编码转换
 
 #### 源代码解析
+
 ##### 接口声明
+
 ```java
 package java.io;
 
@@ -1752,17 +1877,23 @@ public class FileWriter extends OutputStreamWriter {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 继承自OutputStreamWriter：实现了字节流到字符流的转换
-> 	- 用于写入字符文件：专门用于向文件系统写入字符数据
+>
+> - 具体类：可以直接实例化
+> - 继承自OutputStreamWriter：实现了字节流到字符流的转换
+> - 用于写入字符文件：专门用于向文件系统写入字符数据
+>
 > 2. 设计目的
-> 	- 提供便捷的字符文件写入能力
-> 	- 自动处理字符编码转换
-> 	- 简化字符流的创建过程
+>
+> - 提供便捷的字符文件写入能力
+> - 自动处理字符编码转换
+> - 简化字符流的创建过程
 
 #### 核心构造方法
+
 ```java
 /**
  * 创建一个新的FileWriter，给定要写入的File对象
@@ -1830,6 +1961,7 @@ public FileWriter(String fileName, boolean append, java.nio.charset.Charset cs) 
 ### 使用示例
 
 #### FileReader示例
+
 ```java
 // 示例1：使用FileReader读取文件
 public static void readFileWithFileReader() throws IOException {
@@ -1854,6 +1986,7 @@ public static void readFileInBatchesWithFileReader() throws IOException {
 ```
 
 #### FileWriter示例
+
 ```java
 // 示例1：使用FileWriter写入文件
 public static void writeFileWithFileWriter() throws IOException {
@@ -1882,6 +2015,7 @@ public static void writePartialChars() throws IOException {
 ```
 
 #### 综合示例：使用FileReader和FileWriter复制文本文件
+
 ```java
 // 使用FileReader和FileWriter复制文本文件
 public static void copyTextFile() throws IOException {
@@ -1898,6 +2032,7 @@ public static void copyTextFile() throws IOException {
 ```
 
 ---
+
 # 4. 带缓存的输入输出流
 
 ## BufferedInputStream 和 BufferedOutputStream
@@ -1910,13 +2045,16 @@ public static void copyTextFile() throws IOException {
 > BufferedInputStream通过内部缓冲区减少对底层输入流的直接调用次数，从而提高读取效率。它支持标记和重置操作，允许在流中标记一个位置并稍后返回到该位置。
 >
 > **核心功能**：
+>
 > - 为底层输入流添加缓冲功能
 > - 减少IO操作次数，提高读取效率
 > - 支持标记和重置操作
 > - 支持按字节、字节数组读取
 
 #### 源代码解析
+
 ##### 接口声明
+
 ```java
 package java.io;
 
@@ -1924,17 +2062,23 @@ public class BufferedInputStream extends FilterInputStream {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 继承自FilterInputStream：使用装饰器模式包装其他输入流
-> 	- 带缓冲：内部维护一个字节数组作为缓冲区
+>
+> - 具体类：可以直接实例化
+> - 继承自FilterInputStream：使用装饰器模式包装其他输入流
+> - 带缓冲：内部维护一个字节数组作为缓冲区
+>
 > 2. 设计目的
-> 	- 提高读取效率：减少对底层IO的直接调用
-> 	- 支持标记和重置：允许在流中标记位置并返回
-> 	- 装饰器模式：可以包装任何InputStream实现
+>
+> - 提高读取效率：减少对底层IO的直接调用
+> - 支持标记和重置：允许在流中标记位置并返回
+> - 装饰器模式：可以包装任何InputStream实现
 
 #### 核心字段
+
 ```java
 // 内部缓冲区数组
 protected volatile byte buf[];
@@ -1959,7 +2103,9 @@ private static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE - 8;
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个带有默认大小缓冲区（8192字节）的BufferedInputStream，用于包装指定的输入流
@@ -1985,7 +2131,9 @@ public BufferedInputStream(InputStream in, int size) {
 ```
 
 ##### 普通方法
+
 > [!note] 核心读取方法
+
 ```java
 /**
  * 从输入流中读取下一个字节的数据
@@ -2008,6 +2156,7 @@ public synchronized int read(byte[] b, int off, int len) throws IOException {
 ```
 
 > [!note] 标记和重置方法
+
 ```java
 /**
  * 标记输入流中的当前位置
@@ -2036,6 +2185,7 @@ public boolean markSupported() {
 ```
 
 > [!note] 跳过和可用方法
+
 ```java
 /**
  * 跳过输入流中的n个字节
@@ -2065,13 +2215,16 @@ public synchronized int available() throws IOException {
 > BufferedOutputStream通过内部缓冲区减少对底层输出流的直接调用次数，从而提高写入效率。它支持刷新操作，确保所有缓冲数据被写入底层输出流。
 >
 > **核心功能**：
+>
 > - 为底层输出流添加缓冲功能
 > - 减少IO操作次数，提高写入效率
 > - 支持刷新操作
 > - 支持按字节、字节数组写入
 
 #### 源代码解析
+
 ##### 接口声明
+
 ```java
 package java.io;
 
@@ -2079,17 +2232,23 @@ public class BufferedOutputStream extends FilterOutputStream {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 继承自FilterOutputStream：使用装饰器模式包装其他输出流
-> 	- 带缓冲：内部维护一个字节数组作为缓冲区
+>
+> - 具体类：可以直接实例化
+> - 继承自FilterOutputStream：使用装饰器模式包装其他输出流
+> - 带缓冲：内部维护一个字节数组作为缓冲区
+>
 > 2. 设计目的
-> 	- 提高写入效率：减少对底层IO的直接调用
-> 	- 支持缓冲刷新：确保数据及时写入
-> 	- 装饰器模式：可以包装任何OutputStream实现
+>
+> - 提高写入效率：减少对底层IO的直接调用
+> - 支持缓冲刷新：确保数据及时写入
+> - 装饰器模式：可以包装任何OutputStream实现
 
 #### 核心字段
+
 ```java
 // 内部缓冲区数组
 protected byte buf[];
@@ -2102,7 +2261,9 @@ private static final int DEFAULT_BUFFER_SIZE = 8192;
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个带有默认大小缓冲区（8192字节）的BufferedOutputStream，用于包装指定的输出流
@@ -2128,7 +2289,9 @@ public BufferedOutputStream(OutputStream out, int size) {
 ```
 
 ##### 普通方法
+
 > [!note] 核心写入方法
+
 ```java
 /**
  * 将指定的字节写入此缓冲输出流
@@ -2164,6 +2327,7 @@ public synchronized void write(byte[] b, int off, int len) throws IOException {
 ```
 
 > [!note] 刷新方法
+
 ```java
 /**
  * 刷新此缓冲输出流，确保所有缓冲数据被写入底层输出流
@@ -2189,6 +2353,7 @@ private void flushBuffer() throws IOException {
 ### 使用示例
 
 #### BufferedInputStream示例
+
 ```java
 // 示例1：使用BufferedInputStream读取文件
 public static void readFileWithBufferedInputStream() throws IOException {
@@ -2218,17 +2383,17 @@ public static void useMarkReset() throws IOException {
         byte[] buffer = new byte[10];
         bis.read(buffer);
         System.out.println("First 10 bytes: " + new String(buffer));
-        
+
         // 标记当前位置
         bis.mark(10);
-        
+
         // 读取接下来的10个字节
         bis.read(buffer);
         System.out.println("Next 10 bytes: " + new String(buffer));
-        
+
         // 重置到标记位置
         bis.reset();
-        
+
         // 再次读取10个字节（应该与上面的Next 10 bytes相同）
         bis.read(buffer);
         System.out.println("Reset and read 10 bytes: " + new String(buffer));
@@ -2237,6 +2402,7 @@ public static void useMarkReset() throws IOException {
 ```
 
 #### BufferedOutputStream示例
+
 ```java
 // 示例1：使用BufferedOutputStream写入文件
 public static void writeFileWithBufferedOutputStream() throws IOException {
@@ -2265,6 +2431,7 @@ public static void useFlushMethod() throws IOException {
 ```
 
 #### 综合示例：使用BufferedInputStream和BufferedOutputStream复制文件
+
 ```java
 // 使用BufferedInputStream和BufferedOutputStream复制文件
 public static void copyFile() throws IOException {
@@ -2290,13 +2457,16 @@ public static void copyFile() throws IOException {
 > BufferedReader通过内部缓冲区减少对底层字符输入流的直接调用次数，从而提高读取效率。它支持按行读取，是处理文本文件的常用工具。
 >
 > **核心功能**：
+>
 > - 为底层字符输入流添加缓冲功能
 > - 减少IO操作次数，提高读取效率
 > - 支持按行读取
 > - 支持标记和重置操作
 
 #### 源代码解析
+
 ##### 接口声明
+
 ```java
 package java.io;
 
@@ -2304,17 +2474,23 @@ public class BufferedReader extends Reader {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 继承自Reader：实现了所有字符输入流的核心方法
-> 	- 带缓冲：内部维护一个字符数组作为缓冲区
+>
+> - 具体类：可以直接实例化
+> - 继承自Reader：实现了所有字符输入流的核心方法
+> - 带缓冲：内部维护一个字符数组作为缓冲区
+>
 > 2. 设计目的
-> 	- 提高字符读取效率：减少对底层IO的直接调用
-> 	- 支持按行读取：方便处理文本文件
-> 	- 支持标记和重置：允许在流中标记位置并返回
+>
+> - 提高字符读取效率：减少对底层IO的直接调用
+> - 支持按行读取：方便处理文本文件
+> - 支持标记和重置：允许在流中标记位置并返回
 
 #### 核心字段
+
 ```java
 // 内部缓冲区数组
 private char[] cb;
@@ -2339,7 +2515,9 @@ private static final int DEFAULT_CHAR_BUFFER_SIZE = 8192;
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个带有默认大小缓冲区（8192字符）的BufferedReader，用于包装指定的字符输入流
@@ -2366,7 +2544,9 @@ public BufferedReader(Reader in, int sz) {
 ```
 
 ##### 普通方法
+
 > [!note] 核心读取方法
+
 ```java
 /**
  * 从输入流中读取一个字符
@@ -2398,6 +2578,7 @@ public String readLine() throws IOException {
 ```
 
 > [!note] 标记和重置方法
+
 ```java
 /**
  * 标记输入流中的当前位置
@@ -2432,13 +2613,16 @@ public boolean markSupported() {
 > BufferedWriter通过内部缓冲区减少对底层字符输出流的直接调用次数，从而提高写入效率。它支持写入行终止符，是处理文本文件的常用工具。
 >
 > **核心功能**：
+>
 > - 为底层字符输出流添加缓冲功能
 > - 减少IO操作次数，提高写入效率
 > - 支持写入行终止符
 > - 支持刷新操作
 
 #### 源代码解析
+
 ##### 接口声明
+
 ```java
 package java.io;
 
@@ -2446,17 +2630,23 @@ public class BufferedWriter extends Writer {
     // ...
 }
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化
-> 	- 继承自Writer：实现了所有字符输出流的核心方法
-> 	- 带缓冲：内部维护一个字符数组作为缓冲区
+>
+> - 具体类：可以直接实例化
+> - 继承自Writer：实现了所有字符输出流的核心方法
+> - 带缓冲：内部维护一个字符数组作为缓冲区
+>
 > 2. 设计目的
-> 	- 提高字符写入效率：减少对底层IO的直接调用
-> 	- 支持写入行终止符：方便处理文本文件
-> 	- 支持刷新操作：确保数据及时写入
+>
+> - 提高字符写入效率：减少对底层IO的直接调用
+> - 支持写入行终止符：方便处理文本文件
+> - 支持刷新操作：确保数据及时写入
 
 #### 核心字段
+
 ```java
 // 内部缓冲区数组
 private char[] cb;
@@ -2475,7 +2665,9 @@ private static final int DEFAULT_BUFFER_SIZE = 8192;
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个带有默认大小缓冲区（8192字符）的BufferedWriter，用于包装指定的字符输出流
@@ -2505,7 +2697,9 @@ public BufferedWriter(Writer out, int sz) {
 ```
 
 ##### 普通方法
+
 > [!note] 核心写入方法
+
 ```java
 /**
  * 写入单个字符
@@ -2547,6 +2741,7 @@ public void newLine() throws IOException {
 ```
 
 > [!note] 刷新方法
+
 ```java
 /**
  * 刷新此缓冲输出流，确保所有缓冲数据被写入底层输出流
@@ -2573,6 +2768,7 @@ private void flushBuffer() throws IOException {
 ### 使用示例
 
 #### BufferedReader示例
+
 ```java
 // 示例1：使用BufferedReader读取文件
 public static void readFileWithBufferedReader() throws IOException {
@@ -2612,6 +2808,7 @@ public static void processLargeFile() throws IOException {
 ```
 
 #### BufferedWriter示例
+
 ```java
 // 示例1：使用BufferedWriter写入文件
 public static void writeFileWithBufferedWriter() throws IOException {
@@ -2642,6 +2839,7 @@ public static void appendToFile() throws IOException {
 ```
 
 #### 综合示例：使用BufferedReader和BufferedWriter复制文本文件
+
 ```java
 // 使用BufferedReader和BufferedWriter复制文本文件
 public static void copyTextFile() throws IOException {
@@ -2658,23 +2856,27 @@ public static void copyTextFile() throws IOException {
 ```
 
 ---
+
 # 5. 数据的输入输出流
 
-## DataInputStream 
+## DataInputStream
 
 > [!note] 类说明
 > **DataInputStream是一种允许应用程序以与机器无关的方式从底层输入流读取基本Java数据类型的输入流。**
-> 
+>
 > DataInputStream通过提供一系列readXXX()方法，将字节流转换为Java基本数据类型，实现了数据的格式化读取。它通常与DataOutputStream配合使用，用于读写结构化数据。
-> 
+>
 > **核心功能**：
+>
 > - 以与机器无关的方式读取Java基本数据类型
 > - 支持从输入流中读取字符串
 > - 通常与DataOutputStream配合使用，实现数据的序列化和反序列化
 > - 继承自FilterInputStream，支持装饰器模式
 
 ### 源代码解析
+
 #### 接口声明
+
 ```java
 package java.io;
 
@@ -2693,18 +2895,24 @@ import java.util.Objects;
  */
 public class DataInputStream extends FilterInputStream implements DataInput
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化，用于读取格式化数据
-> 	- 继承关系：继承自FilterInputStream，支持装饰器模式
-> 	- 实现接口：实现DataInput接口，该接口定义了读取Java基本数据类型的方法
-> 	- 命名语义："Data"表示它处理的是结构化数据，"InputStream"表示它是输入流
+>
+> - 具体类：可以直接实例化，用于读取格式化数据
+> - 继承关系：继承自FilterInputStream，支持装饰器模式
+> - 实现接口：实现DataInput接口，该接口定义了读取Java基本数据类型的方法
+> - 命名语义："Data"表示它处理的是结构化数据，"InputStream"表示它是输入流
+>
 > 2. 设计意图
-> 	- 跨平台数据交换：确保在不同机器上写入的数据可以被正确读取
-> 	- 类型安全：提供类型化的读取方法，避免手动类型转换
-> 	- 结构化数据处理：支持读取复杂的结构化数据
+>
+> - 跨平台数据交换：确保在不同机器上写入的数据可以被正确读取
+> - 类型安全：提供类型化的读取方法，避免手动类型转换
+> - 结构化数据处理：支持读取复杂的结构化数据
 
 #### 核心字段
+
 ```java
 /**
  * 用于读取字符串的内部缓冲区
@@ -2713,7 +2921,9 @@ private byte[] inBuf;
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个使用指定底层InputStream的DataInputStream
@@ -2728,6 +2938,7 @@ public DataInputStream(InputStream in) {
 ##### 普通方法
 
 > [!note] 读取基本数据类型方法
+
 ```java
 /**
  * 从输入流中读取一个布尔值
@@ -2891,6 +3102,7 @@ public final double readDouble() throws IOException {
 ```
 
 > [!note] 读取字符串方法
+
 ```java
 /**
  * 从输入流中读取一个字符串
@@ -3047,6 +3259,7 @@ public static final String readUTF(DataInput in) throws IOException {
 ```
 
 > [!note] 其他重要方法
+
 ```java
 /**
  * 从输入流中读取一些字节，并将它们存储在缓冲区数组b中
@@ -3138,6 +3351,7 @@ public final int skipBytes(int n) throws IOException {
 ### 使用示例
 
 > [!note] 基本数据类型读取示例
+
 ```java
 import java.io.*;
 
@@ -3145,7 +3359,7 @@ public class DataInputStreamExample {
     public static void main(String[] args) {
         try (FileInputStream fis = new FileInputStream("data.bin");
              DataInputStream dis = new DataInputStream(fis)) {
-            
+
             // 读取基本数据类型
             boolean boolValue = dis.readBoolean();
             byte byteValue = dis.readByte();
@@ -3155,7 +3369,7 @@ public class DataInputStreamExample {
             float floatValue = dis.readFloat();
             double doubleValue = dis.readDouble();
             String stringValue = dis.readUTF();
-            
+
             // 输出读取的数据
             System.out.println("Boolean value: " + boolValue);
             System.out.println("Byte value: " + byteValue);
@@ -3165,7 +3379,7 @@ public class DataInputStreamExample {
             System.out.println("Float value: " + floatValue);
             System.out.println("Double value: " + doubleValue);
             System.out.println("String value: " + stringValue);
-            
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -3174,6 +3388,7 @@ public class DataInputStreamExample {
 ```
 
 > [!note] 综合示例：读取结构化数据
+
 ```java
 import java.io.*;
 import java.util.ArrayList;
@@ -3184,25 +3399,25 @@ class Student {
     private String name;
     private int age;
     private double score;
-    
+
     public Student(String name, int age, double score) {
         this.name = name;
         this.age = age;
         this.score = score;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public int getAge() {
         return age;
     }
-    
+
     public double getScore() {
         return score;
     }
-    
+
     @Override
     public String toString() {
         return "Student{" +
@@ -3218,38 +3433,38 @@ public class DataInputStreamStudentExample {
         try {
             // 读取学生数据
             List<Student> students = readStudents("students.dat");
-            
+
             // 输出学生数据
             System.out.println("读取的学生数据：");
             for (Student student : students) {
                 System.out.println(student);
             }
-            
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
+
     // 从文件中读取学生数据
     public static List<Student> readStudents(String filename) throws IOException {
         List<Student> students = new ArrayList<>();
-        
+
         try (FileInputStream fis = new FileInputStream(filename);
              DataInputStream dis = new DataInputStream(fis)) {
-            
+
             // 读取学生数量
             int count = dis.readInt();
-            
+
             // 读取每个学生的数据
             for (int i = 0; i < count; i++) {
                 String name = dis.readUTF();
                 int age = dis.readInt();
                 double score = dis.readDouble();
-                
+
                 students.add(new Student(name, age, score));
             }
         }
-        
+
         return students;
     }
 }
@@ -3259,10 +3474,11 @@ public class DataInputStreamStudentExample {
 
 > [!note] 类说明
 > **DataOutputStream是一种允许应用程序以与机器无关的方式将基本Java数据类型写入底层输出流的输出流。**
-> 
+>
 > DataOutputStream通过提供一系列writeXXX()方法，将Java基本数据类型转换为字节流，实现了数据的格式化写入。它通常与DataInputStream配合使用，用于读写结构化数据。
-> 
+>
 > **核心功能**：
+>
 > - 以与机器无关的方式写入Java基本数据类型
 > - 支持向输出流中写入字符串
 > - 通常与DataInputStream配合使用，实现数据的序列化和反序列化
@@ -3270,7 +3486,9 @@ public class DataInputStreamStudentExample {
 > - 提供了用于跟踪写入字节数的方法
 
 ### 源代码解析
+
 #### 接口声明
+
 ```java
 package java.io;
 
@@ -3288,19 +3506,25 @@ import java.util.Objects;
  */
 public class DataOutputStream extends FilterOutputStream implements DataOutput
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化，用于写入格式化数据
-> 	- 继承关系：继承自FilterOutputStream，支持装饰器模式
-> 	- 实现接口：实现DataOutput接口，该接口定义了写入Java基本数据类型的方法
-> 	- 命名语义："Data"表示它处理的是结构化数据，"OutputStream"表示它是输出流
+>
+> - 具体类：可以直接实例化，用于写入格式化数据
+> - 继承关系：继承自FilterOutputStream，支持装饰器模式
+> - 实现接口：实现DataOutput接口，该接口定义了写入Java基本数据类型的方法
+> - 命名语义："Data"表示它处理的是结构化数据，"OutputStream"表示它是输出流
+>
 > 2. 设计意图
-> 	- 跨平台数据交换：确保在不同机器上写入的数据可以被正确读取
-> 	- 类型安全：提供类型化的写入方法，避免手动类型转换
-> 	- 结构化数据处理：支持写入复杂的结构化数据
-> 	- 字节计数：提供了用于跟踪写入字节数的方法
+>
+> - 跨平台数据交换：确保在不同机器上写入的数据可以被正确读取
+> - 类型安全：提供类型化的写入方法，避免手动类型转换
+> - 结构化数据处理：支持写入复杂的结构化数据
+> - 字节计数：提供了用于跟踪写入字节数的方法
 
 #### 核心字段
+
 ```java
 /**
  * 已写入到数据输出流的字节数
@@ -3309,7 +3533,9 @@ protected int written;
 ```
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个使用指定底层OutputStream的DataOutputStream
@@ -3324,6 +3550,7 @@ public DataOutputStream(OutputStream out) {
 ##### 普通方法
 
 > [!note] 写入基本数据类型方法
+
 ```java
 /**
  * 向输出流中写入一个布尔值
@@ -3433,6 +3660,7 @@ public final void writeDouble(double v) throws IOException {
 ```
 
 > [!note] 写入字符串方法
+
 ```java
 /**
  * 向输出流中写入一个字符串
@@ -3504,7 +3732,7 @@ static int writeUTF(String s, DataOutput out) throws IOException {
     for (int i = 0; i < strlen; i++) {
         c = s.charAt(i);
         if ((c >= 0x0001) && (c <= 0x007F)) {
-            utflen++; 
+            utflen++;
         } else if (c > 0x07FF) {
             utflen += 3;
         } else {
@@ -3568,6 +3796,7 @@ static int writeUTF(String s, DataOutput out) throws IOException {
 ```
 
 > [!note] 字节计数方法
+
 ```java
 /**
  * 返回已写入到数据输出流的字节数
@@ -3585,7 +3814,7 @@ public final int size() {
  */
 protected final void incCount(int value) {
     int temp = written + value;
-    if (temp < 0) { 
+    if (temp < 0) {
         /* 溢出 */
         temp = Integer.MAX_VALUE;
     }
@@ -3594,6 +3823,7 @@ protected final void incCount(int value) {
 ```
 
 > [!note] 其他重要方法
+
 ```java
 /**
  * 向输出流中写入一个字节
@@ -3642,6 +3872,7 @@ public void flush() throws IOException {
 ### 使用示例
 
 > [!note] 基本数据类型写入示例
+
 ```java
 import java.io.*;
 
@@ -3649,7 +3880,7 @@ public class DataOutputStreamExample {
     public static void main(String[] args) {
         try (FileOutputStream fos = new FileOutputStream("data.bin");
              DataOutputStream dos = new DataOutputStream(fos)) {
-            
+
             // 写入基本数据类型
             dos.writeBoolean(true);
             dos.writeByte((byte) 123);
@@ -3659,10 +3890,10 @@ public class DataOutputStreamExample {
             dos.writeFloat(3.14159f);
             dos.writeDouble(2.718281828459045);
             dos.writeUTF("Hello, DataOutputStream!");
-            
+
             // 输出写入的字节数
             System.out.println("已写入 " + dos.size() + " 字节");
-            
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -3671,6 +3902,7 @@ public class DataOutputStreamExample {
 ```
 
 > [!note] 综合示例：写入结构化数据
+
 ```java
 import java.io.*;
 import java.util.ArrayList;
@@ -3681,25 +3913,25 @@ class Student {
     private String name;
     private int age;
     private double score;
-    
+
     public Student(String name, int age, double score) {
         this.name = name;
         this.age = age;
         this.score = score;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public int getAge() {
         return age;
     }
-    
+
     public double getScore() {
         return score;
     }
-    
+
     @Override
     public String toString() {
         return "Student{" +
@@ -3718,32 +3950,32 @@ public class DataOutputStreamStudentExample {
         students.add(new Student("李四", 21, 90.0));
         students.add(new Student("王五", 19, 78.5));
         students.add(new Student("赵六", 22, 92.5));
-        
+
         try {
             // 写入学生数据
             writeStudents(students, "students.dat");
             System.out.println("学生数据写入完成");
-            
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
+
     // 将学生数据写入文件
     public static void writeStudents(List<Student> students, String filename) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(filename);
              DataOutputStream dos = new DataOutputStream(fos)) {
-            
+
             // 写入学生数量
             dos.writeInt(students.size());
-            
+
             // 写入每个学生的数据
             for (Student student : students) {
                 dos.writeUTF(student.getName());
                 dos.writeInt(student.getAge());
                 dos.writeDouble(student.getScore());
             }
-            
+
             // 输出写入的字节数
             System.out.println("已写入 " + dos.size() + " 字节");
         }
@@ -3752,6 +3984,7 @@ public class DataOutputStreamStudentExample {
 ```
 
 > [!note] DataInputStream和DataOutputStream配合使用示例
+
 ```java
 import java.io.*;
 
@@ -3760,36 +3993,36 @@ public class DataStreamExample {
         // 写入数据
         try (FileOutputStream fos = new FileOutputStream("test.dat");
              DataOutputStream dos = new DataOutputStream(fos)) {
-            
+
             // 写入一些数据
             dos.writeUTF("测试数据");
             dos.writeInt(12345);
             dos.writeDouble(3.1415926535);
             dos.writeBoolean(true);
-            
+
             System.out.println("数据写入完成，共写入 " + dos.size() + " 字节");
-            
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         // 读取数据
         try (FileInputStream fis = new FileInputStream("test.dat");
              DataInputStream dis = new DataInputStream(fis)) {
-            
+
             // 读取数据
             String str = dis.readUTF();
             int intValue = dis.readInt();
             double doubleValue = dis.readDouble();
             boolean boolValue = dis.readBoolean();
-            
+
             // 输出读取的数据
             System.out.println("读取的数据：");
             System.out.println("字符串：" + str);
             System.out.println("整数：" + intValue);
             System.out.println("双精度浮点数：" + doubleValue);
             System.out.println("布尔值：" + boolValue);
-            
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -3798,30 +4031,29 @@ public class DataStreamExample {
 ```
 
 ---
+
 # 6. 序列化与反序列化
 
 ## 序列化协议概述
 
 > [!note] 序列化定义
 > **序列化是将对象的状态信息转换为可以存储或传输的形式的过程。**
-> 
+>
 > 在Java中，序列化允许将对象转换为字节序列，这些字节序列可以被保存到文件、数据库中，或者通过网络传输到其他Java虚拟机中。反序列化则是将字节序列转换回对象的过程。
 
 > [!note] 序列化的核心概念
+>
 > 1. **Serializable接口**：
 >    - 一个标记接口，没有任何方法
 >    - 实现该接口表示对象可以被序列化
 >    - 所有非静态和非瞬态字段都会被序列化
-> 
 > 2. **transient关键字**：
 >    - 用于标记字段，使其不被序列化
 >    - 常用于敏感信息或计算字段
-> 
 > 3. **serialVersionUID**：
 >    - 用于验证序列化对象的版本一致性
 >    - 建议显式声明，否则Java会根据类的结构自动生成
 >    - 如果类的结构发生变化，自动生成的serialVersionUID会改变，导致反序列化失败
-> 
 > 4. **ObjectInputStream/ObjectOutputStream**：
 >    - 用于实现对象的序列化和反序列化
 >    - 基于DataInputStream/DataOutputStream实现
@@ -3829,6 +4061,7 @@ public class DataStreamExample {
 
 > [!note] 序列化协议格式
 > Java序列化协议是一种二进制格式，包含以下主要部分：
+>
 > 1. **魔数**：固定值0xACED，用于标识Java序列化数据
 > 2. **版本号**：当前版本为5
 > 3. **类描述**：包含类名、serialVersionUID、字段描述等
@@ -3838,11 +4071,13 @@ public class DataStreamExample {
 
 > [!note] 序列化的优缺点
 > **优点**：
+>
 > - 简单易用：只需要实现Serializable接口
 > - 支持复杂对象图：自动处理对象之间的引用关系
 > - 跨平台：可以在不同Java虚拟机之间传输
-> 
+>
 > **缺点**：
+>
 > - 性能较差：序列化和反序列化过程相对较慢
 > - 安全性问题：反序列化可能导致安全漏洞
 > - 版本兼容性：类结构变化可能导致反序列化失败
@@ -3852,10 +4087,11 @@ public class DataStreamExample {
 
 > [!note] 类说明
 > **ObjectInputStream是一种允许应用程序从底层输入流读取Java对象的输入流。**
-> 
+>
 > ObjectInputStream通过反序列化过程，将字节序列转换回Java对象。它通常与ObjectOutputStream配合使用，用于实现对象的持久化和网络传输。
-> 
+>
 > **核心功能**：
+>
 > - 从输入流中读取序列化的Java对象
 > - 支持读取基本数据类型和字符串
 > - 处理对象引用和继承关系
@@ -3863,7 +4099,9 @@ public class DataStreamExample {
 > - 支持自定义反序列化过程
 
 ### 源代码解析
+
 #### 接口声明
+
 ```java
 package java.io;
 
@@ -3888,20 +4126,27 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ObjectInputStream extends InputStream implements ObjectInput, ObjectStreamConstants
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化，用于读取序列化对象
-> 	- 继承关系：继承自InputStream，支持装饰器模式
-> 	- 实现接口：实现ObjectInput和ObjectStreamConstants接口
-> 	- 命名语义："Object"表示它处理的是对象，"InputStream"表示它是输入流
+>
+> - 具体类：可以直接实例化，用于读取序列化对象
+> - 继承关系：继承自InputStream，支持装饰器模式
+> - 实现接口：实现ObjectInput和ObjectStreamConstants接口
+> - 命名语义："Object"表示它处理的是对象，"InputStream"表示它是输入流
+>
 > 2. 设计意图
-> 	- 对象恢复：将序列化的字节序列转换回Java对象
-> 	- 类型安全：确保反序列化的对象类型正确
-> 	- 版本兼容：处理不同版本的序列化对象
-> 	- 引用处理：正确恢复对象之间的引用关系
+>
+> - 对象恢复：将序列化的字节序列转换回Java对象
+> - 类型安全：确保反序列化的对象类型正确
+> - 版本兼容：处理不同版本的序列化对象
+> - 引用处理：正确恢复对象之间的引用关系
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个从指定InputStream读取的ObjectInputStream
@@ -3926,6 +4171,7 @@ public ObjectInputStream(InputStream in) throws IOException {
 ##### 普通方法
 
 > [!note] 读取对象方法
+
 ```java
 /**
  * 从输入流中读取一个对象
@@ -3982,6 +4228,7 @@ private Object readObject0(boolean unshared) throws IOException {
 ```
 
 > [!note] 读取基本数据类型方法
+
 ```java
 /**
  * 从输入流中读取一个布尔值
@@ -4013,6 +4260,7 @@ public byte readByte() throws IOException {
 ```
 
 > [!note] 特殊对象处理方法
+
 ```java
 /**
  * 从输入流中读取一个字符串
@@ -4053,6 +4301,7 @@ private Object readEnum(boolean unshared) throws IOException {
 ```
 
 > [!note] 版本控制和验证方法
+
 ```java
 /**
  * 读取并验证序列化流头部
@@ -4093,6 +4342,7 @@ public void registerValidation(ObjectInputValidation validator, int priority) th
 ### 使用示例
 
 > [!note] 基本反序列化示例
+
 ```java
 import java.io.*;
 
@@ -4102,13 +4352,13 @@ class Person implements Serializable {
     private String name;
     private int age;
     private transient String password; // 该字段不会被序列化
-    
+
     public Person(String name, int age, String password) {
         this.name = name;
         this.age = age;
         this.password = password;
     }
-    
+
     // 自定义反序列化方法
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         // 调用默认的反序列化方法
@@ -4116,7 +4366,7 @@ class Person implements Serializable {
         // 可以在这里进行额外的初始化
         this.password = "default_password";
     }
-    
+
     @Override
     public String toString() {
         return "Person{" +
@@ -4131,13 +4381,13 @@ public class ObjectInputStreamExample {
     public static void main(String[] args) {
         try (FileInputStream fis = new FileInputStream("person.ser");
              ObjectInputStream ois = new ObjectInputStream(fis)) {
-            
+
             // 读取序列化的对象
             Person person = (Person) ois.readObject();
-            
+
             // 输出对象信息
             System.out.println("反序列化的对象：" + person);
-            
+
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -4149,10 +4399,11 @@ public class ObjectInputStreamExample {
 
 > [!note] 类说明
 > **ObjectOutputStream是一种允许应用程序将Java对象写入底层输出流的输出流。**
-> 
+>
 > ObjectOutputStream通过序列化过程，将Java对象转换为字节序列。它通常与ObjectInputStream配合使用，用于实现对象的持久化和网络传输。
-> 
+>
 > **核心功能**：
+>
 > - 向输出流中写入序列化的Java对象
 > - 支持写入基本数据类型和字符串
 > - 处理对象引用和继承关系
@@ -4160,7 +4411,9 @@ public class ObjectInputStreamExample {
 > - 验证序列化对象的版本一致性
 
 ### 源代码解析
+
 #### 接口声明
+
 ```java
 package java.io;
 
@@ -4184,20 +4437,27 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ObjectOutputStream extends OutputStream implements ObjectOutput, ObjectStreamConstants
 ```
+
 > [!note] 说明
+>
 > 1. 核心特征
-> 	- 具体类：可以直接实例化，用于写入序列化对象
-> 	- 继承关系：继承自OutputStream，支持装饰器模式
-> 	- 实现接口：实现ObjectOutput和ObjectStreamConstants接口
-> 	- 命名语义："Object"表示它处理的是对象，"OutputStream"表示它是输出流
+>
+> - 具体类：可以直接实例化，用于写入序列化对象
+> - 继承关系：继承自OutputStream，支持装饰器模式
+> - 实现接口：实现ObjectOutput和ObjectStreamConstants接口
+> - 命名语义："Object"表示它处理的是对象，"OutputStream"表示它是输出流
+>
 > 2. 设计意图
-> 	- 对象持久化：将对象状态保存到存储设备
-> 	- 网络传输：允许对象在不同Java虚拟机之间传输
-> 	- 类型安全：确保序列化的对象类型正确
-> 	- 引用处理：正确处理对象之间的引用关系
+>
+> - 对象持久化：将对象状态保存到存储设备
+> - 网络传输：允许对象在不同Java虚拟机之间传输
+> - 类型安全：确保序列化的对象类型正确
+> - 引用处理：正确处理对象之间的引用关系
 
 #### 核心方法
+
 ##### 构造方法
+
 ```java
 /**
  * 创建一个写入指定OutputStream的ObjectOutputStream
@@ -4227,6 +4487,7 @@ public ObjectOutputStream(OutputStream out) throws IOException {
 ##### 普通方法
 
 > [!note] 写入对象方法
+
 ```java
 /**
  * 向输出流中写入一个对象
@@ -4270,6 +4531,7 @@ private void writeObject0(Object obj, boolean unshared) throws IOException {
 ```
 
 > [!note] 写入基本数据类型方法
+
 ```java
 /**
  * 向输出流中写入一个布尔值
@@ -4301,6 +4563,7 @@ public void writeByte(int v) throws IOException {
 ```
 
 > [!note] 序列化流头部和控制方法
+
 ```java
 /**
  * 写入序列化流头部
@@ -4345,6 +4608,7 @@ protected Object replaceObject(Object obj) throws IOException {
 ### 使用示例
 
 > [!note] 基本序列化示例
+
 ```java
 import java.io.*;
 
@@ -4354,20 +4618,20 @@ class Person implements Serializable {
     private String name;
     private int age;
     private transient String password; // 该字段不会被序列化
-    
+
     public Person(String name, int age, String password) {
         this.name = name;
         this.age = age;
         this.password = password;
     }
-    
+
     // 自定义序列化方法
     private void writeObject(ObjectOutputStream out) throws IOException {
         // 调用默认的序列化方法
         out.defaultWriteObject();
         // 可以在这里进行额外的序列化操作
     }
-    
+
     @Override
     public String toString() {
         return "Person{" +
@@ -4381,14 +4645,14 @@ class Person implements Serializable {
 public class ObjectOutputStreamExample {
     public static void main(String[] args) {
         Person person = new Person("张三", 25, "123456");
-        
+
         try (FileOutputStream fos = new FileOutputStream("person.ser");
              ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-            
+
             // 写入序列化对象
             oos.writeObject(person);
             System.out.println("对象序列化完成：" + person);
-            
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -4397,6 +4661,7 @@ public class ObjectOutputStreamExample {
 ```
 
 > [!note] 综合示例：序列化和反序列化
+
 ```java
 import java.io.*;
 import java.util.ArrayList;
@@ -4408,13 +4673,13 @@ class Book implements Serializable {
     private String title;
     private String author;
     private double price;
-    
+
     public Book(String title, String author, double price) {
         this.title = title;
         this.author = author;
         this.price = price;
     }
-    
+
     @Override
     public String toString() {
         return "Book{" +
@@ -4432,7 +4697,7 @@ public class SerializationExample {
         books.add(new Book("Java核心技术", "Cay S. Horstmann", 128.0));
         books.add(new Book("Effective Java", "Joshua Bloch", 99.0));
         books.add(new Book("深入理解Java虚拟机", "周志明", 89.0));
-        
+
         // 序列化到文件
         try (ObjectOutputStream oos = new ObjectOutputStream(
                 new FileOutputStream("books.ser"))) {
@@ -4441,7 +4706,7 @@ public class SerializationExample {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         // 从文件反序列化
         try (ObjectInputStream ois = new ObjectInputStream(
                 new FileInputStream("books.ser"))) {
@@ -4458,22 +4723,25 @@ public class SerializationExample {
 ```
 
 ---
+
 # 7. 最佳实践
 
 ## try-with-resource 的正确使用
 
 > [!note] 什么是try-with-resource
 > **try-with-resource是Java 7引入的一种异常处理机制，用于自动关闭实现了AutoCloseable接口的资源。**
-> 
+>
 > 在Java IO中，所有流类都实现了Closeable接口，而Closeable接口继承自AutoCloseable接口，因此所有流都可以使用try-with-resource进行自动关闭。
 
 > [!note] try-with-resource的优势
+>
 > 1. **自动关闭资源**：无需手动调用close()方法，避免资源泄漏
 > 2. **代码简洁**：减少了try-catch-finally的嵌套，提高代码可读性
 > 3. **异常抑制**：如果在关闭资源时发生异常，会被抑制，只抛出主要异常
 > 4. **支持多个资源**：可以在一个try语句中声明多个资源，它们会按照声明顺序的相反顺序关闭
 
 > [!note] 基本语法
+
 ```java
 // 单个资源
 try (资源声明) {
@@ -4491,6 +4759,7 @@ try (资源1声明; 资源2声明; ...) {
 ```
 
 > [!note] 正确使用示例
+
 ```java
 // 错误的方式：手动关闭资源，容易遗漏
 InputStream is = null;
@@ -4521,20 +4790,21 @@ try (FileInputStream fis = new FileInputStream("input.txt");
      FileOutputStream fos = new FileOutputStream("output.txt");
      BufferedInputStream bis = new BufferedInputStream(fis);
      BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-    
+
     // 使用bis和bos进行文件复制
     byte[] buffer = new byte[1024];
     int len;
     while ((len = bis.read(buffer)) != -1) {
         bos.write(buffer, 0, len);
     }
-    
+
 } catch (IOException e) {
     e.printStackTrace();
 }
 ```
 
 > [!note] 注意事项
+>
 > 1. **资源必须实现AutoCloseable接口**：否则无法在try-with-resource中使用
 > 2. **资源声明必须在try语句中**：不能在try语句外声明，然后在try-with-resource中使用
 > 3. **资源会自动关闭**：无需手动调用close()方法
@@ -4545,10 +4815,11 @@ try (FileInputStream fis = new FileInputStream("input.txt");
 
 > [!note] flush()的作用
 > **flush()方法用于将缓冲区中的数据强制写入到底层设备。**
-> 
+>
 > 在Java IO中，许多输出流都使用缓冲区来提高性能，数据会先写入缓冲区，当缓冲区满了或者流关闭时，才会自动写入到底层设备。flush()方法允许手动将缓冲区中的数据写入到底层设备，而不需要等待缓冲区满或流关闭。
 
 > [!note] 何时需要调用flush()
+>
 > 1. **在重要数据写入后**：确保重要数据立即写入到底层设备，避免数据丢失
 > 2. **在网络通信中**：确保数据及时发送到网络另一端，避免通信延迟
 > 3. **在日志记录中**：确保日志信息及时写入到日志文件，便于调试和监控
@@ -4556,29 +4827,31 @@ try (FileInputStream fis = new FileInputStream("input.txt");
 > 5. **在调用close()方法前**：虽然close()方法会自动调用flush()，但在某些情况下，可能需要在关闭前手动flush()
 
 > [!note] 何时不需要调用flush()
+>
 > 1. **当流即将关闭时**：close()方法会自动调用flush()，无需手动调用
 > 2. **当使用try-with-resource时**：try-with-resource会自动关闭流，因此会自动调用flush()
 > 3. **当缓冲区足够小时**：缓冲区很快就会满，自动flush()
 > 4. **当性能要求不高时**：频繁调用flush()会降低性能，因为每次flush()都会导致系统调用
 
 > [!note] 正确使用示例
+
 ```java
 // 示例1：网络通信中使用flush()
 try (Socket socket = new Socket("localhost", 8080);
      OutputStream os = socket.getOutputStream();
      PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os)))) {
-    
+
     // 发送请求头
     pw.println("GET / HTTP/1.1");
     pw.println("Host: localhost:8080");
     pw.println("Connection: close");
     pw.println();
-    
+
     // 强制发送数据，确保服务器及时收到请求
     pw.flush();
-    
+
     // 读取响应...
-    
+
 } catch (IOException e) {
     e.printStackTrace();
 }
@@ -4586,13 +4859,13 @@ try (Socket socket = new Socket("localhost", 8080);
 // 示例2：日志记录中使用flush()
 try (FileOutputStream fos = new FileOutputStream("log.txt", true);
      PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)))) {
-    
+
     // 记录重要日志
     pw.println("[INFO] 系统启动成功");
     pw.flush(); // 确保日志立即写入文件
-    
+
     // 继续执行其他操作...
-    
+
 } catch (IOException e) {
     e.printStackTrace();
 }
@@ -4600,6 +4873,7 @@ try (FileOutputStream fos = new FileOutputStream("log.txt", true);
 
 > [!note] flush()的实现原理
 > 以BufferedOutputStream为例，flush()方法的实现如下：
+
 ```java
 /**
  * 刷新此缓冲输出流
@@ -4628,19 +4902,22 @@ private void flushBuffer() throws IOException {
 
 > [!note] 缓冲区的作用
 > **缓冲区是一块内存区域，用于临时存储数据，减少对底层设备的直接访问次数，从而提高IO性能。**
-> 
+>
 > 在Java IO中，缓冲区的大小对性能有重要影响：
+>
 > - 缓冲区太小：会导致频繁的系统调用，降低性能
 > - 缓冲区太大：会浪费内存，增加GC压力
 
 > [!note] 默认缓冲区大小
 > Java IO中常用流的默认缓冲区大小：
+>
 > - BufferedInputStream/BufferedOutputStream：8192字节（8KB）
 > - BufferedReader/BufferedWriter：8192字符
 > - ByteArrayOutputStream：32字节
 > - StringBufferInputStream：16字节
 
 > [!note] 如何选择合适的缓冲区大小
+>
 > 1. **考虑底层设备的特性**：
 >    - 硬盘：通常使用4KB或8KB的缓冲区，与硬盘的扇区大小匹配
 >    - 网络：根据网络带宽和延迟调整，通常使用8KB到64KB
@@ -4655,6 +4932,7 @@ private void flushBuffer() throws IOException {
 >    - 根据测试结果选择最优的缓冲区大小
 
 > [!note] 缓冲区大小选择示例
+
 ```java
 // 默认缓冲区大小（8KB）
 try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream("file.txt")))
@@ -4679,6 +4957,7 @@ try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("f
 ```
 
 > [!note] 缓冲区大小的性能影响
+>
 > - **过小的缓冲区**：
 >   - 优点：内存占用小
 >   - 缺点：频繁的系统调用，CPU利用率高，总吞吐量低
@@ -4693,16 +4972,18 @@ try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("f
 
 > [!note] 什么是重复包装
 > **重复包装是指对同一个流进行多次相同类型的包装，导致性能下降。**
-> 
+>
 > 在Java IO中，装饰器模式允许对同一个流进行多次包装，但如果多次使用相同类型的包装器，就会导致重复包装，增加不必要的开销。
 
 > [!note] 重复包装的危害
+>
 > 1. **性能下降**：每次包装都会增加额外的方法调用开销
 > 2. **代码可读性差**：过多的包装会使代码变得复杂，难以理解
 > 3. **资源浪费**：每个包装器都会占用一定的内存
 > 4. **可能导致错误**：某些包装器可能不适合多次使用
 
 > [!note] 常见的重复包装情况
+
 ```java
 // 错误：重复使用BufferedInputStream包装
 InputStream is = new FileInputStream("file.txt");
@@ -4726,6 +5007,7 @@ try (BufferedInputStream bis = new BufferedInputStream(
 ```
 
 > [!note] 正确的包装方式
+
 ```java
 // 正确：只使用一次BufferedInputStream包装
 try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream("file.txt"))) {
@@ -4755,6 +5037,7 @@ try (DataInputStream dis = new DataInputStream(
 ```
 
 > [!note] 如何避免重复包装
+>
 > 1. **检查流的类型**：在包装前检查流是否已经是目标类型
 > 2. **合理设计包装顺序**：从底层流到高层流，逐层包装
 > 3. **使用工厂方法**：创建流的工厂方法，避免重复包装
@@ -4765,22 +5048,25 @@ try (DataInputStream dis = new DataInputStream(
 
 > [!note] 反序列化安全风险概述
 > **反序列化是将字节序列转换为对象的过程，如果字节序列来自不可信的来源，可能会导致安全问题。**
-> 
+>
 > Java反序列化漏洞是一种严重的安全问题，攻击者可以通过构造恶意的字节序列，在目标系统上执行任意代码。
 
 > [!note] 常见的反序列化安全风险
+>
 > 1. **远程代码执行**：攻击者构造恶意字节序列，导致目标系统执行任意代码
 > 2. **拒绝服务攻击**：攻击者构造特殊的字节序列，导致目标系统内存耗尽或CPU使用率过高
 > 3. **信息泄露**：攻击者通过反序列化获取敏感信息
 > 4. **权限提升**：攻击者通过反序列化提升权限
 
 > [!note] 反序列化安全风险的原因
+>
 > 1. **Serializable接口的设计缺陷**：任何实现Serializable接口的类都可以被序列化和反序列化
 > 2. **readObject()方法的安全性问题**：readObject()方法可以执行任意代码
 > 3. **第三方库的漏洞**：许多第三方库存在反序列化漏洞
 > 4. **缺乏输入验证**：对反序列化的输入没有进行严格的验证
 
 > [!note] 如何防范反序列化安全风险
+>
 > 1. **不要反序列化不可信的数据**：只反序列化来自可信来源的数据
 > 2. **实现readObject()方法的安全检查**：在readObject()方法中添加安全检查
 > 3. **使用transient关键字**：对敏感字段使用transient关键字，避免被序列化
@@ -4790,27 +5076,28 @@ try (DataInputStream dis = new DataInputStream(
 > 7. **定期更新依赖库**：及时更新第三方库，修复已知的反序列化漏洞
 
 > [!note] 安全的反序列化示例
+
 ```java
 // 实现readObject()方法的安全检查
 class SafeClass implements Serializable {
     private static final long serialVersionUID = 1L;
     private String data;
     private transient String sensitiveData;
-    
+
     // 自定义readObject()方法，添加安全检查
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         // 调用默认的readObject()方法
         in.defaultReadObject();
-        
+
         // 添加安全检查
         if (data == null || data.length() > 1000) {
             throw new SecurityException("Invalid data");
         }
-        
+
         // 初始化transient字段
         sensitiveData = "default";
     }
-    
+
     // getter和setter方法
 }
 
@@ -4825,13 +5112,14 @@ public class SerializationFilterExample {
                    className.startsWith("java.") ||
                    className.startsWith("javax.");
         });
-        
+
         // 反序列化操作...
     }
 }
 ```
 
 > [!note] 反序列化安全最佳实践
+>
 > 1. **最小化可序列化类的数量**：只让必要的类实现Serializable接口
 > 2. **显式声明serialVersionUID**：避免自动生成的serialVersionUID导致的版本问题
 > 3. **对敏感字段使用transient关键字**：避免敏感信息被序列化

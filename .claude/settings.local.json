@@ -41,7 +41,5 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "skill-central"
-  ]
+  "enabledMcpjsonServers": ["skill-central"]
 }

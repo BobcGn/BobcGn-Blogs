@@ -71,8 +71,7 @@ export default ((opts?: Partial<Options>) => {
       return <></>
     }
 
-    const issueHref =
-      options.issueUrl ?? `https://github.com/${options.repo}/issues/new/choose`
+    const issueHref = options.issueUrl ?? `https://github.com/${options.repo}/issues/new/choose`
 
     return (
       <div class={classNames(displayClass, "feedback-card")}>
@@ -83,12 +82,7 @@ export default ((opts?: Partial<Options>) => {
             如果您发现了文章错误、有新功能建议，或者想探讨架构问题，推荐通过 Issue
             追踪。如果是日常交流，可以直接在下方留言。
           </p>
-          <a
-            class="feedback-btn"
-            href={issueHref}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a class="feedback-btn" href={issueHref} target="_blank" rel="noopener noreferrer">
             🚀 前往 GitHub 提交结构化 Issue
           </a>
         </div>

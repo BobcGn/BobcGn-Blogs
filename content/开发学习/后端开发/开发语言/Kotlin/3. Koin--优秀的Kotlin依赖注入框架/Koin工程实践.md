@@ -1,5 +1,5 @@
 ---
-title: 'Koin工程实践'
+title: "Koin工程实践"
 tags:
   - kotlin
   - koin
@@ -35,13 +35,13 @@ val appModule = module {
 
 每一种架构决策都有 trade-off，Koin 也不例外。
 
-| 维度 | 编译时 DI（Dagger/Hilt） | 运行时 DI（Koin） |
-|------|------------------------|-------------------|
-| 编译速度 | 随模块数增长显著下降（KAPT 性能瓶颈） | 几乎不受影响（纯 Kotlin DSL） |
-| 启动性能 | 依赖图在编译期构造，启动几乎零开销 | 运行时构建依赖图（可接受，详见 5.1） |
-| 跨平台 | 仅 Android/JVM（Hilt 不支持 KMP） | 所有 Kotlin Target 统一语法 |
-| 错误发现时机 | **编译期**：缺失绑定立即报错 | **运行时**：需要 `checkModules` 提前校验 |
-| 学习曲线 | 陡峭（注解、Component、Scope、Subcomponent…） | 平缓（`single` / `factory` / `scope`） |
+| 维度         | 编译时 DI（Dagger/Hilt）                      | 运行时 DI（Koin）                        |
+| ------------ | --------------------------------------------- | ---------------------------------------- |
+| 编译速度     | 随模块数增长显著下降（KAPT 性能瓶颈）         | 几乎不受影响（纯 Kotlin DSL）            |
+| 启动性能     | 依赖图在编译期构造，启动几乎零开销            | 运行时构建依赖图（可接受，详见 5.1）     |
+| 跨平台       | 仅 Android/JVM（Hilt 不支持 KMP）             | 所有 Kotlin Target 统一语法              |
+| 错误发现时机 | **编译期**：缺失绑定立即报错                  | **运行时**：需要 `checkModules` 提前校验 |
+| 学习曲线     | 陡峭（注解、Component、Scope、Subcomponent…） | 平缓（`single` / `factory` / `scope`）   |
 
 > [!tip] 架构师思考
 > 选择 Koin 的核心决策点通常不是"它比 Dagger 更强大"，而是**"我的团队需要一个高度可维护、跨平台兼容、且不拖累编译速度的 DI 方案"**。在多模块 KMP 项目中，编译速度的增益往往远超运行时解析的微小开销。而运行时的"不可知性"可以通过 `checkModules()` 在 CI 中弥补（见第 5 章）。
@@ -52,6 +52,7 @@ val appModule = module {
 
 > [!warning] 生产环境避坑
 > 把所有依赖全塞进一个 `appModule` 是 Koin 项目中最常见的反模式。这不仅让依赖图谱难以阅读，还会导致以下问题：
+>
 > 1. **测试隔离困难**：单元测试无法选择性加载依赖
 > 2. **跨平台失效**：JVM 特有实现和 Android 实现混在一起
 > 3. **启动性能退化**：所有模块都在首次访问时初始化，无法懒加载
@@ -175,6 +176,7 @@ fun loadLazyModule(koin: Koin, module: Module) {
 
 > [!tip] 最佳实践
 > 对于大型项目，推荐在 `appModule` 中使用 `includes()` 集中管理子模块的导入关系。这带来三层收益：
+>
 > 1. **可读性**：一眼看清模块间的拓扑关系
 > 2. **可测试性**：单元测试可以只加载 `userModule + networkModule`，无需拖入整个 App 依赖树
 > 3. **可维护性**：删除一个 Feature Module 时，只需在 `includes` 中移除一行
@@ -186,11 +188,11 @@ fun loadLazyModule(koin: Koin, module: Module) {
 
 ## 3.1 `single` 与 `factory` 的适用场景边界
 
-| 声明方式 | 生命周期 | 适用场景 | 内存特征 |
-|---------|---------|---------|---------|
-| `single` | 应用全局单例 | 数据库连接池、HttpClient、Logger | 常驻内存，应用启动到退出 |
-| `factory` | 每次 `get()` 创建新实例 | UseCase、临时处理器 | 随用随建，GC 及时回收 |
-| `scoped` | 绑定到自定义 Scope | 用户会话、事务上下文 | Scope 销毁时释放 |
+| 声明方式  | 生命周期                | 适用场景                         | 内存特征                 |
+| --------- | ----------------------- | -------------------------------- | ------------------------ |
+| `single`  | 应用全局单例            | 数据库连接池、HttpClient、Logger | 常驻内存，应用启动到退出 |
+| `factory` | 每次 `get()` 创建新实例 | UseCase、临时处理器              | 随用随建，GC 及时回收    |
+| `scoped`  | 绑定到自定义 Scope      | 用户会话、事务上下文             | Scope 销毁时释放         |
 
 ```kotlin
 // single：整个 Application 生命周期内唯一实例
@@ -456,6 +458,7 @@ fun initKoin() {
 
 > [!tip] 架构师思考
 > KMP 中 Koin 的 DI 策略遵循**"接口下沉、实现上浮"**原则：
+>
 > - **Common 层**声明接口（`interface`），`sharedModule` 中绑定到该接口
 > - **Platform 层**提供具体实现，通过 `platformModule` 注入
 > - 最终在 `startKoin {}` 中将两者合并：`modules(sharedModule + platformModule)`
@@ -516,6 +519,7 @@ class KoinModuleTest {
 
 > [!tip] 最佳实践
 > 将 `checkModules()` 集成到 CI/CD 管线的 **pre-commit hook** 或 **GitHub Actions** 中。推荐策略：
+>
 > 1. **本地开发**：`./gradlew test` 中执行
 > 2. **PR 提交**：作为必须通过的检查项
 > 3. **定期全量扫描**：对 `production` 分支的完整依赖图做每日校验

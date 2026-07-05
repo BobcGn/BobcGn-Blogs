@@ -1,5 +1,5 @@
 ---
-title: 'Python'
+title: "Python"
 date: 2026-04-28
 tags:
   - 开发学习
@@ -7,10 +7,12 @@ tags:
 ---
 
 # 0 Python简介
+
 > [!note] Python
 > Python是一种**高级、解释型**的编程语言，以简洁明了的语法和强大的功能而闻名。相比于Java，Python代码更简洁，开发效率更高；相比于C/C++，Python更容易上手，适合快速原型开发。
 
 > [!tip] 核心特性
+>
 > - **简单易学**​：语法清晰简洁，接近自然语言
 > - ​**解释型语言**​：无需编译，直接运行
 > - ​**跨平台性**​：支持Windows、Linux、macOS等主流操作系统
@@ -20,6 +22,7 @@ tags:
 > - ​**开源免费**​：完全免费使用和修改
 
 > [!tip] 技术体系
+>
 > - ​**Python标准库**​：内置的强大功能模块
 > - ​**数据科学**​：NumPy、Pandas、Matplotlib
 > - ​**Web开发**​：Django、Flask、FastAPI
@@ -28,34 +31,38 @@ tags:
 > - ​**网络爬虫**​：Scrapy、BeautifulSoup
 
 ---
+
 # 1 基本语法
+
 ## 1.1 Python的所有关键字
 
-|   关键字    |               功能               |  关键字   |          功能          |
-| :------: | :----------------------------: | :----: | :------------------: |
-|   and    |              逻辑与               | global |      声明变量为全局变量       |
-|    as    |          导入模块时指定模块别名           |   if   |         条件判断         |
-|  assert  | 检查某个条件是否为真，否则会引发AssertionError | import |        导入模块或包        |
-|  async   |         定义异步函数，标记函数为协程         |   in   |  检查某个元素是否存在于指定的序列中   |
-|  await   |       用于在异步函数中等待一个协程的结果        |   is   |    比较两个对象是否是同一个对象    |
-|  break   |             跳出当前循环             | lambda |        创建匿名函数        |
-|  class   |              定义类               |  not   |         逻辑非          |
-| continue |        跳过当前循环，直接进入下一次循环        |   or   |         逻辑或          |
-|   def    |              定义函数              |  pass  |      占位符，表示空操作       |
-|   del    |         删除变量或数据结构中的元素          | raise  |        用于引发异常        |
-|   elif   |     用于if中添加多个条件判断（else if）     | return |        从函数返回值        |
-|   else   |        分支结构中定义不满足条件时的语句        |  try   |        开始异常捕获        |
-|  except  |          捕获异常（catch）           | while  |     循环，条件为真时持续循环     |
-| finally  |        无论是否发生异常都会执行的代码块        |  with  |     简化资源管理如文件操作      |
-|   for    |           用于循环，遍历序列            | yield  | 定义生成器函数，返回一个值并暂停函数执行 |
-|   from   |         从指定的模块中导入特定的部分         |        |                      |
+|  关键字  |                      功能                      | 关键字 |                   功能                   |
+| :------: | :--------------------------------------------: | :----: | :--------------------------------------: |
+|   and    |                     逻辑与                     | global |            声明变量为全局变量            |
+|    as    |             导入模块时指定模块别名             |   if   |                 条件判断                 |
+|  assert  | 检查某个条件是否为真，否则会引发AssertionError | import |               导入模块或包               |
+|  async   |          定义异步函数，标记函数为协程          |   in   |    检查某个元素是否存在于指定的序列中    |
+|  await   |       用于在异步函数中等待一个协程的结果       |   is   |       比较两个对象是否是同一个对象       |
+|  break   |                  跳出当前循环                  | lambda |               创建匿名函数               |
+|  class   |                     定义类                     |  not   |                  逻辑非                  |
+| continue |        跳过当前循环，直接进入下一次循环        |   or   |                  逻辑或                  |
+|   def    |                    定义函数                    |  pass  |            占位符，表示空操作            |
+|   del    |           删除变量或数据结构中的元素           | raise  |               用于引发异常               |
+|   elif   |      用于if中添加多个条件判断（else if）       | return |               从函数返回值               |
+|   else   |        分支结构中定义不满足条件时的语句        |  try   |               开始异常捕获               |
+|  except  |               捕获异常（catch）                | while  |         循环，条件为真时持续循环         |
+| finally  |        无论是否发生异常都会执行的代码块        |  with  |          简化资源管理如文件操作          |
+|   for    |               用于循环，遍历序列               | yield  | 定义生成器函数，返回一个值并暂停函数执行 |
+|   from   |          从指定的模块中导入特定的部分          |        |                                          |
 
 > [!note] 软关键字
 > `match`、`case`、`_` 和 `type` 是软关键字：它们只在特定语法位置具有关键字含义，平时仍可作为变量名使用。`match/case/_` 常用于结构化模式匹配，`type` 常用于类型别名语法。
 
 ## 1.2 输出
+
 > [!note] 概述
 > 在Python中，输出没有Java那么复杂，仅需要使用**print**关键字即可输出内容
+>
 > ```Python
 > print("Hello World")
 > print(123456)
@@ -65,31 +72,36 @@ tags:
 > ```
 
 ## 1.3 输入
+
 > [!note] 说明
 > Python使用`input()`函数获取用户输入，比Java的Scanner更简单
->```python
+>
+> ```python
 > a = int(input('请输入数字：'))
 > print(f"a的值为{a}")
->```
+> ```
 
 ## 1.4 分支结构
+
 > [!note] if-elif-else分支结构
 > Python 通过缩进来区分代码块，而不是大括号
+>
 > ```python
 > a = int(input('请输入数字：'))
 > if a > 0:
 >    print('数字{}是正数'.format(a))
->elif a == 0:
+> elif a == 0:
 >    print('数字{}是零'.format(a))
->else:
+> else:
 >    print('数字{}是负数'.format(a))
 > ```
 
 > [!note] match-case分支结构
 > 相当于Java中的 switch-case 结构，但是更强大
+>
 > ```python
 > grade = int(input('请输入分数：'))
->match grade:
+> match grade:
 >    case 90:
 >        print('优秀')
 >    case 80:
@@ -104,80 +116,111 @@ tags:
 >        print('输入错误')
 > ```
 
-
 ## 1.5 循环结构
+
 > [!note] 说明
 > 在Python中，循环结构分为**while**循环和**for**循环
+>
 > 1. while循环
+>
 > ```python
 > i = 1
 > while i < 5:
 > 	print(i)
 > ```
+>
 > 2. for循环
-> 	- `for i in range(n)`：最简单的for循环，表示范围`[0,n)`
-> 	```python
-> 	for i in range (5):
-> 		print(i)
-> 	```
-> 	- `for i in range(m,n)`：指定范围的for循环，表示范围`[m,n)`
-> 	```python
-> 	for i in range(1,6):
-> 		print(i)
-> 	```
-> 	- `for i in range(m,n,p)`：指定范围和步长的for循环，其中范围为`[m,n)`，步长为p
-> 	```python
-> 	for i in range(1,10,2):
-> 		print(i)
-> 	```
+>
+> - `for i in range(n)`：最简单的for循环，表示范围`[0,n)`
+>
+> ```python
+> for i in range (5):
+> 	print(i)
+> ```
+>
+> - `for i in range(m,n)`：指定范围的for循环，表示范围`[m,n)`
+>
+> ```python
+> for i in range(1,6):
+> 	print(i)
+> ```
+>
+> - `for i in range(m,n,p)`：指定范围和步长的for循环，其中范围为`[m,n)`，步长为p
+>
+> ```python
+> for i in range(1,10,2):
+> 	print(i)
+> ```
 
 ## 1.6 列表、元组、集合和字典
+
 ### 列表
 
 > [!note] 说明
 > 列表是Python中的一种数据结构，它是一个**可变的有序集合**，可以存储多个元素。列表的元素可以是任何数据类型，包括数字、字符串、列表等。列表的定义和操作与Java的数组有相似之处，但更加灵活。
+
 #### 列表的定义
+
 ```python
 # 列表的定义
 list1 = [1, 2, 3]
 list2 = ["a", "b", "c"]
 list3 = [1, "a", True, 3.14]
 ```
+
 #### 列表的常用操作
+
 - **添加元素**：使用`append()`方法
+
 ```python
 list1.append(4)
 ```
+
 - **删除元素**：使用`remove()`方法
+
 ```python
 list1.remove(1)
 ```
+
 - **修改元素**：使用索引直接修改
+
 ```python
 list1[0] = 10
 ```
+
 - **查询元素**：使用索引获取元素
+
 ```python
 print(list1[0])
 ```
+
 - **遍历列表**：使用`for`循环
+
 ```python
 for item in list1:
     print(item)
 ```
+
 - **列表的长度**：使用`len()`函数
+
 ```python
 print(len(list1))
 ```
+
 - **列表的排序**：使用`sort()`方法
+
 ```python
 list1.sort()
 ```
+
 - **列表的反转**：使用`reverse()`方法
+
 ```python
 list1.reverse()
 ```
+
 - **列表的切片**：使用`[start:end]`获取列表的一部分
+
 ```python
 print(list1[0:2])
 ```
@@ -188,6 +231,7 @@ print(list1[0:2])
 > 元组是Python中的一种数据结构，它是一个**不可变的有序集合**，可以存储多个元素。元组的元素可以是任何数据类型，包括数字、字符串、元组等。元组的定义和操作与列表相似，但更加安全。
 
 #### 元组的定义
+
 ```python
 # 元组的定义
 tuple1 = (1, 2, 3)
@@ -196,36 +240,52 @@ tuple3 = (1, "a", True, 3.14)
 ```
 
 #### 元组的常用操作
+
 - **添加元素**：元组是不可变的，不能直接添加元素，但可以通过`+`操作符实现
+
 ```python
 tuple1 = tuple1 + (4,)
 ```
+
 - **删除元素**：元组是不可变的，不能直接删除元素，但可以通过`del`语句删除整个元组
+
 ```python
 del tuple1
 ```
+
 - **修改元素**：元组是不可变的，不能直接修改元素，但可以通过`+`操作符实现
+
 ```python
 tuple1 = tuple1[:1] + (10,)
 ```
+
 - **查询元素**：使用索引获取元素
+
 ```python
 print(tuple1[0])
 ```
+
 - **遍历元组**：使用`for`循环
+
 ```python
 for item in tuple1:
     print(item)
 ```
+
 - **元组的长度**：使用`len()`函数
+
 ```python
 print(len(tuple1))
 ```
+
 - **元组的排序**：元组是不可变的，不能直接排序，但可以通过`sorted()`函数实现
+
 ```python
 print(sorted(tuple1))
 ```
+
 - **元组的切片**：使用`[start:end]`获取元组的一部分
+
 ```python
 print(tuple1[0:2])
 ```
@@ -236,6 +296,7 @@ print(tuple1[0:2])
 > 集合是一个**无序、不重复**的数据容器，适合去重、成员判断和集合运算。集合底层通常基于哈希表，成员判断平均时间复杂度接近 `O(1)`。
 
 #### 集合的定义
+
 ```python
 nums = {1, 2, 3}
 empty_set = set()       # 注意：{} 表示空字典，不是空集合
@@ -243,6 +304,7 @@ unique = set([1, 1, 2]) # {1, 2}
 ```
 
 #### 集合的常用操作
+
 ```python
 tags = {"python", "backend"}
 tags.add("data")              # 添加单个元素
@@ -254,6 +316,7 @@ print("python" in tags)       # 成员判断
 ```
 
 #### 集合运算
+
 ```python
 a = {1, 2, 3}
 b = {3, 4, 5}
@@ -279,40 +342,58 @@ dict3 = {"id": 1, "name": "Bob", "age": 25}
 ```
 
 #### 字典的常用操作
+
 - **添加键值对**：使用`update()`方法
+
 ```python
 dict1.update({"gender": "female"})
 ```
+
 - **删除键值对**：使用`pop()`方法
+
 ```python
 dict1.pop("age")
 ```
+
 - **修改键值对**：使用索引直接修改
+
 ```python
 dict1["name"] = "Eve"
 ```
+
 - **查询键值对**：使用索引获取值
+
 ```python
 print(dict1["name"])
 ```
+
 - **遍历字典**：使用`for`循环
+
 ```python
 for key, value in dict1.items():
     print(key, value)
 ```
+
 - **字典的长度**：使用`len()`函数
+
 ```python
 print(len(dict1))
 ```
+
 - **字典的排序**：使用`sorted()`函数
+
 ```python
 print(sorted(dict1.items()))
 ```
+
 - **字典的键**：使用`keys()`方法
+
 ```python
 print(dict1.keys())
 ```
+
 - **字典的值**：使用`values()`方法
+
 ```python
 print(dict1.values())
 ```
@@ -335,10 +416,12 @@ gen = (x * x for x in nums)                  # 生成器表达式，惰性计算
 ```
 
 ## 1.7 函数
+
 > [!note] 说明
 > 函数是Python中的一种基本结构，它是一段可以重复调用的代码块。函数可以接受参数，并可以返回值。函数的定义和调用与Java的`main`方法有相似之处，但更加灵活。
 
 ### 函数的定义
+
 ```python
 # 函数的定义
 def my_function(a, b):
@@ -346,6 +429,7 @@ def my_function(a, b):
 ```
 
 ### 函数的调用
+
 ```python
 # 函数的调用
 result = my_function(1, 2)
@@ -355,6 +439,7 @@ print(result)
 ### 函数的参数
 
 - **位置参数**：按顺序传递参数
+
 ```python
 def my_function(a, b):
     return a + b
@@ -363,6 +448,7 @@ result = my_function(1, 2)
 ```
 
 - **关键字参数**：按关键字传递参数
+
 ```python
 def my_function(a, b):
     return a + b
@@ -371,6 +457,7 @@ result = my_function(a=1, b=2)
 ```
 
 - **默认参数**：定义默认值
+
 ```python
 def my_function(a, b=2):
     return a + b
@@ -379,6 +466,7 @@ result = my_function(1)
 ```
 
 - **可变参数**：使用`*args`和`**kwargs`传递任意数量的参数
+
 ```python
 def my_function(*args):
     return sum(args)
@@ -387,6 +475,7 @@ result = my_function(1, 2, 3)
 ```
 
 ### 函数的返回值
+
 ```python
 # 函数的返回值
 def my_function(a, b):
@@ -416,6 +505,7 @@ print(result)
 ### 函数的参数传递
 
 - **值传递**：传递的是参数的值
+
 ```python
 def my_function(a):
     a = 10
@@ -426,6 +516,7 @@ print(a)
 ```
 
 - **引用传递**：传递的是参数的引用
+
 ```python
 def my_function(a):
     a.append(10)
@@ -439,7 +530,9 @@ print(a)
 > Python 参数传递可以理解为“对象引用按值传递”。函数拿到的是对象引用的副本：给参数重新赋值不会影响外部变量；但如果对象本身可变，函数内部修改对象内容会被外部看到。
 
 ---
+
 # 2 面向对象编程
+
 > [!note] 概述
 > Python 是“一切皆对象”的语言。数字、字符串、函数、类本身都是对象。与 [[Java知识点总结|Java]] 不同，Python 更强调鸭子类型和组合：只要对象提供了需要的方法，就可以被当作对应能力使用。
 
@@ -575,15 +668,15 @@ class Money:
 print(Money(10) + Money(20))
 ```
 
-| 方法 | 作用 |
-| --- | --- |
-| `__init__` | 初始化对象 |
-| `__repr__` | 开发调试展示 |
-| `__str__` | 用户友好展示 |
-| `__len__` | 支持 `len(obj)` |
-| `__iter__` | 支持迭代 |
+| 方法                     | 作用                   |
+| ------------------------ | ---------------------- |
+| `__init__`               | 初始化对象             |
+| `__repr__`               | 开发调试展示           |
+| `__str__`                | 用户友好展示           |
+| `__len__`                | 支持 `len(obj)`        |
+| `__iter__`               | 支持迭代               |
 | `__enter__` / `__exit__` | 支持 `with` 上下文管理 |
-| `__eq__` / `__lt__` | 支持比较 |
+| `__eq__` / `__lt__`      | 支持比较               |
 
 ## 2.5 `@property`
 
@@ -626,7 +719,9 @@ print(p)
 > `dataclass` 适合 DTO、配置对象、简单领域对象。需要复杂不变量时，可以在 `__post_init__` 中校验。
 
 ---
+
 # 3 核心技术
+
 ## 3.1 Python的异常处理
 
 > [!note] 核心思想
@@ -782,19 +877,19 @@ if __name__ == "__main__":
 
 ## 3.4 常用的内置函数
 
-| 函数 | 说明 | 示例 |
-| --- | --- | --- |
-| `len()` | 获取长度 | `len([1, 2])` |
-| `type()` | 查看运行时类型 | `type("x")` |
-| `isinstance()` | 判断类型 | `isinstance(1, int)` |
-| `enumerate()` | 遍历时带索引 | `for i, v in enumerate(items)` |
-| `zip()` | 并行组合多个序列 | `zip(names, ages)` |
-| `sorted()` | 返回排序后的新列表 | `sorted(nums)` |
-| `sum()` | 求和 | `sum(nums)` |
-| `any()` / `all()` | 任一/全部为真 | `any(flags)` |
-| `map()` | 映射转换 | `map(str, nums)` |
-| `filter()` | 过滤元素 | `filter(pred, nums)` |
-| `open()` | 打开文件 | `open("a.txt")` |
+| 函数              | 说明               | 示例                           |
+| ----------------- | ------------------ | ------------------------------ |
+| `len()`           | 获取长度           | `len([1, 2])`                  |
+| `type()`          | 查看运行时类型     | `type("x")`                    |
+| `isinstance()`    | 判断类型           | `isinstance(1, int)`           |
+| `enumerate()`     | 遍历时带索引       | `for i, v in enumerate(items)` |
+| `zip()`           | 并行组合多个序列   | `zip(names, ages)`             |
+| `sorted()`        | 返回排序后的新列表 | `sorted(nums)`                 |
+| `sum()`           | 求和               | `sum(nums)`                    |
+| `any()` / `all()` | 任一/全部为真      | `any(flags)`                   |
+| `map()`           | 映射转换           | `map(str, nums)`               |
+| `filter()`        | 过滤元素           | `filter(pred, nums)`           |
+| `open()`          | 打开文件           | `open("a.txt")`                |
 
 ```python
 users = ["Alice", "Bob", "Cindy"]
@@ -830,25 +925,27 @@ print(phones)
 
 ### 常见元字符
 
-| 写法 | 含义 |
-| --- | --- |
-| `.` | 任意字符，默认不匹配换行 |
-| `\d` | 数字 |
-| `\w` | 字母、数字、下划线 |
-| `\s` | 空白字符 |
-| `*` | 重复 0 次或多次 |
-| `+` | 重复 1 次或多次 |
-| `?` | 重复 0 次或 1 次，也可表示非贪婪 |
-| `{m,n}` | 重复 m 到 n 次 |
-| `^` / `$` | 字符串开始 / 结束 |
-| `()` | 分组 |
-| `[]` | 字符集合 |
+| 写法      | 含义                             |
+| --------- | -------------------------------- |
+| `.`       | 任意字符，默认不匹配换行         |
+| `\d`      | 数字                             |
+| `\w`      | 字母、数字、下划线               |
+| `\s`      | 空白字符                         |
+| `*`       | 重复 0 次或多次                  |
+| `+`       | 重复 1 次或多次                  |
+| `?`       | 重复 0 次或 1 次，也可表示非贪婪 |
+| `{m,n}`   | 重复 m 到 n 次                   |
+| `^` / `$` | 字符串开始 / 结束                |
+| `()`      | 分组                             |
+| `[]`      | 字符集合                         |
 
 > [!tip] 正则建议
 > 复杂正则优先使用 `re.compile()` 并拆成多个具名变量；需要解析 HTML、JSON、XML 时不要用正则硬解析，应使用专门解析器。
 
 ---
+
 # 4 高级特性
+
 ## 4.1 装饰器
 
 > [!note] 本质
@@ -1085,18 +1182,18 @@ def close_quietly(resource: SupportsClose) -> None:
 
 ## 4.6 标准库常用模块
 
-| 模块 | 用途 |
-| --- | --- |
-| `pathlib` | 路径和文件操作 |
-| `datetime` | 日期时间 |
-| `json` | JSON 编码和解码 |
-| `csv` | CSV 文件读写 |
-| `argparse` | 命令行参数解析 |
-| `logging` | 日志 |
-| `collections` | 扩展容器 |
-| `itertools` | 迭代器工具 |
-| `functools` | 高阶函数工具 |
-| `subprocess` | 调用外部命令 |
+| 模块          | 用途            |
+| ------------- | --------------- |
+| `pathlib`     | 路径和文件操作  |
+| `datetime`    | 日期时间        |
+| `json`        | JSON 编码和解码 |
+| `csv`         | CSV 文件读写    |
+| `argparse`    | 命令行参数解析  |
+| `logging`     | 日志            |
+| `collections` | 扩展容器        |
+| `itertools`   | 迭代器工具      |
+| `functools`   | 高阶函数工具    |
+| `subprocess`  | 调用外部命令    |
 
 ```python
 import json
