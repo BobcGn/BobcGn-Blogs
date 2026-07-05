@@ -71,14 +71,37 @@
     cooldownEl.style.display = "none"
   }
 
+  /** Extract current page article text for context (max 8000 chars) */
+  function extractPageContext(): string {
+    const article = document.querySelector("article")
+    if (!article) return ""
+    const raw = article.innerText ?? ""
+    return raw.length > 8000 ? raw.slice(0, 8000) + "…" : raw
+  }
+
+  /** Build the context-enriched user message for the API payload */
+  function buildEnrichedContent(original: string, context: string): string {
+    if (!context) return original
+    return (
+      `作为本博客的 AI 助手，请优先且严格基于用户当前正在阅读的页面内容来回答问题。` +
+      `当前页面内容如下：\n\n【${context}】\n\n用户的问题是：${original}`
+    )
+  }
+
   /** Send the message via SSE streaming */
   async function sendMessage(text: string): Promise<void> {
     if (isProcessing || cooldownRemaining > 0) return
     if (!text.trim()) return
 
-    // Append user message
-    messages.push({ role: "user", content: text.trim() })
-    addMessage("user", text.trim())
+    const userText = text.trim()
+
+    // ── UI: only show the original clean question ──
+    addMessage("user", userText)
+
+    // ── API payload: enrich with page context ──
+    const context = extractPageContext()
+    const enriched = buildEnrichedContent(userText, context)
+    messages.push({ role: "user", content: enriched })
     input.value = ""
 
     // Acquire lock
