@@ -176,7 +176,7 @@ export function useChat(): UseChatReturn {
           return
         }
 
-        // ── SSE Stream Read ──
+        // ── Robust SSE Stream Read ──
         const reader = res.body!.getReader()
         const decoder = new TextDecoder()
         let buffer = ""
@@ -186,44 +186,52 @@ export function useChat(): UseChatReturn {
           const { done, value } = await reader.read()
           if (done) break
 
+          // Append the new chunk to our buffer
           buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split("\n")
-          buffer = lines.pop()! // Keep incomplete line in buffer
 
-          for (const line of lines) {
-            const trimmed = line.trim()
-            if (!trimmed || !trimmed.startsWith("data:")) continue
+          // Process all complete messages in the buffer
+          let boundary = buffer.indexOf("\n\n")
+          while (boundary !== -1) {
+            const chunk = buffer.slice(0, boundary)
+            buffer = buffer.slice(boundary + 2) // Move buffer past the message and \n\n
 
-            const data = trimmed.slice(5).trim()
-            if (data === "[DONE]") break
+            if (chunk.trim()) {
+              const line = chunk.trim().slice("data: ".length)
 
-            try {
-              const parsed: Record<string, unknown> = JSON.parse(data)
-              const choices = parsed.choices as Array<{
-                delta?: { content?: string }
-              }> | undefined
-              const delta = choices?.[0]?.delta?.content
-              if (delta) {
-                fullContent += cleanToken(delta)
-                // Strip think tags for display only — raw content stays in history
-                setStreamingContent(stripThink(fullContent))
+              // Check for the end signal
+              if (line === "[DONE]") {
+                // Finalize and exit reader loop
+                setUiMessages((prev) => [
+                  ...prev,
+                  { role: "assistant", content: fullContent },
+                ])
+                setStreamingContent("")
+                reader.releaseLock()
+                return
               }
-            } catch {
-              // Skip malformed JSON chunks
+
+              // Safely parse JSON and extract content
+              try {
+                const parsed = JSON.parse(line)
+                const content = parsed.choices?.[0]?.delta?.content
+                if (typeof content === "string") {
+                  fullContent += content
+                  setStreamingContent(stripThink(fullContent))
+                }
+              } catch (e) {
+                // A malformed JSON is not fatal, just log and continue
+                console.warn("SSE JSON parse error:", e)
+                continue
+              }
             }
+            boundary = buffer.indexOf("\n\n")
           }
         }
 
-        // ── Finalize: commit to message history ──
+      } catch (e) {
         setUiMessages((prev) => [
           ...prev,
-          { role: "assistant", content: fullContent },
-        ])
-        setStreamingContent("")
-      } catch {
-        setUiMessages((prev) => [
-          ...prev,
-          { role: "system", content: "⚠️ 网络异常，请检查连接后重试。" },
+          { role: "system", content: `⚠️ 网络异常，请检查连接后重试。 ${e instanceof Error ? `(${e.message})` : ""}` },
         ])
       } finally {
         setIsLoading(false)

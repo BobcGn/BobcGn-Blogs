@@ -251,10 +251,13 @@ const chatWidgetCss = `
   border-radius: 10px;
   font-size: 0.88rem;
   line-height: 1.55;
-  /* Ensure proper text wrapping for all bubbles */
-  word-break: break-word;
-  overflow-wrap: break-word;
+
+  /* Defensive styles for robust layout */
+  min-width: 2rem;
+  min-height: 1.5rem;
   white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere; /* Stricter than break-word */
 }
 .chat-msg--user {
   align-self: flex-end;
