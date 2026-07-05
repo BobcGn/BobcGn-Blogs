@@ -40,7 +40,46 @@ const NOISE_SELECTORS = [
   ".feedback-card",
   ".chat-toggle",
   ".chat-panel",
+  "button",
+  "svg",
+  ".code-title",
+  ".copy-button",
+  ".lang-indicator",
+  "[aria-hidden='true']",
+  ".popover",
+  ".tooltip",
+  ".breadcrumb",
 ].join(", ")
+
+/**
+ * Clean raw innerText: remove residual noise, normalize whitespace.
+ */
+function cleanBodyText(raw: string): string {
+  return (
+    raw
+      // Remove URLs (http/https/www)
+      .replace(/https?:\/\/\S+/g, "")
+      .replace(/www\.\S+/g, "")
+      // Remove markdown-style link artifacts: [text](url) → text
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+      // Remove image references: ![alt](url) or [[image/...]]
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+      .replace(/!\[\[.*?\]\]/g, "")
+      // Remove wikilink brackets: [[page|label]] → label, [[page]] → page
+      .replace(/\[\[([^|\]]+)?\|([^\]]*)\]\]/g, "$2")
+      .replace(/\[\[([^\]]*)\]\]/g, "$1")
+      // Remove single brackets leftover: [text] → text
+      .replace(/\[([^\]]+)\]/g, "$1")
+      // Remove lone symbols / decorators
+      .replace(/^[#\-*=_~`>|]+$/gm, "")
+      // Collapse 3+ blank lines → 2
+      .replace(/\n{3,}/g, "\n\n")
+      // Remove leading/trailing whitespace per line
+      .replace(/^[ \t]+|[ \t]+$/gm, "")
+      // Trim whole string
+      .trim()
+  )
+}
 
 // ── Core Functions ──
 
@@ -72,7 +111,7 @@ export function getPageContext(): PageContext {
     // Remove noise elements to avoid polluting context
     clone.querySelectorAll(NOISE_SELECTORS).forEach((el) => el.remove())
     // innerText preserves line breaks from <pre><code> blocks
-    bodyText = clone.innerText ?? ""
+    bodyText = cleanBodyText(clone.innerText ?? "")
   }
 
   // Truncate to prevent token overflow

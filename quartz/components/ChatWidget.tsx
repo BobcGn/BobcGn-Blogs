@@ -1,6 +1,127 @@
 import { QuartzComponent, QuartzComponentConstructor, QuartzComponentProps } from "./types"
 import { classNames } from "../util/lang"
 import { useChat } from "../../src/ai/useChat"
+import type { UiMessage } from "../../src/ai/useChat"
+
+// ── Markdown Renderer (lightweight, no dependencies) ──
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
+function renderMarkdown(text: string): string {
+  // Normalize line endings
+  let md = text.replace(/\r\n/g, "\n")
+
+  // Code blocks: ```lang\n...\n```
+  md = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, _lang: string, code: string) => {
+    return `<pre><code>${escapeHtml(code.trimEnd())}</code></pre>`
+  })
+
+  // Split into lines for block-level processing
+  const lines = md.split("\n")
+  const htmlLines: string[] = []
+  let inList = false
+  let listType: "ul" | "ol" | null = null
+
+  for (const line of lines) {
+    // Skip if inside a pre block (already processed)
+    if (htmlLines.length > 0 && htmlLines[htmlLines.length - 1].includes("<pre>")) {
+      if (!line.includes("</pre>")) {
+        htmlLines.push(escapeHtml(line))
+        continue
+      }
+    }
+
+    // Unordered list
+    const ulMatch = line.match(/^[\s]*[-*]\s+(.*)/)
+    if (ulMatch) {
+      if (!inList || listType !== "ul") {
+        if (inList) htmlLines.push(`</${listType}>`)
+        htmlLines.push("<ul>")
+        inList = true
+        listType = "ul"
+      }
+      htmlLines.push(`<li>${inlineMarkdown(ulMatch[1])}</li>`)
+      continue
+    }
+
+    // Ordered list
+    const olMatch = line.match(/^[\s]*\d+\.\s+(.*)/)
+    if (olMatch) {
+      if (!inList || listType !== "ol") {
+        if (inList) htmlLines.push(`</${listType}>`)
+        htmlLines.push("<ol>")
+        inList = true
+        listType = "ol"
+      }
+      htmlLines.push(`<li>${inlineMarkdown(olMatch[1])}</li>`)
+      continue
+    }
+
+    // Close list if we're no longer in one
+    if (inList) {
+      htmlLines.push(`</${listType}>`)
+      inList = false
+      listType = null
+    }
+
+    // Empty line → paragraph break
+    if (line.trim() === "") {
+      htmlLines.push("")
+      continue
+    }
+
+    // Already HTML (pre/code blocks) — pass through
+    if (line.startsWith("<pre>") || line.startsWith("</pre>")) {
+      htmlLines.push(line)
+      continue
+    }
+
+    // Regular paragraph line
+    htmlLines.push(`<p>${inlineMarkdown(line)}</p>`)
+  }
+
+  if (inList) htmlLines.push(`</${listType}>`)
+
+  // Collapse multiple blank lines
+  return htmlLines.join("\n").replace(/(\n\s*){2,}/g, "\n")
+}
+
+function inlineMarkdown(text: string): string {
+  let s = escapeHtml(text)
+  // Bold: **text**
+  s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+  // Italic: *text*
+  s = s.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>")
+  // Inline code: `code`
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>")
+  // Links: [text](url)
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+  return s
+}
+
+// ── Think Tag Parser ──
+
+interface ParsedMessage {
+  think: string
+  body: string
+}
+
+const THINK_RE = /<think>([\s\S]*?)<\/think>/g
+
+function parseAssistantMessage(raw: string): ParsedMessage {
+  const thinks: string[] = []
+  const body = raw.replace(THINK_RE, (_m, content: string) => {
+    thinks.push(content.trim())
+    return ""
+  }).trim()
+  return { think: thinks.join("\n\n"), body }
+}
 
 // ── Inline CSS (Quartz variable theme) ──
 
@@ -119,6 +240,8 @@ const chatWidgetCss = `
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Message Bubbles ── */
@@ -129,19 +252,64 @@ const chatWidgetCss = `
   font-size: 0.88rem;
   line-height: 1.55;
   word-break: break-word;
-  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 .chat-msg--user {
   align-self: flex-end;
   background: var(--secondary);
   color: var(--light);
   border-bottom-right-radius: 3px;
+  white-space: pre-wrap;
 }
 .chat-msg--assistant {
   align-self: flex-start;
   background: var(--lightgray);
   color: var(--darkgray);
   border-bottom-left-radius: 3px;
+  width: 100%;
+  max-width: 85%;
+}
+.chat-msg--assistant .chat-msg-body {
+  white-space: pre-wrap;
+}
+.chat-msg--assistant .chat-msg-body p {
+  margin: 0.3em 0;
+}
+.chat-msg--assistant .chat-msg-body p:first-child {
+  margin-top: 0;
+}
+.chat-msg--assistant .chat-msg-body p:last-child {
+  margin-bottom: 0;
+}
+.chat-msg--assistant .chat-msg-body code {
+  background: rgba(0,0,0,0.08);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: var(--codeFont, monospace);
+}
+.chat-msg--assistant .chat-msg-body pre {
+  background: rgba(0,0,0,0.06);
+  padding: 0.5rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0.4em 0;
+}
+.chat-msg--assistant .chat-msg-body pre code {
+  background: none;
+  padding: 0;
+}
+.chat-msg--assistant .chat-msg-body a {
+  color: var(--secondary);
+  text-decoration: underline;
+}
+.chat-msg--assistant .chat-msg-body ul,
+.chat-msg--assistant .chat-msg-body ol {
+  margin: 0.3em 0;
+  padding-left: 1.2em;
+}
+.chat-msg--assistant .chat-msg-body strong {
+  font-weight: 600;
 }
 .chat-msg--system {
   align-self: center;
@@ -151,6 +319,37 @@ const chatWidgetCss = `
   opacity: 0.8;
   text-align: center;
   font-style: italic;
+}
+
+/* ── Think Block (collapsible) ── */
+.chat-think {
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--lightgray);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.chat-think summary {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--darkgray);
+  opacity: 0.7;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(0,0,0,0.03);
+}
+.chat-think summary:hover {
+  opacity: 1;
+}
+.chat-think-body {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--darkgray);
+  opacity: 0.75;
+  white-space: pre-wrap;
+  border-top: 1px solid var(--lightgray);
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 /* ── Streaming Cursor ── */
@@ -277,6 +476,33 @@ const IconSend = (
 
 // ── Component ──
 
+/** Render a single assistant message: think block (collapsible) + markdown body */
+function renderAssistantMsg(raw: string): preact.ComponentChildren {
+  const { think, body } = parseAssistantMessage(raw)
+  const children: preact.ComponentChildren[] = []
+
+  if (think) {
+    children.push(
+      <details class="chat-think" key="think">
+        <summary>💭 思考过程 ({think.length} 字)</summary>
+        <div class="chat-think-body">{think}</div>
+      </details>,
+    )
+  }
+
+  if (body) {
+    children.push(
+      <div
+        class="chat-msg-body"
+        key="body"
+        dangerouslySetInnerHTML={{ __html: renderMarkdown(body) }}
+      />,
+    )
+  }
+
+  return children.length > 0 ? children : null
+}
+
 const ChatWidget: QuartzComponent = ({ displayClass }: QuartzComponentProps) => {
   const {
     uiMessages,
@@ -356,15 +582,17 @@ const ChatWidget: QuartzComponent = ({ displayClass }: QuartzComponentProps) => 
 
         {/* Messages */}
         <div class="chat-messages">
-          {uiMessages.map((msg, i) => (
+          {uiMessages.map((msg: UiMessage, i: number) => (
             <div key={i} class={`chat-msg chat-msg--${msg.role}`}>
-              {msg.content}
+              {msg.role === "assistant"
+                ? renderAssistantMsg(msg.content)
+                : msg.content}
             </div>
           ))}
           {/* Active streaming bubble */}
           {streamingContent && (
             <div class="chat-msg chat-msg--assistant">
-              {streamingContent}
+              {renderAssistantMsg(streamingContent)}
               <span class="chat-cursor" />
             </div>
           )}
