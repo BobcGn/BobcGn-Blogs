@@ -25,6 +25,7 @@ import Utterances from "./Utterances"
 import Feedback from "./Feedback"
 import Flex from "./Flex"
 import ConditionalRender from "./ConditionalRender"
+import ChatWidget from "./ChatWidget"
 
 export {
   ArticleTitle,
@@ -54,4 +55,5 @@ export {
   Feedback,
   Flex,
   ConditionalRender,
+  ChatWidget,
 }

@@ -10,6 +10,7 @@ export const sharedPageComponents: SharedLayout = {
       repo: "BobcGn/quartz-myblogs" as `${string}/${string}`,
       repoId: "",
     }),
+    Component.ChatWidget(),
   ],
   footer: Component.Footer({
     links: {
