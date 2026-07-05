@@ -1,7 +1,8 @@
-// @ts-ignore
-import chatwidgetScript from "./scripts/chatwidget.inline"
 import { QuartzComponent, QuartzComponentConstructor, QuartzComponentProps } from "./types"
 import { classNames } from "../util/lang"
+import { useChat } from "../../src/ai/useChat"
+
+// ── Inline CSS (Quartz variable theme) ──
 
 const chatWidgetCss = `
 /* ── Floating Trigger Button ── */
@@ -81,7 +82,12 @@ const chatWidgetCss = `
   align-items: center;
   gap: 0.4rem;
 }
-.chat-close {
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.chat-icon-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -91,12 +97,15 @@ const chatWidgetCss = `
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.chat-close:hover {
+.chat-icon-btn:hover {
   background: var(--lightgray);
 }
-.chat-close svg {
+.chat-icon-btn--danger:hover {
+  color: #e74c3c;
+}
+.chat-icon-btn svg {
   width: 18px;
   height: 18px;
   fill: currentColor;
@@ -142,6 +151,20 @@ const chatWidgetCss = `
   opacity: 0.8;
   text-align: center;
   font-style: italic;
+}
+
+/* ── Streaming Cursor ── */
+.chat-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--darkgray);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: chat-blink 0.8s step-end infinite;
+}
+@keyframes chat-blink {
+  50% { opacity: 0; }
 }
 
 /* ── Input Area ── */
@@ -201,18 +224,6 @@ const chatWidgetCss = `
   fill: currentColor;
 }
 
-/* ── Cooldown Badge ── */
-.chat-cooldown {
-  display: none;
-  text-align: center;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.78rem;
-  color: var(--darkgray);
-  background: var(--light);
-  border-top: 1px solid var(--lightgray);
-  flex-shrink: 0;
-}
-
 /* ── Mobile Adjustments ── */
 @media (max-width: 800px) {
   .chat-toggle {
@@ -231,15 +242,91 @@ const chatWidgetCss = `
 }
 `.trim()
 
+// ── SVG Icons (inlined for zero network requests) ──
+
+const IconChat = (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
+    <path d="M7 9h10v2H7zm0-3h10v2H7zm0 6h7v2H7z" />
+  </svg>
+)
+
+const IconBrain = (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+  </svg>
+)
+
+const IconClose = (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+  </svg>
+)
+
+const IconTrash = (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+  </svg>
+)
+
+const IconSend = (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+  </svg>
+)
+
+// ── Component ──
+
 const ChatWidget: QuartzComponent = ({ displayClass }: QuartzComponentProps) => {
+  const {
+    uiMessages,
+    isLoading,
+    streamingContent,
+    sendMessage,
+    clearHistory,
+  } = useChat()
+
+  // ── Event Handlers ──
+
+  const handleToggle = (): void => {
+    const panel = document.querySelector<HTMLElement>(".chat-panel")
+    panel?.classList.toggle("chat-panel--open")
+    if (panel?.classList.contains("chat-panel--open")) {
+      const input = panel.querySelector<HTMLInputElement>(".chat-input")
+      input?.focus()
+    }
+  }
+
+  const handleClose = (): void => {
+    document.querySelector<HTMLElement>(".chat-panel")?.classList.remove("chat-panel--open")
+  }
+
+  const handleSend = (): void => {
+    const input = document.querySelector<HTMLInputElement>(".chat-input")
+    if (input?.value) {
+      sendMessage(input.value)
+      input.value = ""
+    }
+  }
+
+  const handleKeydown = (e: KeyboardEvent): void => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  // ── Render ──
+
   return (
     <>
       {/* ── Floating Trigger ── */}
-      <button class={classNames(displayClass, "chat-toggle")} aria-label="Open AI Chat">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
-          <path d="M7 9h10v2H7zm0-3h10v2H7zm0 6h7v2H7z" />
-        </svg>
+      <button
+        class={classNames(displayClass, "chat-toggle")}
+        aria-label="Open AI Chat"
+        onClick={handleToggle}
+      >
+        {IconChat}
       </button>
 
       {/* ── Chat Panel ── */}
@@ -247,46 +334,59 @@ const ChatWidget: QuartzComponent = ({ displayClass }: QuartzComponentProps) => 
         {/* Header */}
         <div class="chat-header">
           <span class="chat-header-title">
-            <svg
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="var(--secondary)"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-            </svg>
+            <span style={{ display: "flex", alignItems: "center", color: "var(--secondary)" }}>
+              {IconBrain}
+            </span>
             AI 助手
           </span>
-          <button class="chat-close" aria-label="Close chat">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-            </svg>
-          </button>
+          <div class="chat-header-actions">
+            <button
+              class="chat-icon-btn chat-icon-btn--danger"
+              aria-label="Clear history"
+              title="清除对话记忆"
+              onClick={clearHistory}
+            >
+              {IconTrash}
+            </button>
+            <button class="chat-icon-btn" aria-label="Close chat" onClick={handleClose}>
+              {IconClose}
+            </button>
+          </div>
         </div>
 
         {/* Messages */}
         <div class="chat-messages">
-          <div class="chat-msg chat-msg--system">
-            👋 你好！我是 AI 助手，有什么可以帮你的？
-          </div>
+          {uiMessages.map((msg, i) => (
+            <div key={i} class={`chat-msg chat-msg--${msg.role}`}>
+              {msg.content}
+            </div>
+          ))}
+          {/* Active streaming bubble */}
+          {streamingContent && (
+            <div class="chat-msg chat-msg--assistant">
+              {streamingContent}
+              <span class="chat-cursor" />
+            </div>
+          )}
         </div>
-
-        {/* Cooldown Badge */}
-        <div class="chat-cooldown"></div>
 
         {/* Input Area */}
         <div class="chat-input-area">
           <input
             class="chat-input"
             type="text"
-            placeholder="输入消息…"
+            placeholder={isLoading ? "AI 正在回复…" : "输入消息…"}
             autocomplete="off"
+            disabled={isLoading}
+            onKeyDown={handleKeydown}
           />
-          <button class="chat-send" aria-label="Send message">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-            </svg>
+          <button
+            class="chat-send"
+            aria-label="Send message"
+            disabled={isLoading}
+            onClick={handleSend}
+          >
+            {IconSend}
           </button>
         </div>
       </div>
@@ -295,6 +395,5 @@ const ChatWidget: QuartzComponent = ({ displayClass }: QuartzComponentProps) => 
 }
 
 ChatWidget.css = chatWidgetCss
-ChatWidget.afterDOMLoaded = chatwidgetScript
 
 export default (() => ChatWidget) satisfies QuartzComponentConstructor
