@@ -1,5 +1,5 @@
 ---
-title: "SQLDelight"
+title: 'SQLDelight'
 date: 2026-04-29
 tags:
   - 开发学习
@@ -26,14 +26,14 @@ SQLDelight 是一个 **SQL-first 的 Kotlin 类型安全代码生成工具**。
 
 ### 1.1 SQLDelight 解决的问题
 
-| 问题                   | SQLDelight 的做法                                        |
-| ---------------------- | -------------------------------------------------------- |
-| SQL 字符串运行时才报错 | 编译期解析 SQL，提前暴露语法、字段、类型错误             |
-| 查询参数容易写错       | 根据 SQL 参数生成 Kotlin 函数参数                        |
-| 返回结果类型不稳定     | 根据 `SELECT` 投影生成 data class 或基础类型             |
+| 问题 | SQLDelight 的做法 |
+|---|---|
+| SQL 字符串运行时才报错 | 编译期解析 SQL，提前暴露语法、字段、类型错误 |
+| 查询参数容易写错 | 根据 SQL 参数生成 Kotlin 函数参数 |
+| 返回结果类型不稳定 | 根据 `SELECT` 投影生成 data class 或基础类型 |
 | 多平台 SQLite 访问割裂 | Android、JVM、Native、JS 使用同一套 `.sq`，换不同 driver |
-| 数据库迁移不可验证     | `.sqm` 迁移可参与 Gradle 校验                            |
-| SQL 与业务类型不一致   | `ColumnAdapter` 负责数据库类型与领域类型互转             |
+| 数据库迁移不可验证 | `.sqm` 迁移可参与 Gradle 校验 |
+| SQL 与业务类型不一致 | `ColumnAdapter` 负责数据库类型与领域类型互转 |
 
 ### 1.2 SQLDelight 不适合什么
 
@@ -66,11 +66,11 @@ SQLDelight 的心智模型可以拆成两层：
 
 ## 3. 支持范围速查
 
-| 数据库     | 主要平台                                | 主要方言依赖                          | 常用运行时 driver                                                       |
-| ---------- | --------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------- |
-| SQLite     | Android、JVM、Native、JS、Multiplatform | 默认 SQLite，或 `sqlite-3-xx-dialect` | `android-driver`、`sqlite-driver`、`native-driver`、`web-worker-driver` |
-| MySQL      | JVM                                     | `mysql-dialect`                       | `jdbc-driver`、`r2dbc-driver`                                           |
-| PostgreSQL | JVM，部分 Native 场景                   | `postgresql-dialect`                  | `jdbc-driver`、`r2dbc-driver`                                           |
+| 数据库 | 主要平台 | 主要方言依赖 | 常用运行时 driver |
+|---|---|---|---|
+| SQLite | Android、JVM、Native、JS、Multiplatform | 默认 SQLite，或 `sqlite-3-xx-dialect` | `android-driver`、`sqlite-driver`、`native-driver`、`web-worker-driver` |
+| MySQL | JVM | `mysql-dialect` | `jdbc-driver`、`r2dbc-driver` |
+| PostgreSQL | JVM，部分 Native 场景 | `postgresql-dialect` | `jdbc-driver`、`r2dbc-driver` |
 
 实践中：
 
@@ -107,13 +107,13 @@ src/commonMain/sqldelight/
 
 ### 4.3 文件职责
 
-| 文件              | 作用                                                    |
-| ----------------- | ------------------------------------------------------- |
-| `.sq`             | 描述最新 schema，包含建表、索引、初始化数据、运行时查询 |
-| `.sqm`            | 描述从旧版本迁移到新版本的 SQL                          |
-| `1.sqm`           | 从 schema version 1 升级到 2                            |
-| `2.sqm`           | 从 schema version 2 升级到 3                            |
-| `.db` schema 文件 | 用于迁移验证，证明迁移后的结构等于最新 schema           |
+| 文件 | 作用 |
+|---|---|
+| `.sq` | 描述最新 schema，包含建表、索引、初始化数据、运行时查询 |
+| `.sqm` | 描述从旧版本迁移到新版本的 SQL |
+| `1.sqm` | 从 schema version 1 升级到 2 |
+| `2.sqm` | 从 schema version 2 升级到 3 |
+| `.db` schema 文件 | 用于迁移验证，证明迁移后的结构等于最新 schema |
 
 注意：`.sq` 永远描述「空数据库如何创建最新结构」；`.sqm` 描述「已有旧数据库如何升级」。
 
@@ -155,16 +155,16 @@ val userQueries = database.userQueries
 
 ### 5.2 常用 Gradle 参数
 
-| 参数                         | 作用                          | 建议                                       |
-| ---------------------------- | ----------------------------- | ------------------------------------------ |
-| `packageName`                | 生成代码的包名                | 必填，建议放在 `db` 或 `database` 包       |
-| `srcDirs`                    | `.sq` / `.sqm` 文件目录       | 单平台默认可不配，复杂项目建议显式配置     |
-| `dialect`                    | 指定 SQL 方言                 | MySQL/PostgreSQL 必配；SQLite 可按版本选配 |
-| `schemaOutputDirectory`      | 输出 `.db` schema 文件        | 需要迁移验证时配置                         |
-| `verifyMigrations`           | 编译时验证迁移语法            | 建议打开                                   |
-| `deriveSchemaFromMigrations` | 用 `.sqm` 推导 schema         | 适合已有生产库或迁移为唯一事实来源         |
-| `generateAsync`              | 生成挂起函数，配合异步 driver | JS WebWorker、R2DBC 场景考虑打开           |
-| `expandSelectStar`           | 将 `SELECT *` 展开为具体列    | 默认 true，利于生成代码稳定                |
+| 参数 | 作用 | 建议 |
+|---|---|---|
+| `packageName` | 生成代码的包名 | 必填，建议放在 `db` 或 `database` 包 |
+| `srcDirs` | `.sq` / `.sqm` 文件目录 | 单平台默认可不配，复杂项目建议显式配置 |
+| `dialect` | 指定 SQL 方言 | MySQL/PostgreSQL 必配；SQLite 可按版本选配 |
+| `schemaOutputDirectory` | 输出 `.db` schema 文件 | 需要迁移验证时配置 |
+| `verifyMigrations` | 编译时验证迁移语法 | 建议打开 |
+| `deriveSchemaFromMigrations` | 用 `.sqm` 推导 schema | 适合已有生产库或迁移为唯一事实来源 |
+| `generateAsync` | 生成挂起函数，配合异步 driver | JS WebWorker、R2DBC 场景考虑打开 |
+| `expandSelectStar` | 将 `SELECT *` 展开为具体列 | 默认 true，利于生成代码稳定 |
 
 示例：
 
@@ -257,12 +257,12 @@ fun createUser(database: AppDatabase) {
 
 ### 6.2 Query 执行方法
 
-| 方法                   | 含义                     | 适用场景         |
-| ---------------------- | ------------------------ | ---------------- |
-| `executeAsOne()`       | 必须返回一行，否则抛异常 | 根据主键查询     |
-| `executeAsOneOrNull()` | 返回 0 或 1 行           | 可为空查询       |
-| `executeAsList()`      | 返回列表                 | 列表页、批量读取 |
-| `execute()`            | 执行无返回语句           | 插入、更新、删除 |
+| 方法 | 含义 | 适用场景 |
+|---|---|---|
+| `executeAsOne()` | 必须返回一行，否则抛异常 | 根据主键查询 |
+| `executeAsOneOrNull()` | 返回 0 或 1 行 | 可为空查询 |
+| `executeAsList()` | 返回列表 | 列表页、批量读取 |
+| `execute()` | 执行无返回语句 | 插入、更新、删除 |
 
 示例：
 
@@ -974,12 +974,12 @@ actual class DriverFactory {
 
 ### 12.7 SQLite 类型映射
 
-| SQLite 类型 | Kotlin 默认类型 | 说明                             |
-| ----------- | --------------- | -------------------------------- |
-| `INTEGER`   | `Long`          | SQLite 整型统一倾向 Long         |
-| `REAL`      | `Double`        | 浮点数                           |
-| `TEXT`      | `String`        | 字符串、JSON、枚举常用 TEXT 存储 |
-| `BLOB`      | `ByteArray`     | 二进制数据                       |
+| SQLite 类型 | Kotlin 默认类型 | 说明 |
+|---|---|---|
+| `INTEGER` | `Long` | SQLite 整型统一倾向 Long |
+| `REAL` | `Double` | 浮点数 |
+| `TEXT` | `String` | 字符串、JSON、枚举常用 TEXT 存储 |
+| `BLOB` | `ByteArray` | 二进制数据 |
 
 如果希望 SQLite 的 `INTEGER` 在 Kotlin 暴露为 `Int`、`Short`，可以使用 primitive adapters：
 
@@ -1154,25 +1154,25 @@ fun findActiveUsers(database: AppDatabase): List<Mysql_user> {
 
 ### 13.4 MySQL 类型映射
 
-| MySQL 类型                       | Kotlin 默认类型  |
-| -------------------------------- | ---------------- |
-| `BIT`                            | `Boolean`        |
-| `TINYINT`                        | `Byte`           |
-| `SMALLINT`                       | `Short`          |
-| `MEDIUMINT` / `INTEGER` / `INT`  | `Int`            |
-| `BIGINT`                         | `Long`           |
-| `DECIMAL` / `DEC` / `FIXED`      | `Double`         |
-| `NUMERIC`                        | `BigDecimal`     |
-| `FLOAT` / `REAL` / `DOUBLE`      | `Double`         |
-| `DATE`                           | `LocalDate`      |
-| `TIME`                           | `LocalTime`      |
-| `DATETIME`                       | `LocalDateTime`  |
-| `TIMESTAMP`                      | `OffsetDateTime` |
-| `CHAR` / `VARCHAR` / `TEXT` 系列 | `String`         |
-| `ENUM` / `SET`                   | `String`         |
-| `BINARY` / `VARBINARY` / `BLOB`  | `ByteArray`      |
-| `JSON`                           | `String`         |
-| `BOOLEAN`                        | `Boolean`        |
+| MySQL 类型 | Kotlin 默认类型 |
+|---|---|
+| `BIT` | `Boolean` |
+| `TINYINT` | `Byte` |
+| `SMALLINT` | `Short` |
+| `MEDIUMINT` / `INTEGER` / `INT` | `Int` |
+| `BIGINT` | `Long` |
+| `DECIMAL` / `DEC` / `FIXED` | `Double` |
+| `NUMERIC` | `BigDecimal` |
+| `FLOAT` / `REAL` / `DOUBLE` | `Double` |
+| `DATE` | `LocalDate` |
+| `TIME` | `LocalTime` |
+| `DATETIME` | `LocalDateTime` |
+| `TIMESTAMP` | `OffsetDateTime` |
+| `CHAR` / `VARCHAR` / `TEXT` 系列 | `String` |
+| `ENUM` / `SET` | `String` |
+| `BINARY` / `VARBINARY` / `BLOB` | `ByteArray` |
+| `JSON` | `String` |
+| `BOOLEAN` | `Boolean` |
 
 建议：
 
@@ -1372,27 +1372,27 @@ fun insertArticle(database: AppDatabase, article: NewArticle) {
 
 ### 14.4 PostgreSQL 类型映射
 
-| PostgreSQL 类型                                   | Kotlin 默认类型  |
-| ------------------------------------------------- | ---------------- |
-| `SMALLINT` / `INT2`                               | `Short`          |
-| `INTEGER` / `INT` / `INT4`                        | `Int`            |
-| `BIGINT` / `INT8`                                 | `Long`           |
-| `NUMERIC`                                         | `BigDecimal`     |
-| `DECIMAL`                                         | `Double`         |
-| `REAL` / `FLOAT4` / `DOUBLE PRECISION` / `FLOAT8` | `Double`         |
-| `SMALLSERIAL` / `SERIAL2`                         | `Short`          |
-| `SERIAL` / `SERIAL4`                              | `Int`            |
-| `BIGSERIAL` / `SERIAL8`                           | `Long`           |
-| `CHAR` / `VARCHAR` / `TEXT`                       | `String`         |
-| `DATE`                                            | `LocalDate`      |
-| `TIME`                                            | `LocalTime`      |
-| `TIMESTAMP`                                       | `LocalDateTime`  |
-| `TIMESTAMPTZ`                                     | `OffsetDateTime` |
-| `JSON` / `JSONB`                                  | `String`         |
-| `INTERVAL`                                        | `String`         |
-| `UUID`                                            | `UUID`           |
-| `BOOL` / `BOOLEAN`                                | `Boolean`        |
-| `BYTEA`                                           | `ByteArray`      |
+| PostgreSQL 类型 | Kotlin 默认类型 |
+|---|---|
+| `SMALLINT` / `INT2` | `Short` |
+| `INTEGER` / `INT` / `INT4` | `Int` |
+| `BIGINT` / `INT8` | `Long` |
+| `NUMERIC` | `BigDecimal` |
+| `DECIMAL` | `Double` |
+| `REAL` / `FLOAT4` / `DOUBLE PRECISION` / `FLOAT8` | `Double` |
+| `SMALLSERIAL` / `SERIAL2` | `Short` |
+| `SERIAL` / `SERIAL4` | `Int` |
+| `BIGSERIAL` / `SERIAL8` | `Long` |
+| `CHAR` / `VARCHAR` / `TEXT` | `String` |
+| `DATE` | `LocalDate` |
+| `TIME` | `LocalTime` |
+| `TIMESTAMP` | `LocalDateTime` |
+| `TIMESTAMPTZ` | `OffsetDateTime` |
+| `JSON` / `JSONB` | `String` |
+| `INTERVAL` | `String` |
+| `UUID` | `UUID` |
+| `BOOL` / `BOOLEAN` | `Boolean` |
+| `BYTEA` | `ByteArray` |
 
 建议：
 
@@ -1516,15 +1516,15 @@ sqldelight {
 
 ## 16. SQLite / MySQL / PostgreSQL 对比
 
-| 维度            | SQLite                      | MySQL                          | PostgreSQL                             |
-| --------------- | --------------------------- | ------------------------------ | -------------------------------------- |
-| 典型场景        | 本地存储、移动端、桌面、KMP | Web 服务、业务系统、传统关系库 | Web 服务、复杂查询、JSONB、强 SQL 能力 |
-| SQLDelight 平台 | Android/JVM/Native/JS/KMP   | JVM 为主                       | JVM 为主，部分 Native                  |
-| 方言配置        | 可默认，可指定 SQLite 版本  | 必须 `mysql-dialect`           | 必须 `postgresql-dialect`              |
-| Driver          | 平台差异大                  | JDBC/R2DBC                     | JDBC/R2DBC                             |
-| 事务            | 本地轻量                    | 服务端事务                     | 服务端事务                             |
-| 类型系统        | 动态类型倾向，映射简单      | 类型多，时间语义需注意         | 类型强，UUID/JSONB/TIMESTAMPTZ 友好    |
-| 迁移复杂度      | ALTER 能力受版本影响        | DDL 与线上锁表需注意           | DDL 能力强，但也要注意锁和索引创建     |
+| 维度 | SQLite | MySQL | PostgreSQL |
+|---|---|---|---|
+| 典型场景 | 本地存储、移动端、桌面、KMP | Web 服务、业务系统、传统关系库 | Web 服务、复杂查询、JSONB、强 SQL 能力 |
+| SQLDelight 平台 | Android/JVM/Native/JS/KMP | JVM 为主 | JVM 为主，部分 Native |
+| 方言配置 | 可默认，可指定 SQLite 版本 | 必须 `mysql-dialect` | 必须 `postgresql-dialect` |
+| Driver | 平台差异大 | JDBC/R2DBC | JDBC/R2DBC |
+| 事务 | 本地轻量 | 服务端事务 | 服务端事务 |
+| 类型系统 | 动态类型倾向，映射简单 | 类型多，时间语义需注意 | 类型强，UUID/JSONB/TIMESTAMPTZ 友好 |
+| 迁移复杂度 | ALTER 能力受版本影响 | DDL 与线上锁表需注意 | DDL 能力强，但也要注意锁和索引创建 |
 
 ## 17. 实战建议
 
@@ -1544,9 +1544,9 @@ sqldelight/com/example/db/
 
 每个 `.sq` 文件会生成一个对应的 `Queries` 对象：
 
-| 文件         | 生成对象         |
-| ------------ | ---------------- |
-| `User.sq`    | `userQueries`    |
+| 文件 | 生成对象 |
+|---|---|
+| `User.sq` | `userQueries` |
 | `Article.sq` | `articleQueries` |
 | `Comment.sq` | `commentQueries` |
 
@@ -1655,17 +1655,17 @@ MySQL/PostgreSQL 服务端测试：
 
 ## 18. 排错清单
 
-| 现象                          | 可能原因                                             | 处理                                         |
-| ----------------------------- | ---------------------------------------------------- | -------------------------------------------- |
-| `Database` 类没有生成         | 插件未应用、`.sq` 路径错误、包名错误                 | 检查 `sqldelight` 配置与 source set          |
-| MySQL/PostgreSQL SQL 编译失败 | 未配置对应 dialect                                   | 添加 `mysql-dialect` 或 `postgresql-dialect` |
-| Kotlin 参数名奇怪             | SQL 使用位置参数或列名不清晰                         | 改用命名参数 `:id`                           |
-| 返回类型不是预期 data class   | SELECT 投影与表结构不一致                            | 检查列顺序、别名、mapper                     |
-| SQLite 外键不生效             | 没有开启 foreign key                                 | Android/JVM/Native 按 driver 配置开启        |
-| 迁移验证未运行                | 未配置 `schemaOutputDirectory`                       | 配置目录并生成 schema 快照                   |
-| JS 查询不能同步调用           | Web Worker driver 是异步                             | 打开 `generateAsync`，在协程中调用           |
-| Flow 不更新                   | 不是通过 SQLDelight 查询对象写入，或查询监听表不匹配 | 确认写入路径和查询表依赖                     |
-| 金额精度异常                  | 使用了 `Double`                                      | 改用 `BigDecimal` / adapter                  |
+| 现象 | 可能原因 | 处理 |
+|---|---|---|
+| `Database` 类没有生成 | 插件未应用、`.sq` 路径错误、包名错误 | 检查 `sqldelight` 配置与 source set |
+| MySQL/PostgreSQL SQL 编译失败 | 未配置对应 dialect | 添加 `mysql-dialect` 或 `postgresql-dialect` |
+| Kotlin 参数名奇怪 | SQL 使用位置参数或列名不清晰 | 改用命名参数 `:id` |
+| 返回类型不是预期 data class | SELECT 投影与表结构不一致 | 检查列顺序、别名、mapper |
+| SQLite 外键不生效 | 没有开启 foreign key | Android/JVM/Native 按 driver 配置开启 |
+| 迁移验证未运行 | 未配置 `schemaOutputDirectory` | 配置目录并生成 schema 快照 |
+| JS 查询不能同步调用 | Web Worker driver 是异步 | 打开 `generateAsync`，在协程中调用 |
+| Flow 不更新 | 不是通过 SQLDelight 查询对象写入，或查询监听表不匹配 | 确认写入路径和查询表依赖 |
+| 金额精度异常 | 使用了 `Double` | 改用 `BigDecimal` / adapter |
 
 ## 19. 最小可用模板
 

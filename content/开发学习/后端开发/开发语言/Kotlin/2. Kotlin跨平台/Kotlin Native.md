@@ -1,5 +1,5 @@
 ---
-title: "Kotlin Native"
+title: 'Kotlin Native'
 date: 2026-05-07
 tags:
   - 开发学习
@@ -10,12 +10,10 @@ tags:
 > [[Kotlin知识点快速梳理|Kotlin]]、[[Kotlin Multiplatform]]
 
 # 0. Kotlin/Native简介
-
 > [!note] 概述
 > Kotlin/Native 是 Kotlin Multiplatform 的一部分，它可以把 Kotlin 代码编译为不依赖 JVM 的原生二进制产物。常见目标包括 iOS、macOS、Linux、Windows、watchOS、tvOS 等。
 
 Kotlin/Native的核心价值：
-
 - 在没有JVM的环境运行Kotlin代码
 - 为iOS等平台提供共享业务逻辑
 - 与C、Objective-C、Swift生态互操作
@@ -25,11 +23,8 @@ Kotlin/Native的核心价值：
 > Kotlin/Native不是“把JVM程序直接搬到原生平台”。JVM专属库、反射能力、动态类加载等能力不能直接复用。
 
 ---
-
 # 1. 编译目标
-
 ## 1.1 常见target
-
 ```kotlin
 kotlin {
     iosArm64()
@@ -43,9 +38,7 @@ kotlin {
 > Native target 的可用性与操作系统、CPU架构、编译工具链有关。例如iOS相关target通常需要在macOS环境下配合Xcode工具链构建。
 
 ## 1.2 产物形式
-
 Kotlin/Native可以生成：
-
 - 可执行文件
 - 静态库
 - 动态库
@@ -64,25 +57,19 @@ kotlin {
 ```
 
 ---
-
 # 2. 内存模型
-
 > [!note] 概述
 > Kotlin/Native使用自动内存管理。现在的默认内存模型已经支持更自然的跨线程对象共享，减少了早期版本中冻结对象带来的心智负担。
 
 需要注意的点：
-
 - 不要把JVM中的线程模型经验完全照搬到Native
 - 并发代码优先使用协程和明确的状态管理
 - 与Objective-C/Swift互操作时要注意对象生命周期
 - 大型对象、图片、文件句柄等资源仍然要按平台规则释放
 
 ---
-
 # 3. 与平台互操作
-
 ## 3.1 C互操作
-
 Kotlin/Native可以通过`.def`文件描述C库头文件和链接参数，然后生成Kotlin可调用的绑定。
 
 ```text
@@ -92,7 +79,6 @@ staticLibraries = libmylib.a
 ```
 
 ## 3.2 Objective-C和Swift互操作
-
 在Apple平台，Kotlin代码常被编译为framework供Swift或Objective-C调用。
 
 ```swift
@@ -105,28 +91,21 @@ let info = PlatformInfo().name
 > Swift调用Kotlin时，Kotlin中的可空类型、集合、异常、协程返回值都会映射为平台可理解的形式，但映射后的API不一定像原生Swift一样自然，需要专门设计对外暴露的接口。
 
 ---
-
 # 4. 适用场景
-
 > [!summary] 适合使用
->
 > - Android/iOS共享业务逻辑
 > - 跨平台命令行工具
 > - 需要复用Kotlin算法代码到Native环境
 > - Kotlin库需要提供Apple framework
 
 > [!warning] 不适合强行使用
->
 > - 强依赖JVM生态的后端应用
 > - 需要大量运行时反射或动态代理的框架
 > - 对平台UI细节要求很高但团队不熟悉Native互操作的项目
 
 ---
-
 # 5. 最佳实践
-
 > [!summary] 实践原则
->
 > - 公共层保持小而稳定
 > - 对外暴露给Swift的API要单独设计，不要直接暴露复杂内部模型
 > - 使用接口或`expect/actual`隔离平台差异
@@ -134,7 +113,6 @@ let info = PlatformInfo().name
 > - 对iOS framework的包名、模块名和二进制大小保持关注
 
 ---
-
 # 6. 深入内存模型
 
 > [!important] Kotlin/Native 内存模型的演进
@@ -160,7 +138,6 @@ flowchart LR
 ```
 
 > [!note] 新旧对比
->
 > - 旧模型：安全但僵化——要么冻结，要么不共享
 > - 新模型：灵活但有代价——GC 需要更复杂的跨线程引用跟踪，性能略低于冻结模型
 
@@ -195,13 +172,12 @@ object PerThreadRandom {
 }
 ```
 
-|        注解        | 作用                                 | 适用场景                           |    内存代价    |
-| :----------------: | :----------------------------------- | :--------------------------------- | :------------: |
-| `@SharedImmutable` | 告诉编译器该对象永不改变，可安全共享 | 全局常量、配置映射、枚举           |   无（单例）   |
-|   `@ThreadLocal`   | 每个线程独立副本，避免同步开销       | 线程不安全工具类、SimpleDateFormat | 每线程一份副本 |
+| 注解 | 作用 | 适用场景 | 内存代价 |
+|:----:|:----|:---------|:--------:|
+| `@SharedImmutable` | 告诉编译器该对象永不改变，可安全共享 | 全局常量、配置映射、枚举 | 无（单例） |
+| `@ThreadLocal` | 每个线程独立副本，避免同步开销 | 线程不安全工具类、SimpleDateFormat | 每线程一份副本 |
 
 > [!tip] 使用建议
->
 > - 97% 的场景不需要这两个注解——默认 GC 管理已经够用
 > - `@SharedImmutable` 用于性能关键的全局常量
 > - `@ThreadLocal` 只用于无法设计为无状态的工具类
@@ -211,7 +187,6 @@ object PerThreadRandom {
 ### 6.3.1 Kotlin/Native GC 特点
 
 > [!note] 与 JVM GC 的关键区别
->
 > - Kotlin/Native 使用**引用计数（Ref-Counting）+ 追踪式 GC** 的混合策略
 > - 引用计数：大多数对象在引用归零时立即回收（确定性高）
 > - 追踪式 GC：周期性扫描循环引用和跨线程引用（类似 JVM 的 CMS）
@@ -230,12 +205,12 @@ flowchart TD
 
 ### 6.3.2 内存泄漏常见模式
 
-|         模式          | 描述                                                   | 解决方案                                            |
-| :-------------------: | :----------------------------------------------------- | :-------------------------------------------------- |
-|  **跨线程闭包捕获**   | 协程 Job 未被取消，闭包持有外部对象引用                | 确保 `scope.cancel()` 在组件销毁时调用              |
-| **@ThreadLocal 滥用** | 以为 @ThreadLocal 会自动回收，但线程池中的线程不会释放 | 改用 `ThreadLocal.withInitial` 或对象池             |
-|   **C 指针未释放**    | `CPointer` 对应的 native 内存未调用 `free()`           | 用 `usePinned {}` 或 `CPointerHolder` RAII 包装     |
-|     **循环引用**      | Kotlin 对象互相引用，GC 扫描周期未到                   | 在 `DisposableEffect` 或 `onDestroy` 中显式断裂引用 |
+| 模式 | 描述 | 解决方案 |
+|:----:|:------|:--------|
+| **跨线程闭包捕获** | 协程 Job 未被取消，闭包持有外部对象引用 | 确保 `scope.cancel()` 在组件销毁时调用 |
+| **@ThreadLocal 滥用** | 以为 @ThreadLocal 会自动回收，但线程池中的线程不会释放 | 改用 `ThreadLocal.withInitial` 或对象池 |
+| **C 指针未释放** | `CPointer` 对应的 native 内存未调用 `free()` | 用 `usePinned {}` 或 `CPointerHolder` RAII 包装 |
+| **循环引用** | Kotlin 对象互相引用，GC 扫描周期未到 | 在 `DisposableEffect` 或 `onDestroy` 中显式断裂引用 |
 
 ```kotlin
 // 常见泄漏示例：协程泄漏
@@ -269,7 +244,6 @@ class SafeViewModel {
 ```
 
 ---
-
 # 7. 跨语言互操作进阶
 
 > [!important] Kotlin/Native 的真正价值在于与平台生态融合
@@ -296,7 +270,6 @@ libraryPaths = /usr/local/opt/curl/lib
 ```
 
 > [!tip] .def 文件关键配置
->
 > - `headers`：C 头文件路径（多个用空格分隔）
 > - `headerFilter`：只暴露匹配的头文件中的符号（避免引入系统头文件的噪声）
 > - `staticLibraries`：静态库名称（不包含 `lib` 前缀和 `.a` 后缀）
@@ -333,7 +306,6 @@ class NativeBuffer(size: Int) : Closeable {
 ```
 
 > [!warning] C 互操作的黄金法则
->
 > - 谁分配，谁释放——遵循底层 C 库的内存管理约定
 > - 总是用 `memScoped {}` 或 `usePinned {}` 代替手动 `alloc/free`
 > - C 回调中的 Kotlin 闭包可能被多线程调用，确保线程安全
@@ -436,7 +408,6 @@ sequenceDiagram
 ```
 
 > [!warning] 跨语言引用的核心风险
->
 > 1. Kotlin 闭包被传入 Swift/ObjC，可能被该侧长期持有
 > 2. Swift 闭包被传入 Kotlin，捕获了 Swift 对象，形成跨语言引用链
 > 3. 双方 GC / ARC 互不了解对方的引用图，可能延迟回收甚至泄漏
@@ -481,13 +452,11 @@ ArkTS / 仓颉 应用层
 ```
 
 > [!warning] 鸿蒙互操作的局限性
->
 > - 目前没有官方的 Kotlin/Native → ArkUI 直接绑定
 > - 需要通过 C 接口做中间层，序列化/反序列化开销较大
 > - 建议：鸿蒙侧只共享纯业务逻辑（无 UI），UI 层仍使用 ArkTS
 
 ---
-
 # 8. Framework 构建与集成
 
 > [!important] 框架构建是 KMP Native 项目从"个人项目"走向"团队项目"的关键基础设施
@@ -548,14 +517,14 @@ kotlin {
 
 ### 8.1.1 静态 vs 动态框架对比
 
-|       维度       | 静态框架（`isStatic = true`） | 动态框架（`isStatic = false`） |
-| :--------------: | :---------------------------: | :----------------------------: |
-|     产物大小     |     嵌入到主二进制，增量      |   独立 .framework，整体上传    |
-|     构建速度     |  快（不需要签名 framework）   |    慢（每次需要 codesign）     |
-|     启动时间     |        无额外加载开销         |      App 启动时 dyld 加载      |
-|  多 target 合并  |           需要 lipo           |           需要 lipo            |
-| 发布到 App Store |             正常              |              正常              |
-|  **开发期推荐**  |           **✅ 是**           |             ❌ 否              |
+| 维度 | 静态框架（`isStatic = true`） | 动态框架（`isStatic = false`） |
+|:----:|:-----------------------------:|:------------------------------:|
+| 产物大小 | 嵌入到主二进制，增量 | 独立 .framework，整体上传 |
+| 构建速度 | 快（不需要签名 framework） | 慢（每次需要 codesign） |
+| 启动时间 | 无额外加载开销 | App 启动时 dyld 加载 |
+| 多 target 合并 | 需要 lipo | 需要 lipo |
+| 发布到 App Store | 正常 | 正常 |
+| **开发期推荐** | **✅ 是** | ❌ 否 |
 
 > [!tip] 开发期用静态库，发布期按需选择
 > 静态库在 Xcode 中不需要每次重新 `embed` 和 `sign`，显著提升迭代速度。
@@ -608,7 +577,6 @@ kotlin {
 ```
 
 > [!warning] CocoaPods plugin 的局限性
->
 > - 每次 Gradle 构建后自动执行 `pod install`，如果 shared module 依赖复杂可能耗时较长
 > - 多个 App Target 共享同一个 KMP framework 时，需要确保 pod 路径一致
 > - **推荐替代方案**：直接生成 `.xcframework` 手动集成
@@ -645,14 +613,12 @@ cd "${SRCROOT}/../shared"
 ```
 
 > [!tip] Xcode 集成最佳实践
->
 > 1. Run Script 放在 **"Compile Sources" 之前**，确保 framework 已生成
 > 2. 设置 `FRAMEWORK_SEARCH_PATHS = $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)`
 > 3. 调试时使用 `isStatic=true` + `kotlin.native.cacheKind=static` 提速
 > 4. 在 `.gitignore` 中添加 `shared/build/` 和 `*.framework/`
 
 ---
-
 # 9. 调试与性能优化
 
 ## 9.1 崩溃符号化
@@ -690,7 +656,6 @@ export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 ```
 
 > [!tip] 线上崩溃符号化流程
->
 > 1. CI 构建时保存 dSYM 文件（关联 Git commit SHA）
 > 2. 上报崩溃栈时附带 dSYM UUID
 > 3. 在符号化服务中根据 UUID 匹配 dSYM
@@ -698,13 +663,13 @@ export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 
 ## 9.2 性能分析工具
 
-|            工具             | 适用平台    | 分析能力                         | 接入难度 |
-| :-------------------------: | :---------- | :------------------------------- | :------: |
-|    **Xcode Instruments**    | iOS/macOS   | CPU、内存、GPU、网络全量分析     |    低    |
-| **Android Studio Profiler** | Android     | CPU、内存、网络                  |    低    |
-|      **perf** (Linux)       | Linux       | CPU 采样、调用图                 |    中    |
-|      **Heap Profiler**      | iOS/Android | Kotlin/Native 对象分配追踪       |    高    |
-|      **自定义 Trace**       | 所有        | 埋点追踪特定 Kotlin 函数调用耗时 |    中    |
+| 工具 | 适用平台 | 分析能力 | 接入难度 |
+|:----:|:--------|:---------|:--------:|
+| **Xcode Instruments** | iOS/macOS | CPU、内存、GPU、网络全量分析 | 低 |
+| **Android Studio Profiler** | Android | CPU、内存、网络 | 低 |
+| **perf** (Linux) | Linux | CPU 采样、调用图 | 中 |
+| **Heap Profiler** | iOS/Android | Kotlin/Native 对象分配追踪 | 高 |
+| **自定义 Trace** | 所有 | 埋点追踪特定 Kotlin 函数调用耗时 | 中 |
 
 ```kotlin
 // 自定义 Trace 打点
@@ -758,20 +723,19 @@ kotlin {
 }
 ```
 
-|       编译器选项        | 效果                 | 推荐场景                                 |
-| :---------------------: | :------------------- | :--------------------------------------- |
-|         `-opt`          | 启用 LLVM 优化（O2） | 所有构建（包括 debug，除非需要快速迭代） |
-|          `-g`           | 生成 DWARF 调试信息  | 开发期 + 发布版（配合 dSYM）             |
-|       `-Xgc=cms`        | 并发标记清除 GC      | 默认，大多数场景                         |
-|       `-Xgc=noop`       | 完全禁用 GC          | 仅在确定无循环引用且性能极端敏感时使用   |
-|  `-Xbinary=dead_strip`  | 链接时移除未用符号   | 发布版（减小包体积）                     |
-| `-Xinline-checks=false` | 消除内联边界检查     | 发布版（提升运行时性能）                 |
+| 编译器选项 | 效果 | 推荐场景 |
+|:----------:|:----|:--------|
+| `-opt` | 启用 LLVM 优化（O2） | 所有构建（包括 debug，除非需要快速迭代） |
+| `-g` | 生成 DWARF 调试信息 | 开发期 + 发布版（配合 dSYM） |
+| `-Xgc=cms` | 并发标记清除 GC | 默认，大多数场景 |
+| `-Xgc=noop` | 完全禁用 GC | 仅在确定无循环引用且性能极端敏感时使用 |
+| `-Xbinary=dead_strip` | 链接时移除未用符号 | 发布版（减小包体积） |
+| `-Xinline-checks=false` | 消除内联边界检查 | 发布版（提升运行时性能） |
 
 > [!warning] `-Xgc=noop` 的风险
 > 禁用 GC 意味着所有对象永远不会被回收。只在确定对象数量有限且固定（如嵌入式系统、游戏引擎的固定对象池）时使用。**生产环境几乎永远不推荐**。
 
 ---
-
 # 10. 并发与协程实践
 
 ## 10.1 Kotlin/Native 协程特性
@@ -803,7 +767,6 @@ flowchart TD
 ```
 
 > [!important] 区别列表
->
 > - `Dispatchers.Default`：基于原生线程池（不是 JVM 的 ForkJoinPool），线程数 = CPU 核心数
 > - `Dispatchers.Main`：iOS 上基于 GCD 主队列，Android 上基于主线程 Looper
 > - `Dispatchers.IO`：Kotlin/Native 上没有专用 IO 线程池，用 `newSingleThreadContext` 替代
@@ -864,7 +827,6 @@ class SafeRepository {
 ```
 
 > [!tip] `AtomicInt` vs `Mutex` 选择
->
 > - `AtomicInt`/`AtomicLong`/`AtomicReference`：无锁、高性能，适合简单状态
 > - `Mutex.withLock {}`：协程挂起式锁，适合长时间临界区操作
 > - 不要直接用 `synchronized` 块——Kotlin/Native 上可能退化为平台的 `@Synchronized` 注解
@@ -873,7 +835,6 @@ class SafeRepository {
 
 > [!warning] 大多数场景不需要直接使用 Worker
 > 协程已经封装了线程管理和任务调度。只有以下情况需要直接操作 Worker：
->
 > - 需要绑定线程到特定 CPU 核心
 > - 执行不支持协程的 C 库回调
 > - 需要确定性线程优先级
@@ -897,7 +858,6 @@ worker.requestTermination()
 ```
 
 ---
-
 # 11. 包体积与构建优化
 
 > [!important] KMP Native 的包体积是团队落地时最先遇到的"硬钉子"
@@ -937,11 +897,11 @@ kotlin {
 }
 ```
 
-|            配置            | 效果                                      |  体积影响   |
-| :------------------------: | :---------------------------------------- | :---------: |
-|        导出所有依赖        | 所有 module 的 public API 都对 Swift 可见 | 基线 +100%  |
-|   **仅导出必要 module**    | 只暴露核心 API                            | **-30~50%** |
-| `transitiveExport = false` | 不传递导出依赖                            | **-10~20%** |
+| 配置 | 效果 | 体积影响 |
+|:----:|:----|:--------:|
+| 导出所有依赖 | 所有 module 的 public API 都对 Swift 可见 | 基线 +100% |
+| **仅导出必要 module** | 只暴露核心 API | **-30~50%** |
+| `transitiveExport = false` | 不传递导出依赖 | **-10~20%** |
 
 ### 11.2.2 Dead Code Elimination
 
@@ -1001,13 +961,11 @@ kotlin.incremental.multiplatform=true
 ```
 
 > [!note] 构建时间参考（中等规模项目）
->
 > - 首次全量编译：~8-15 分钟
 > - 增量编译（一行代码修改）：~30-90 秒
 > - 增量编译（添加依赖）：~2-5 分钟
 
 ---
-
 # 12. 大型项目应用模式
 
 > [!important] 当团队规模 > 5 人、shared module > 10 个时，以下模式决定项目成败
@@ -1062,7 +1020,6 @@ kotlin {
 ```
 
 > [!tip] 多模块策略的好处
->
 > - **并行编译**：各个 framework 可独立编译，CI 可以并行
 > - **按需加载**：App 只有在使用同步功能时才加载 SyncKit
 > - **API 隔离**：不同团队负责不同的 framework，接口变更互不影响
@@ -1088,7 +1045,6 @@ internal class UserRepositoryImpl(
 ```
 
 > [!important] API Surface 控制规则
->
 > 1. `public` 的顶层声明才会被 framework 导出 → Swift 可见
 > 2. `internal`、`private` 的声明**不会**出现在 framework 的头文件中
 > 3. 仅导出 `api/` 包的模块，`internal/` 包不导出
@@ -1113,7 +1069,6 @@ fun oldMethod()        // ✅ 安全，编译器给 warning
 ```
 
 > [!tip] 语义化版本管理建议
->
 > ```
 > MAJOR.MINOR.PATCH
 > MAJOR：破坏性 API 变更（删除/修改 public 方法）
@@ -1137,7 +1092,6 @@ flowchart LR
 > 不需要一次全部迁移。从最"纯"的层（数据模型）开始，逐层向上替换。每个步骤完成后都能独立编译和测试，不影响未迁移的模块。
 
 > [!summary] Kotlin/Native 进阶全景
->
 > ```text
 > 从"能编译"到"能交付"，Kotlin/Native 需要跨越的维度：
 >
@@ -1151,7 +1105,6 @@ flowchart LR
 > ```
 
 > [!tip] 关联进阶笔记
->
 > - [[Kotlin Multiplatform]] — KMP 全栈项目架构与工程实践
 > - [[跨平台同步原理]] — 端云同步引擎与冲突处理
 > - [[Compose Multiplatform 混合渲染]] — CMP 与原生组件互操作

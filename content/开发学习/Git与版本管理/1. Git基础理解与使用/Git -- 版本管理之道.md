@@ -38,15 +38,14 @@ graph LR
     C -- "git checkout / restore" --> A
 ```
 
-| 区域         | 物理位置                | 本质                   | 你对它的操作                                |
-| ------------ | ----------------------- | ---------------------- | ------------------------------------------- |
-| **工作区**   | 项目目录下的可见文件    | 你正在编辑的文件副本   | 自由修改、增删                              |
-| **暂存区**   | `.git/index` 二进制文件 | 下一次提交的"预演快照" | `git add` 加入，`git restore --staged` 撤出 |
-| **本地仓库** | `.git/objects/`         | 永久历史存档           | `git commit` 写入                           |
+| 区域 | 物理位置 | 本质 | 你对它的操作 |
+|------|----------|------|-------------|
+| **工作区** | 项目目录下的可见文件 | 你正在编辑的文件副本 | 自由修改、增删 |
+| **暂存区** | `.git/index` 二进制文件 | 下一次提交的"预演快照" | `git add` 加入，`git restore --staged` 撤出 |
+| **本地仓库** | `.git/objects/` | 永久历史存档 | `git commit` 写入 |
 
 > [!warning] ⚠️ 认知纠正
 > 暂存区不是"临时中转站"，而是 **原子化提交的构建台**。
->
 > - 你可以分多次 `git add`，把一个大改动拆成多个逻辑独立的提交。
 > - 你可以通过 `git add -p` 精确到**某几行代码**进入暂存区，而非整个文件。
 > - 这种"先组装、再落盘"的设计，让你在最终 `git commit` 之前永远有机会反悔和精修。
@@ -72,16 +71,15 @@ graph LR
 
 ### 2.1 安装指南
 
-| 平台                      | 推荐方式                      | 命令                                                 |
-| ------------------------- | ----------------------------- | ---------------------------------------------------- |
-| **macOS**                 | Homebrew（首选）              | `brew install git`                                   |
-| **Windows**               | Git for Windows（官方安装包） | 下载 [git-scm.com](https://git-scm.com/download/win) |
-| **Linux (Debian/Ubuntu)** | apt 包管理器                  | `sudo apt install git`                               |
-| **Linux (Fedora/CentOS)** | dnf / yum                     | `sudo dnf install git`                               |
+| 平台 | 推荐方式 | 命令 |
+|------|----------|------|
+| **macOS** | Homebrew（首选） | `brew install git` |
+| **Windows** | Git for Windows（官方安装包） | 下载 [git-scm.com](https://git-scm.com/download/win) |
+| **Linux (Debian/Ubuntu)** | apt 包管理器 | `sudo apt install git` |
+| **Linux (Fedora/CentOS)** | dnf / yum | `sudo dnf install git` |
 
 > [!tip] 💡 macOS 用户请注意
 > macOS 预装了一个 Git（由 Xcode Command Line Tools 提供），但版本通常较旧。建议通过 Homebrew 安装最新稳定版：
->
 > ```bash
 > # 安装后，确认使用 Homebrew 版本
 > brew install git
@@ -90,7 +88,6 @@ graph LR
 > ```
 
 Windows 安装 Git for Windows 时，**建议选项**：
-
 - 编辑器选择：VS Code 或你日常使用的编辑器（不要用默认的 Vim，除非你会用）
 - 路径环境：选择 "Git from the command line and also from 3rd-party software"
 - 行尾转换：选择 "Checkout as-is, commit as-is"（避免 CRLF/LF 混乱）
@@ -104,11 +101,11 @@ Windows 安装 Git for Windows 时，**建议选项**：
 (当前仓库)  (当前用户)  (整台机器)
 ```
 
-| 作用域     | 配置文件路径         | 适用内容                   |
-| ---------- | -------------------- | -------------------------- |
-| `--local`  | `<repo>/.git/config` | 项目特定配置（如项目邮箱） |
-| `--global` | `~/.gitconfig`       | 用户身份、常用别名         |
-| `--system` | `/etc/gitconfig`     | 极少使用，管理员级配置     |
+| 作用域 | 配置文件路径 | 适用内容 |
+|--------|-------------|----------|
+| `--local` | `<repo>/.git/config` | 项目特定配置（如项目邮箱） |
+| `--global` | `~/.gitconfig` | 用户身份、常用别名 |
+| `--system` | `/etc/gitconfig` | 极少使用，管理员级配置 |
 
 ```bash
 # ========== 必备基础配置 ==========
@@ -127,7 +124,6 @@ git config user.name              # 查看某个具体值
 ```
 
 > [!warning] 🔴 常见踩坑
->
 > - 忘记配置 `user.name` / `user.email` 就直接 commit，会导致提交记录显示错误的身份。这在公司仓库中尤其尴尬。
 > - 不确定当前配置来自哪个层级？用 `git config --list --show-origin` 一键排查。
 
@@ -167,14 +163,13 @@ desktop.ini     # Windows
 ```
 
 > [!tip] 💡 匹配规则速记
->
-> | 模式             | 含义                                         |
-> | ---------------- | -------------------------------------------- |
-> | `*.log`          | 匹配所有 `.log` 后缀文件                     |
-> | `build/`         | 匹配 `build/` 目录及其下所有内容             |
-> | `!important.log` | 否定模式——不忽略 `important.log`             |
-> | `/TODO.md`       | 只忽略**根目录**下的 `TODO.md`，不影响子目录 |
-> | `doc/**/*.pdf`   | 匹配 `doc/` 下任意深度的 `.pdf` 文件         |
+> | 模式 | 含义 |
+> |------|------|
+> | `*.log` | 匹配所有 `.log` 后缀文件 |
+> | `build/` | 匹配 `build/` 目录及其下所有内容 |
+> | `!important.log` | 否定模式——不忽略 `important.log` |
+> | `/TODO.md` | 只忽略**根目录**下的 `TODO.md`，不影响子目录 |
+> | `doc/**/*.pdf` | 匹配 `doc/` 下任意深度的 `.pdf` 文件 |
 
 > [!danger] 🔴 安全红线
 > **绝对不要提交**：API 密钥、数据库密码、私有证书、`.env` 文件。
@@ -202,11 +197,10 @@ git clone https://github.com/user/repo.git my-dir   # 克隆到指定目录名
 ```
 
 > [!tip] 💡 HTTPS vs SSH
->
-> | 协议  | 优点                   | 缺点                                         |
-> | ----- | ---------------------- | -------------------------------------------- |
+> | 协议 | 优点 | 缺点 |
+> |------|------|------|
 > | HTTPS | 配置简单，无需 SSH Key | 每次推送需输入密码（或用 credential helper） |
-> | SSH   | 配置一次，永久免密     | 需先配置 SSH Key 并添加到 GitHub/GitLab      |
+> | SSH | 配置一次，永久免密 | 需先配置 SSH Key 并添加到 GitHub/GitLab |
 >
 > **推荐**：个人开发环境配置 SSH Key，一劳永逸。
 
@@ -232,16 +226,15 @@ git add -p                   # 逐块（hunk）交互式选择要暂存的变更
 > (1/5) Stage this hunk [y,n,q,a,d,e,?]?
 > ```
 >
-> | 选项 | 含义           | 使用场景                                 |
-> | ---- | -------------- | ---------------------------------------- |
-> | `y`  | 暂存这一块     | 这块属于当前即将提交的逻辑               |
-> | `n`  | 跳过这一块     | 这块不属于本次提交                       |
-> | `s`  | 拆分成更小的块 | 当前 hunk 里混了多个逻辑，需要进一步细化 |
-> | `e`  | 手动编辑这一块 | 需要更精细的控制                         |
-> | `q`  | 退出，保留已选 | 我选够了                                 |
+> | 选项 | 含义 | 使用场景 |
+> |------|------|----------|
+> | `y` | 暂存这一块 | 这块属于当前即将提交的逻辑 |
+> | `n` | 跳过这一块 | 这块不属于本次提交 |
+> | `s` | 拆分成更小的块 | 当前 hunk 里混了多个逻辑，需要进一步细化 |
+> | `e` | 手动编辑这一块 | 需要更精细的控制 |
+> | `q` | 退出，保留已选 | 我选够了 |
 >
 > **实际工作流**：
->
 > 1. 写代码时随意改（功能 A + Bug 修复 + 格式调整一起改）。
 > 2. 准备提交时，用 `git add -p` 逐块挑选，将功能 A 的变更精准放入暂存区。
 > 3. 执行 `git commit`，得到一个纯粹的、只包含功能 A 的提交。
@@ -265,26 +258,24 @@ git commit --amend -m "docs: 更新 README 安装说明"
 > [!note] Commit Message 的基本规范
 >
 > 推荐遵循 **Conventional Commits** 格式：
->
 > ```
 > <type>: <简短描述>
 >
 > <可选的详细说明正文>
 > ```
 >
-> | type       | 含义                     | 示例                                 |
-> | ---------- | ------------------------ | ------------------------------------ |
-> | `feat`     | 新功能                   | `feat: 添加密码重置流程`             |
-> | `fix`      | Bug 修复                 | `fix: 修复 token 过期后未跳转登录页` |
-> | `docs`     | 文档变更                 | `docs: 补充 API 接口说明`            |
-> | `refactor` | 重构（不改变功能）       | `refactor: 提取公共校验逻辑`         |
-> | `style`    | 格式调整（空格、缩进等） | `style: 统一缩进为 2 空格`           |
-> | `chore`    | 杂项（依赖更新等）       | `chore: 升级 ESLint 到 v9`           |
+> | type | 含义 | 示例 |
+> |------|------|------|
+> | `feat` | 新功能 | `feat: 添加密码重置流程` |
+> | `fix` | Bug 修复 | `fix: 修复 token 过期后未跳转登录页` |
+> | `docs` | 文档变更 | `docs: 补充 API 接口说明` |
+> | `refactor` | 重构（不改变功能） | `refactor: 提取公共校验逻辑` |
+> | `style` | 格式调整（空格、缩进等） | `style: 统一缩进为 2 空格` |
+> | `chore` | 杂项（依赖更新等） | `chore: 升级 ESLint 到 v9` |
 >
 > 好的提交信息 = 六个月后的你能看懂今天做了什么。
 
 > [!warning] 🔴 关于 `git commit --amend`
->
 > - `--amend` 会**改写最后一次提交**，产生新的 commit hash。
 > - **已经 push 到远程的 commit，绝对不要 amend**，否则会导致协作者的本地分支混乱。
 > - 安全用法：只 amend 尚未 push 的本地 commit。
@@ -321,7 +312,6 @@ git log --author="your-name"          # 按作者过滤
 > [!note] 常用 `git log` 别名推荐
 >
 > 把这些加入你的全局配置，效率翻倍：
->
 > ```bash
 > git config --global alias.lg "log --oneline --graph --all"
 > git config --global alias.ls "log --oneline --graph --all --decorate"
@@ -353,12 +343,12 @@ graph TB
 
 **掌握这三个区域、五个核心命令**，你就已经具备了日常开发中 80% 的 Git 使用能力：
 
-| 命令               | 职责     | 频率         |
-| ------------------ | -------- | ------------ |
-| `git status`       | 洞察状态 | 随时         |
-| `git add -p`       | 精准暂存 | 每次提交前   |
-| `git commit`       | 版本定格 | 每次提交     |
-| `git log`          | 回溯历史 | 排查问题时   |
+| 命令 | 职责 | 频率 |
+|------|------|------|
+| `git status` | 洞察状态 | 随时 |
+| `git add -p` | 精准暂存 | 每次提交前 |
+| `git commit` | 版本定格 | 每次提交 |
+| `git log` | 回溯历史 | 排查问题时 |
 | `git clone / init` | 项目起点 | 每个项目一次 |
 
-有了这个基础，后续的 [[Git分支与协作]]（分支、合并、变基）和 [[Git工作流与实际工程实践]]（团队工作流）就是水到渠成的进阶。
+有了这个基础，后续的  [[Git分支与协作]]（分支、合并、变基）和 [[Git工作流与实际工程实践]]（团队工作流）就是水到渠成的进阶。

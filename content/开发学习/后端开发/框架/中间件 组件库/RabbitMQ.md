@@ -1,5 +1,5 @@
 ---
-title: "RabbitMQ"
+title: 'RabbitMQ'
 date: 2026-04-28
 tags:
   - 开发学习
@@ -7,13 +7,11 @@ tags:
 ---
 
 # 0. RabbitMQ 简介
-
 > [!question] RabbitMQ 是什么？
 > RabbitMQ 是一个实现 AMQP 协议的消息代理（Message Broker）。
 > 它的核心职责是接收生产者发送的消息，根据路由规则投递到队列，再由消费者异步消费。
 
 > [!summary] RabbitMQ 适合的场景
->
 > - 订单创建后异步发送通知
 > - 支付完成后触发积分、优惠券、发票等后续流程
 > - 消费失败后延迟重试
@@ -21,9 +19,7 @@ tags:
 > - 削峰填谷，保护下游服务
 
 # 1. RabbitMQ 架构
-
 > [!important] 核心组件
->
 > - **Producer**：生产者，负责发送消息
 > - **Exchange**：交换机，负责根据路由规则分发消息
 > - **Queue**：队列，负责保存消息
@@ -50,7 +46,6 @@ flowchart LR
 ```
 
 ## 1.1 消息投递流程
-
 ```mermaid
 sequenceDiagram
     participant P as Producer
@@ -70,16 +65,14 @@ sequenceDiagram
 ```
 
 # 2. Exchange 类型
-
-|  类型   |                  路由方式                  |        示例         |
-| :-----: | :----------------------------------------: | :-----------------: |
-| Direct  |            Routing Key 完全匹配            |    `order.paid`     |
-| Fanout  |      不看 Routing Key，广播到所有队列      |      系统通知       |
-|  Topic  | 通配符匹配，`*` 匹配一个词，`#` 匹配多个词 | `order.*`、`user.#` |
-| Headers |                按消息头匹配                |    复杂条件路由     |
+| 类型 | 路由方式 | 示例 |
+| :---: | :---: | :---: |
+| Direct | Routing Key 完全匹配 | `order.paid` |
+| Fanout | 不看 Routing Key，广播到所有队列 | 系统通知 |
+| Topic | 通配符匹配，`*` 匹配一个词，`#` 匹配多个词 | `order.*`、`user.#` |
+| Headers | 按消息头匹配 | 复杂条件路由 |
 
 > [!example] Topic Exchange 示例
->
 > ```mermaid
 > flowchart LR
 >     P[Producer] --> E[Topic Exchange]
@@ -90,9 +83,7 @@ sequenceDiagram
 > ```
 
 # 3. 消息可靠性
-
 > [!warning] RabbitMQ 可靠性要覆盖三段链路
->
 > 1. Producer -> Broker：生产者确认（Publisher Confirm）
 > 2. Broker 内部：队列和消息持久化
 > 3. Broker -> Consumer：手动 ACK、失败重试、死信队列
@@ -112,9 +103,7 @@ flowchart TD
 ```
 
 ## 3.1 持久化
-
 > [!note] 三个地方都要注意
->
 > - Exchange durable
 > - Queue durable
 > - Message persistent
@@ -122,7 +111,6 @@ flowchart TD
 > 只设置队列持久化还不够，消息本身也要设置为持久化。
 
 ## 3.2 ACK
-
 > [!important] 为什么推荐手动 ACK？
 > 自动 ACK 表示 RabbitMQ 一投递给消费者就认为成功。
 > 如果消费者刚拿到消息就崩溃，消息会丢失。
@@ -130,9 +118,7 @@ flowchart TD
 > 手动 ACK 的语义是：消费者业务逻辑真正执行成功后，再确认消息。
 
 ## 3.3 死信队列
-
 > [!note] 消息什么时候会变成死信？
->
 > - 被消费者 `basicNack` 并且不重新入队
 > - 消息 TTL 过期
 > - 队列长度超过限制
@@ -148,28 +134,22 @@ flowchart LR
 ```
 
 # 4. 常见业务模型
-
 ## 4.1 异步任务
-
 > [!example] 下单后发短信
 > 下单接口只负责创建订单，然后发送 `order.created` 事件。
 > 短信服务异步消费事件，不影响下单主链路。
 
 ## 4.2 发布订阅
-
 > [!example] 支付成功事件
 > `order.paid` 可以同时被多个系统消费：
->
 > - 积分服务
 > - 发票服务
 > - 数据分析
 > - 通知服务
 
 ## 4.3 延迟重试
-
 > [!note] RabbitMQ 延迟重试思路
 > 可以通过 TTL + 死信队列实现：
->
 > 1. 消费失败后投递到延迟队列
 > 2. 延迟队列设置 TTL
 > 3. TTL 到期后消息进入业务队列
@@ -184,7 +164,6 @@ flowchart LR
 ```
 
 # 5. Ktor 示例
-
 > [!example] Ktor + RabbitMQ Java Client
 > Ktor 没有强绑定 RabbitMQ 的官方服务端插件，通常直接使用 RabbitMQ Java Client 或封装成自己的组件。
 
@@ -200,7 +179,6 @@ dependencies {
 ```
 
 ## 5.1 连接管理
-
 ```kotlin
 // RabbitProvider.kt
 package com.example.rabbit
@@ -244,7 +222,6 @@ object RabbitProvider {
 ```
 
 ## 5.2 生产者接口
-
 ```kotlin
 // OrderRoutes.kt
 package com.example.rabbit
@@ -311,7 +288,6 @@ fun Application.orderRoutes() {
 ```
 
 ## 5.3 消费者
-
 ```kotlin
 // OrderConsumer.kt
 package com.example.rabbit
@@ -355,9 +331,7 @@ class OrderConsumer {
 > 如果在 Ktor 请求处理中做大量同步等待，应放到 `Dispatchers.IO` 或封装异步投递队列，避免阻塞事件循环。
 
 # 6. SpringBoot 示例
-
 > [!example] 依赖配置
-
 ```kotlin
 // build.gradle.kts
 dependencies {
@@ -383,7 +357,6 @@ spring:
 ```
 
 ## 6.1 队列与交换机配置
-
 ```java
 // RabbitConfig.java
 package com.example.rabbit;
@@ -433,7 +406,6 @@ public class RabbitConfig {
 ```
 
 ## 6.2 生产者
-
 ```java
 // OrderEvent.java
 package com.example.rabbit;
@@ -511,7 +483,6 @@ public class OrderController {
 ```
 
 ## 6.3 消费者
-
 ```java
 // OrderConsumer.java
 package com.example.rabbit;
@@ -542,7 +513,6 @@ public class OrderConsumer {
 ```
 
 ## 6.4 生产者确认
-
 ```java
 // RabbitTemplateConfig.java
 package com.example.rabbit;
@@ -573,13 +543,11 @@ public class RabbitTemplateConfig {
 ```
 
 # 7. 幂等与事务
-
 > [!warning] 消息重复是正常现象
 > RabbitMQ + 手动 ACK 的系统中，如果消费者处理完业务但 ACK 之前宕机，消息会再次投递。
 > 所以消费者必须幂等。
 
 ## 7.1 幂等表
-
 ```sql
 CREATE TABLE consumed_message (
     message_id VARCHAR(64) PRIMARY KEY,
@@ -597,11 +565,9 @@ flowchart TD
 ```
 
 ## 7.2 本地消息表
-
 > [!important] 解决“数据库成功但消息发送失败”
 > 如果业务写数据库成功，但发送 MQ 失败，就会出现数据和消息不一致。
 > 常见方案是本地消息表：
->
 > 1. 在同一个数据库事务中写业务表和 outbox 表
 > 2. 后台任务扫描 outbox 表并发送 MQ
 > 3. 发送成功后标记为已发送
@@ -622,9 +588,7 @@ sequenceDiagram
 ```
 
 # 8. 最佳实践
-
 > [!summary] RabbitMQ 使用建议
->
 > - Exchange、Queue、Message 都要按可靠性要求持久化
 > - 生产者开启 Publisher Confirm 和 Return Callback
 > - 消费者使用手动 ACK

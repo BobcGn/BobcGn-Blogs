@@ -1,5 +1,5 @@
 ---
-title: "KuiklyUI跨平台实践分析"
+title: 'KuiklyUI跨平台实践分析'
 date: 2026-05-04
 tags:
   - 开发学习
@@ -61,9 +61,9 @@ KuiklyUI 不是“单一 KMP 模块直接跑多端”的简单形态，而是一
 
 KuiklyUI 的 Gradle 不是“一个 settings + 一个 root build”这么简单，而是**profile 驱动**：
 
-1. `settings*.gradle.kts` 决定哪些模块参与构建。
-2. `settings*.gradle.kts` 用 `buildFileName` 指定模块应该使用哪份 `build.<version>.gradle.kts`。
-3. root `build.<version>.gradle.kts` 统一定义插件版本、仓库、依赖替换策略。
+1. `settings*.gradle.kts` 决定哪些模块参与构建。  
+2. `settings*.gradle.kts` 用 `buildFileName` 指定模块应该使用哪份 `build.<version>.gradle.kts`。  
+3. root `build.<version>.gradle.kts` 统一定义插件版本、仓库、依赖替换策略。  
 4. 每个模块的 `build.<version>.gradle.kts` 再声明 target/sourceSet/任务。
 
 可把它理解为：
@@ -155,8 +155,8 @@ project(":compose").buildFileName = buildFileName
 
 从“任务依赖图”看，KuiklyUI 是典型的**两段式编排**：
 
-1. 先构建跨端业务产物（`demo`）。
-2. 再构建平台宿主并拷贝/链接业务产物。
+1. 先构建跨端业务产物（`demo`）。  
+2. 再构建平台宿主并拷贝/链接业务产物。  
 
 以 JS 端为例：
 
@@ -320,9 +320,9 @@ fun renderView(json: dynamic) {
 
 ```javascript
 // miniApp/dist/app.js
-global.com = business.com
-global.callKotlinMethod = business.callKotlinMethod
-render.initApp()
+global.com = business.com;
+global.callKotlinMethod = business.callKotlinMethod;
+render.initApp();
 ```
 
 ## 5.4 小程序实践亮点
@@ -377,11 +377,11 @@ Kuikly 的做法是把鸿蒙构建隔离在独立 settings/build 文件中：
 
 ## 6.3 宿主接入链路（NAPI + CMake + ArkTS + KNOI）
 
-1. `libshared.so`（Kotlin 业务产物）由 `demo` 产出。
-2. `ohosApp/entry/src/main/cpp/CMakeLists.txt` 将 `libshared.so` 与 `libkuikly.so` 一起链接进 `libkuikly_entry.so`。
-3. `ohosApp/entry/src/main/cpp/napi_init.cpp` 暴露 `initKuikly` 给 ArkTS。
-4. ArkTS 侧 `MyNativeManager.ets` 调 `Napi.initKuikly()`。
-5. 页面通过 `Kuikly({...})` 组件加载跨端页面，并由 `KuiklyViewDelegate` 注入自定义 View/Module。
+1. `libshared.so`（Kotlin 业务产物）由 `demo` 产出。  
+2. `ohosApp/entry/src/main/cpp/CMakeLists.txt` 将 `libshared.so` 与 `libkuikly.so` 一起链接进 `libkuikly_entry.so`。  
+3. `ohosApp/entry/src/main/cpp/napi_init.cpp` 暴露 `initKuikly` 给 ArkTS。  
+4. ArkTS 侧 `MyNativeManager.ets` 调 `Napi.initKuikly()`。  
+5. 页面通过 `Kuikly({...})` 组件加载跨端页面，并由 `KuiklyViewDelegate` 注入自定义 View/Module。  
 
 此外，`EntryAbilityStage.ets` 使用 `@kuiklybase/knoi`：
 
@@ -457,8 +457,8 @@ ArkTS(EntryAbility/Kuikly)
 
 为了更易理解鸿蒙桥接，可对照 iOS：
 
-- iOS：`ios.def` 暴露 C/ObjC 符号给 Kotlin Native；业务通过 CocoaPods/Framework 注入宿主。
-- 鸿蒙：`ohos.def` + `KRRenderCValue.h` 暴露符号；业务通过 `.so + NAPI` 注入宿主。
+- iOS：`ios.def` 暴露 C/ObjC 符号给 Kotlin Native；业务通过 CocoaPods/Framework 注入宿主。  
+- 鸿蒙：`ohos.def` + `KRRenderCValue.h` 暴露符号；业务通过 `.so + NAPI` 注入宿主。  
 
 两者思路相同：  
 **都在用 cinterop 定义跨语言边界，只是宿主生态一个是 Pod/ObjC，一个是 ArkTS/NAPI。**
@@ -477,8 +477,8 @@ ArkTS(EntryAbility/Kuikly)
 
 ## 7.2 构建策略模板
 
-1. 主线 profile：Android+iOS+desktop+web。
-2. 特殊 profile：鸿蒙等定制 toolchain 平台。
+1. 主线 profile：Android+iOS+desktop+web。  
+2. 特殊 profile：鸿蒙等定制 toolchain 平台。  
 3. 产物标准化：
    - `build/outputs/<platform>/...`
    - 提供 `copyArtifacts` 任务给宿主工程。
@@ -488,11 +488,11 @@ ArkTS(EntryAbility/Kuikly)
 
 每新增一个平台，固定完成这 5 件事：
 
-1. 新增 target 与 sourceSet。
-2. 实现 `NativeBridge/PlatformImp` 的平台 actual。
-3. 提供 render adapter（router/log/media/network 等）。
-4. 提供宿主桥接入口（JS bridge / NAPI / JNI）。
-5. 编写 profile 化构建脚本与拷贝任务。
+1. 新增 target 与 sourceSet。  
+2. 实现 `NativeBridge/PlatformImp` 的平台 actual。  
+3. 提供 render adapter（router/log/media/network 等）。  
+4. 提供宿主桥接入口（JS bridge / NAPI / JNI）。  
+5. 编写 profile 化构建脚本与拷贝任务。  
 
 ## 7.4 重点风险清单
 
@@ -521,13 +521,14 @@ KuiklyUI 的最大实践价值不在“支持了多少端”，而在于它已�
 这一章对应“刚创建 Kotlin Multiplatform 工程”的阶段，目标是：  
 **第一次初始化就把项目配置成可长期演进的多端工程，而不是先跑通、后返工。**
 
+
 ### 9.1 向导阶段怎么选，避免后续返工
 
 在 IDE 新建 KMP（你图中的界面）时，建议直接这样选：
 
-1. 勾选 `Android`、`iOS`、`桌面`、`Web`。
-2. UI 选择“共享 UI”（Compose Multiplatform）。
-3. 若你不准备做后端，取消 `服务器(Ktor)`。
+1. 勾选 `Android`、`iOS`、`桌面`、`Web`。  
+2. UI 选择“共享 UI”（Compose Multiplatform）。  
+3. 若你不准备做后端，取消 `服务器(Ktor)`。  
 4. JDK 推荐先用 17；若向导默认是 21，创建后把 Gradle JDK 切回 17（兼容 AGP 7.4.x/8.x 更稳）。
 
 ### 9.2 创建后第一件事：改成 profile 化构建
@@ -566,9 +567,9 @@ build.2.0.ohos.gradle.kts
 
 创建工程当天建议把以下配置全部补齐：
 
-1. root `build.<profile>.gradle.kts` 固定插件版本：Kotlin/AGP/KSP/Compose。
-2. `allprojects.repositories` 统一仓库，避免子模块各写一份。
-3. `dependencySubstitution`（如本地 `:compose` 替代远端 compose 制品）便于源码联调。
+1. root `build.<profile>.gradle.kts` 固定插件版本：Kotlin/AGP/KSP/Compose。  
+2. `allprojects.repositories` 统一仓库，避免子模块各写一份。  
+3. `dependencySubstitution`（如本地 `:compose` 替代远端 compose 制品）便于源码联调。  
 4. `gradle.properties` 固定关键参数：
    - `ksp.incremental=true`
    - `kotlin.js.webpack.major.version=4`
@@ -579,8 +580,8 @@ build.2.0.ohos.gradle.kts
 
 这是最容易后补、也最容易补崩的部分，建议首日最小接通：
 
-1. H5：配置 `h5App` 的 bundle 拷贝与 html 重写任务。
-2. 小程序：配置 `miniApp` 的 `target=node`、`dist/lib` + `dist/business` 同步任务。
+1. H5：配置 `h5App` 的 bundle 拷贝与 html 重写任务。  
+2. 小程序：配置 `miniApp` 的 `target=node`、`dist/lib` + `dist/business` 同步任务。  
 3. 鸿蒙：准备 `settings.2.0.ohos.gradle.kts` + `demo:linkShared*OhosArm64` + `so/header` 拷贝脚本。
 
 只要这三条链路早接上，后面扩页面不会改工程骨架。
@@ -625,20 +626,20 @@ fi
 
 满足以下 7 条，才算“一步到位”：
 
-1. `settings.2.1.21.gradle.kts` 与 `settings.2.0.ohos.gradle.kts` 都能独立 sync。
-2. `@Page` 能被 KSP 正确生成入口（Android/iOS/JS 至少验证一个）。
-3. Android 壳可安装运行。
-4. iOS 壳可在 Xcode 启动。
-5. H5 能打开路由页。
-6. 小程序 `dist` 可被开发者工具直接加载。
+1. `settings.2.1.21.gradle.kts` 与 `settings.2.0.ohos.gradle.kts` 都能独立 sync。  
+2. `@Page` 能被 KSP 正确生成入口（Android/iOS/JS 至少验证一个）。  
+3. Android 壳可安装运行。  
+4. iOS 壳可在 Xcode 启动。  
+5. H5 能打开路由页。  
+6. 小程序 `dist` 可被开发者工具直接加载。  
 7. 鸿蒙 `libshared.so + libshared_api.h` 能成功复制并被 ohosApp 编译识别。
 
 ### 9.8 首日最常见坑位与规避
 
-- 向导用 JDK21，Gradle/AGP 组合不兼容：立即切 Gradle JDK 17。
-- 只配了主线 settings，没配 ohos settings：后续鸿蒙接入会大面积改脚本。
-- 小程序没设 webpack `target=node`：运行时兼容问题会很隐蔽。
-- 忘了做业务 bundle 到宿主 dist 的同步任务：壳能跑，页面白屏。
+- 向导用 JDK21，Gradle/AGP 组合不兼容：立即切 Gradle JDK 17。  
+- 只配了主线 settings，没配 ohos settings：后续鸿蒙接入会大面积改脚本。  
+- 小程序没设 webpack `target=node`：运行时兼容问题会很隐蔽。  
+- 忘了做业务 bundle 到宿主 dist 的同步任务：壳能跑，页面白屏。  
 - 没把 `so/header` 拷贝流程脚本化：本地偶现”我能跑、同事不能跑”。
 
 ---
@@ -688,7 +689,6 @@ flowchart LR
 Kuikly 的方案是：在 Common 层定义一套平台无关的 **UIElement 树**——这棵树：
 
 > [!note] UIElement 树的三大核心能力
->
 > - **可序列化**（`kotlinx.serialization`），能通过 JSON 或更紧凑的二进制协议从服务端下发
 > - **可 Clone**（用于状态比较与增量更新）
 > - **可遍历**（Visitor 模式），支持后续的布局计算、命令生成、调试检查
@@ -1370,11 +1370,11 @@ Kuikly 采用的策略是 **Command-Based Synchronization**：
 
 > [!compare] 三种同步策略对比
 >
-> | 方案           | 描述                                                      | 适用场景           |
-> | :------------- | :-------------------------------------------------------- | :----------------- |
-> | **全量同步**   | 每次状态变更将整个 AST 序列化后发送给渲染层               | 简单页面、初次渲染 |
-> | **增量 Patch** | DiffEngine 产出 Patch 列表，仅传输变更部分                | 复杂页面、高频交互 |
-> | **双向绑定**   | 平台层可调用 Common 层方法修改状态，Common 层再回发 Patch | 表单输入、动画驱动 |
+> | 方案 | 描述 | 适用场景 |
+> | :--- | :--- | :--- |
+> | **全量同步** | 每次状态变更将整个 AST 序列化后发送给渲染层 | 简单页面、初次渲染 |
+> | **增量 Patch** | DiffEngine 产出 Patch 列表，仅传输变更部分 | 复杂页面、高频交互 |
+> | **双向绑定** | 平台层可调用 Common 层方法修改状态，Common 层再回发 Patch | 表单输入、动画驱动 |
 
 > [!important] 关键性能约束
 > 在 Kotlin/Native 场景下（鸿蒙、iOS），Common → Platform 的每次通信都有 cinterop/FFI 开销。因此 **Patch 必须批量提交**，而非每次属性变更都跨一次边界。详见第 13 节。
@@ -1522,13 +1522,13 @@ data class LayoutConstraints(
 
 > [!compare] 三端排版引擎差异
 >
-> | 维度           | Android（View）                                  | iOS（UIKit）                       | ArkUI（鸿蒙）           |
-> | :------------- | :----------------------------------------------- | :--------------------------------- | :---------------------- |
-> | Measure 入口   | `onMeasure(widthSpec, heightSpec)`               | `sizeThatFits(_:)`                 | `onMeasure(Constraint)` |
-> | 布局方向       | LTR / RTL 全局配置                               | LTR / RTL + leading/trailing       | LTR / RTL               |
-> | 百分比布局     | `ConstraintLayout` / `LinearLayout.LayoutParams` | `NSLayoutConstraint`（multiplier） | 百分比 + vp 原生支持    |
-> | Intrinsic Size | `getSuggestedMinimumWidth/Height`                | `intrinsicContentSize`             | 无原生概念，需计算      |
-> | Overflow       | `clipToPadding` / 不自动处理                     | `clipsToBounds`                    | `clip` 属性             |
+> | 维度 | Android（View） | iOS（UIKit） | ArkUI（鸿蒙） |
+> | :--- | :--- | :--- | :--- |
+> | Measure 入口 | `onMeasure(widthSpec, heightSpec)` | `sizeThatFits(_:)` | `onMeasure(Constraint)` |
+> | 布局方向 | LTR / RTL 全局配置 | LTR / RTL + leading/trailing | LTR / RTL |
+> | 百分比布局 | `ConstraintLayout` / `LinearLayout.LayoutParams` | `NSLayoutConstraint`（multiplier） | 百分比 + vp 原生支持 |
+> | Intrinsic Size | `getSuggestedMinimumWidth/Height` | `intrinsicContentSize` | 无原生概念，需计算 |
+> | Overflow | `clipToPadding` / 不自动处理 | `clipsToBounds` | `clip` 属性 |
 
 Kuikly 的 LayoutMediator 并非重新实现一套跨平台布局引擎——那是替代 Flutter/Yoga 的范畴。它做的是**指令翻译**：
 
@@ -1777,40 +1777,35 @@ class BatchCommandEncoder {
 // 此代码示意 BatchCommandDecoder 的工作逻辑（非 Kuikly 实际代码）
 
 function decodeAndApplyCommands(buffer: ArrayBuffer): void {
-  const view = new DataView(buffer)
-  let offset = 0
-  const count = view.getInt32(offset, false)
-  offset += 4
+    const view = new DataView(buffer);
+    let offset = 0;
+    const count = view.getInt32(offset, false); offset += 4;
 
-  for (let i = 0; i < count; i++) {
-    const opcode = view.getUint8(offset)
-    offset += 1
+    for (let i = 0; i < count; i++) {
+        const opcode = view.getUint8(offset); offset += 1;
 
-    switch (opcode) {
-      case 0x01: {
-        // INSERT
-        const parentId = readString(view, offset)
-        offset += 4 + parentId.length
-        const index = view.getInt32(offset, false)
-        offset += 4
-        const elementJson = readString(view, offset)
-        offset += 4 + elementJson.length
-        // 反序列化后创建 ArkUI 组件
-        createArkUIComponent(JSON.parse(elementJson), parentId, index)
-        break
-      }
-      case 0x03: {
-        // UPDATE_PROPS
-        const elementId = readString(view, offset)
-        offset += 4 + elementId.length
-        const propsJson = readString(view, offset)
-        offset += 4 + propsJson.length
-        updateArkUIProperties(elementId, JSON.parse(propsJson))
-        break
-      }
-      // ... 其他 opcode
+        switch (opcode) {
+            case 0x01: { // INSERT
+                const parentId = readString(view, offset);
+                offset += 4 + parentId.length;
+                const index = view.getInt32(offset, false); offset += 4;
+                const elementJson = readString(view, offset);
+                offset += 4 + elementJson.length;
+                // 反序列化后创建 ArkUI 组件
+                createArkUIComponent(JSON.parse(elementJson), parentId, index);
+                break;
+            }
+            case 0x03: { // UPDATE_PROPS
+                const elementId = readString(view, offset);
+                offset += 4 + elementId.length;
+                const propsJson = readString(view, offset);
+                offset += 4 + propsJson.length;
+                updateArkUIProperties(elementId, JSON.parse(propsJson));
+                break;
+            }
+            // ... 其他 opcode
+        }
     }
-  }
 }
 ```
 
@@ -1838,11 +1833,11 @@ typedef struct {
 
 > [!warning] 共享内存的三重风险
 >
-> | 问题               | 说明                                                                       |
-> | :----------------- | :------------------------------------------------------------------------- |
-> | **对象引用失效**   | Kotlin/Native 的对象可能被 GC 移动（即使有 freezer），导致 C 侧指针悬挂    |
+> | 问题 | 说明 |
+> | :--- | :--- |
+> | **对象引用失效** | Kotlin/Native 的对象可能被 GC 移动（即使有 freezer），导致 C 侧指针悬挂 |
 > | **内存序与可见性** | Kotlin/Native 端写入了共享内存，ArkTS 侧可能因编译器重排或缓存看不到最新值 |
-> | **生命周期管理**   | 谁分配、谁释放？Kotlin 侧分配的内存，ArkTS 侧无法直接 free                 |
+> | **生命周期管理** | 谁分配、谁释放？Kotlin 侧分配的内存，ArkTS 侧无法直接 free |
 
 Kuikly 在共享内存上的实践相对克制：**仅用于标量数据（int/float/bool）和精简命令缓冲区**，所有复杂对象（JSON 文本、嵌套结构）仍走序列化通道。
 
@@ -1896,11 +1891,11 @@ class FrameCoalescer(
 
 > [!compare] 两种运行时内存模型的冲突
 >
-> | Kotlin/Native                   | ArkTS                      | 冲突点                                       |
-> | :------------------------------ | :------------------------- | :------------------------------------------- |
-> | 引用计数 + 部分 Tracing GC      | Tracing GC（基于方舟引擎） | 跨语言引用无法自动回收                       |
-> | Freezer（对象冻结）             | 无冻结概念                 | 从 C 侧传入 ArkTS 的对象可能被修改           |
-> | `kotlinx.cinterop` 手动内存管理 | 自动 GC                    | C 侧分配的内存如果传给了 ArkTS，谁负责释放？ |
+> | Kotlin/Native | ArkTS | 冲突点 |
+> | :--- | :--- | :--- |
+> | 引用计数 + 部分 Tracing GC | Tracing GC（基于方舟引擎） | 跨语言引用无法自动回收 |
+> | Freezer（对象冻结） | 无冻结概念 | 从 C 侧传入 ArkTS 的对象可能被修改 |
+> | `kotlinx.cinterop` 手动内存管理 | 自动 GC | C 侧分配的内存如果传给了 ArkTS，谁负责释放？ |
 
 Kuikly 的应对策略：
 
@@ -1921,15 +1916,15 @@ Kuikly 的应对策略：
 
 > [!compare] 包体积构成明细
 >
-> | 组件                               | 体积贡献（估） | 说明                               |
-> | :--------------------------------- | :------------- | :--------------------------------- |
-> | Kotlin stdlib（Native）            | ~1.5-3MB       | K/N 运行时 + 内存管理 + 并发原语   |
-> | kotlinx.serialization              | ~400KB         | 多态序列化引擎                     |
-> | kotlinx.coroutines                 | ~600KB         | 协程运行时                         |
-> | Kuikly Core（序列化 + AST + Diff） | ~800KB         | Common 层运行时                    |
-> | 平台渲染器（so/dylib）             | ~2-5MB         | 各平台原生渲染引擎                 |
-> | 业务产物                           | ~1MB+          | 业务代码 + DSL bundle              |
-> | **合计**                           | **~6-11MB**    | 远超纯原生开发（0）或 H5（~200KB） |
+> | 组件 | 体积贡献（估） | 说明 |
+> | :--- | :--- | :--- |
+> | Kotlin stdlib（Native） | ~1.5-3MB | K/N 运行时 + 内存管理 + 并发原语 |
+> | kotlinx.serialization | ~400KB | 多态序列化引擎 |
+> | kotlinx.coroutines | ~600KB | 协程运行时 |
+> | Kuikly Core（序列化 + AST + Diff） | ~800KB | Common 层运行时 |
+> | 平台渲染器（so/dylib） | ~2-5MB | 各平台原生渲染引擎 |
+> | 业务产物 | ~1MB+ | 业务代码 + DSL bundle |
+> | **合计** | **~6-11MB** | 远超纯原生开发（0）或 H5（~200KB） |
 
 **对于工具类、内聚型 App（如一个计算器、一个扫码工具），多出 10MB 是不可接受的。** 对于电商首页、信息流等动态化需求强烈的重型 App，这个成本在可接受范围内。
 
@@ -1972,14 +1967,14 @@ flowchart LR
 
 > [!compare] 动画类型可行性评估
 >
-> | 动画类型           | Android                               | iOS                           | Kuikly 可行性         |
-> | :----------------- | :------------------------------------ | :---------------------------- | :-------------------- |
-> | 位移/渐变/缩放     | `Animator` / `animate*AsState`        | `UIView.animate`              | ✅ 通过 Command 驱动  |
-> | 路径动画           | `ObjectAnimator(path)`                | `CAKeyframeAnimation`         | ⚠️ 需要手动插值       |
-> | 弹性动画（Spring） | `SpringAnimation`                     | `UISpringTimingParameters`    | ⚠️ 需平台回传状态     |
-> | **共享元素转场**   | `ActivityOptions.makeSceneTransition` | `UINavigationController.push` | ❌ 极难模拟           |
-> | **粒子/流体特效**  | GPU 粒子系统                          | `CAEmitterLayer` / Metal      | ❌ 不可行             |
-> | **Lottie / Rive**  | 原生 SDK                              | 原生 SDK                      | ⚠️ 需要用 bridge 包装 |
+> | 动画类型 | Android | iOS | Kuikly 可行性 |
+> | :--- | :--- | :--- | :--- |
+> | 位移/渐变/缩放 | `Animator` / `animate*AsState` | `UIView.animate` | ✅ 通过 Command 驱动 |
+> | 路径动画 | `ObjectAnimator(path)` | `CAKeyframeAnimation` | ⚠️ 需要手动插值 |
+> | 弹性动画（Spring） | `SpringAnimation` | `UISpringTimingParameters` | ⚠️ 需平台回传状态 |
+> | **共享元素转场** | `ActivityOptions.makeSceneTransition` | `UINavigationController.push` | ❌ 极难模拟 |
+> | **粒子/流体特效** | GPU 粒子系统 | `CAEmitterLayer` / Metal | ❌ 不可行 |
+> | **Lottie / Rive** | 原生 SDK | 原生 SDK | ⚠️ 需要用 bridge 包装 |
 
 > [!tip] 架构师的判断标准
 > 如果产品需求中 **>20% 的页面包含平台级动画**（共享元素、粒子、手势驱动的复杂过渡），Kuikly 类架构会让你非常痛苦。此时要么（1）在这些页面放弃动态化直接写原生，要么（2）选 Flutter（它有自绘引擎，动画一致性最高）。
@@ -2025,14 +2020,14 @@ flowchart LR
 
 > [!compare] 架构决策矩阵
 >
-> | 场景                                    | 推荐方案                          | 理由                                    |
-> | :-------------------------------------- | :-------------------------------- | :-------------------------------------- |
-> | 电商首页/信息流 50%+ 以上页面需要动态化 | ✅ **Kuikly 类架构**              | 动态化需求强，页面规则但渲染性能要求高  |
-> | 管理后台/表单类                         | ✅ **H5 / React Native**          | 动态化需求强，渲染性能要求低，CRUD 为主 |
-> | 视频/直播/绘图类                        | ❌ **放弃动态化，纯原生开发**     | 性能要求苛刻，原生最稳，动态化无价值    |
-> | 工具类 App（轻量）                      | ❌ **放弃 KMP，纯原生 / Flutter** | 包体积增量无法接受                      |
-> | 从 0 建新 App，团队无 KMP 经验          | ⚠️ **慎重选择，Flutter / 纯原生** | KMP 学习曲线陡峭                        |
-> | 已有 KMP 基础，需要跨 5+ 端             | ✅ **Kuikly 类架构**              | 已有投入，复用 Kotlin 工程师和基础设施  |
+> | 场景 | 推荐方案 | 理由 |
+> | :--- | :--- | :--- |
+> | 电商首页/信息流 50%+ 以上页面需要动态化 | ✅ **Kuikly 类架构** | 动态化需求强，页面规则但渲染性能要求高 |
+> | 管理后台/表单类 | ✅ **H5 / React Native** | 动态化需求强，渲染性能要求低，CRUD 为主 |
+> | 视频/直播/绘图类 | ❌ **放弃动态化，纯原生开发** | 性能要求苛刻，原生最稳，动态化无价值 |
+> | 工具类 App（轻量） | ❌ **放弃 KMP，纯原生 / Flutter** | 包体积增量无法接受 |
+> | 从 0 建新 App，团队无 KMP 经验 | ⚠️ **慎重选择，Flutter / 纯原生** | KMP 学习曲线陡峭 |
+> | 已有 KMP 基础，需要跨 5+ 端 | ✅ **Kuikly 类架构** | 已有投入，复用 Kotlin 工程师和基础设施 |
 
 ### 14.7 演进路线建议
 
