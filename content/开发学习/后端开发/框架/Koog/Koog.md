@@ -1,6 +1,6 @@
 ---
 title: 'Koog'
-date: 2026-04-28
+date: 2026-07-07
 tags:
   - 开发学习
   - 开发学习/后端开发/框架
@@ -39,6 +39,219 @@ tags:
 > - **持续改进**，帮助 Koog 保持高效并适应不断变化的需求。
 
 ---
+
+# 0.1 Koog 1.0 重大更新（按架构层组织）
+
+> [!important] 里程碑
+> Koog 1.0.0 是首个稳定版本，标志着从「快速迭代期」进入「语义化版本」阶段。所有 `@Deprecated` API 已被彻底移除，模块分为 Stable 和 Beta 两个流——生产代码锁定 Stable API，Beta 模块的变化不再影响编译。
+
+## 0.1.1 传输层：HTTP 与 Ktor 解耦
+
+### `KoogHttpClient.Factory` 可插拔机制
+
+> [!note] What
+> 将 HTTP 客户端从硬编码的 Ktor 依赖中抽离，引入 `KoogHttpClient.Factory` SPI（Service Provider Interface）机制，实现传输层的可插拔替换。
+
+> [!question] Why
+> 1.0 之前，Koog 的所有 LLM API 调用都强绑定了 Ktor HttpClient，导致：
+> - Android 端侧部署必须引入整个 Ktor 依赖栈（~2-3MB），与 OkHttp 产生冗余
+> - Spring Boot 企业集成无法复用现有的 RestClient / WebClient
+> - GraalVM Native Image 编译时，Ktor 的反射特性对 native-image 支持不友好
+>
+> 解耦后，Koog 自动发现机制会在 classpath 中寻找 Ktor 实现，也允许开发者显式注入 Java HttpClient / OkHttp / Spring RestClient。
+
+> [!tip] How
+> - **Android 端侧 Agent**：可以用 OkHttp 替代 Ktor，减少约 2MB 的 APK 体积增量
+> - **Spring Boot 集成**：直接复用 `RestClient`，零额外 HTTP 依赖
+> - **GraalVM Native Image**：选择 `java.net.http.HttpClient`，规避 Ktor 的反射问题
+>
+> ```kotlin
+> // Android 项目中使用 OkHttp 作为 Koog 的 HTTP 传输
+> val agent = AIAgent(
+>     promptExecutor = SingleLLMPromptExecutor(
+>         AnthropicLLMClient(
+>             apiKey = apiKey,
+>             httpClient = KoogHttpClient.from(okHttpClient) // 注入 OkHttp
+>         )
+>     ),
+>     llmModel = AnthropicModels.Sonnet_4
+> )
+> ```
+
+### Ollama 统一抽象层路由
+
+> [!note] What
+> Ollama 本地模型的 HTTP 通信也统一到 `KoogHttpClient.Factory` 抽象层，不再走独立路径。
+
+> [!question] Why
+> 之前 Ollama 和远程 LLM Provider 走不同的 HTTP 通道，配置不一致、调试困难。统一后，切换本地/远程模型只需改配置，无需改代码。
+
+> [!tip] How
+> 开发阶段用 Ollama 本地模型调试，生产环境切远程 API——整个过程对 Agent 代码**完全透明**。
+
+### MCP SDK 升级至 0.11.1
+
+> [!note] What
+> MCP 客户端 SDK 升级至 0.11.1，Streamable HTTP 成为首选传输协议，取代此前的 SSE + POST 双通道模式。
+
+> [!question] Why
+> 旧版 MCP 传输需要维护 SSE 长连接 + 独立 POST 端点，部署复杂度高（需反向代理支持 SSE）。Streamable HTTP 将双向通信统一到单个 HTTP 端点，大幅简化部署拓扑。
+
+> [!tip] How
+> - MCP Server 部署从「需要支持 SSE 的特殊 Nginx 配置」简化为「普通 HTTP 服务」
+> - 与 Koog 1.0 的 HTTP 解耦协同——MCP 传输也受益于可插拔 HTTP 客户端
+
+## 0.1.2 Agent 核心：Graph DSL 定型 + Stable/Beta 分流
+
+### Graph DSL 节点命名定型
+
+> [!note] What
+> Graph DSL 中的节点命名规范正式确立，形成两套命名体系：
+> - **String-input 节点**：保留原名 `nodeLLMRequest`、`nodeLLMRequestOnlyCallingTools`、`nodeLLMRequestWithoutTools` 等
+> - **`Message.User`-input 节点**：统一使用 `nodeLLMSendMessage*` 前缀（如 `nodeLLMSendMessageOnlyCallingTools`）
+> - `nodeExecuteTools` 直接返回 `ReceivedToolResults`（非 raw JSON）
+> - 新增 `nodeLLMModerateText` 支持纯 String 输入的内容审核
+
+> [!question] Why
+> 1.0 之前，节点命名混乱——同样是「发送消息给 LLM」，String 输入和 Message 输入用的是同一个函数名，靠重载区分，IDE 提示不清晰。命名分离后，**意图一目了然**：
+> - `nodeLLMRequest` = 我有一个 String，发给 LLM
+> - `nodeLLMSendMessage` = 我有一个构造好的 `Message.User`，发给 LLM
+
+> [!tip] How
+> - 升级时需要做一次节点名称迁移，IDE 的 `Find and Replace` 可以批量处理
+> - `nodeExecuteTools` 返回 `ReceivedToolResults` 意味着不再需要手动解析 tool call 的 JSON——**类型安全直接到位**
+> - `nodeLLMModerateText` 是内容安全的第一公民，生产环境应默认接入
+
+### Stable / Beta 模块分流
+
+> [!note] What
+> 所有模块被分为 **Stable** 和 **Beta** 两个流。生产代码可 `@OptIn` 锁定 Stable API，Beta 模块的变化不再影响编译。同时，**所有 `@Deprecated` API 已在 1.0 中被彻底移除**，涵盖：
+> - event handlers、pipeline
+> - agent / strategy / DSL
+> - tools、persistence、executors
+> - MCP、models
+> - Spring autoconfig、RAG utilities
+
+> [!question] Why
+> 这是框架从「快速迭代」走向「语义化版本」的标志性动作：
+> - Stable API 的 breaking change 只在大版本号变更时发生
+> - Beta API 的变更不会阻断 CI/CD
+> - 旧版代码中所有 `@Deprecated` 调用**必须在升级前修复**，没有过渡期
+
+> [!tip] How
+> - 升级到 1.0 的**第一步**：全局搜索 `@Deprecated` 相关的编译 warning，逐个迁移
+> - 在 `build.gradle.kts` 中配置 `-Xopt-in=kotlin.RequiresOptIn`，明确声明只使用 Stable API
+> - Beta 模块（如实验性的 planner 新功能）可以在独立模块中尝试，不影响主工程
+
+### Java 互操作重设计
+
+> [!note] What
+> 统一 `xxxBlocking` 模式，移除所有显式 `ExecutorService` 参数，改用 Agent 配置的 `dispatcher` 替代线程池管理。
+
+> [!question] Why
+> 之前 Java 调用方需要为每个 blocking 方法传入 `ExecutorService`，代码冗余且容易泄漏线程池。统一后：
+> - `agent.runBlocking(input)` 直接使用 Agent 内部的协程 dispatcher
+> - Java 侧代码量减少约 40%
+> - 线程池生命周期与 Agent 绑定，不会泄漏
+
+> [!tip] How
+> - Java 项目升级：移除所有 `executorService` 参数，直接调用 `xxxBlocking` 方法
+> - 如果需要自定义线程池，在 Agent 构建时通过 `dispatcher` 参数配置
+> - 对「Kotlin Agent + Java Spring Boot」混合架构尤其友好
+
+## 0.1.3 可观测性：OpenTelemetry KMP 多平台
+
+### OpenTelemetry 覆盖 KMP 全平台
+
+> [!note] What
+> OpenTelemetry 集成从 JVM-only 扩展到 KMP 全平台（JVM、JS、iOS Native、Android、Linux Native，除 WasmJS）。Langfuse / Weave / DataDog 的 trace exporter 均支持多平台。内置三大关键指标：
+> - `gen_ai.client.token.usage`：token 消耗量
+> - `gen_ai.client.operation.duration`：操作延迟
+> - `gen_ai.client.tool.count`：工具调用次数
+
+> [!question] Why
+> 之前 Agent 可观测性仅限 JVM 服务端。iOS/Android 客户端的 Agent 行为是一个黑箱——不知道它调用了几次 LLM、消耗了多少 token、哪个 tool 最耗时。多平台支持让**端到端的全链路 trace** 成为可能。
+
+> [!tip] How
+> - **成本管控**：`gen_ai.client.token.usage` 指标可以直接接入 Grafana 仪表盘，实时监控每个 Agent 的 token 消耗
+> - **性能优化**：`gen_ai.client.operation.duration` 可以定位慢 LLM 调用和慢 tool 执行
+> - **质量监控**：`gen_ai.client.tool.count` 过高意味着 Agent 可能陷入了 tool call 循环
+> - 兼容 Prometheus/Grafana，企业级监控零额外成本
+
+## 0.1.4 LLM 交互优化：Prompt Caching + 内容审核
+
+### Anthropic Prompt Caching
+
+> [!note] What
+> 端到端的 Anthropic Prompt Caching 支持：自动请求缓存 + 显式消息断点（breakpoint）。缓存命中的 token 不重复计费，缓存 token 纳入 `usage` 指标便于监控。
+
+> [!question] Why
+> 长 system prompt（>1000 tokens）的 Agent 在每次对话时都要重新发送完整 prompt，造成大量重复 token 消耗。以一个 4000-token system prompt 为例：
+> - 无缓存：每次调用消耗 4000 input tokens
+> - 有缓存：首次 4000 + 缓存写入费，后续每次仅 ~100 缓存读取 token
+> - **成本降幅可达 90%**（取决于 system prompt 占比）
+
+> [!tip] How
+> - 在 Graph DSL 中使用 `nodeAppendPrompt` 设置 system prompt 时，Koog 会自动在合适位置插入缓存断点
+> - `usage` 指标中的 `cache_read_input_tokens` 和 `cache_creation_input_tokens` 字段可用于精确核算缓存收益
+> - **建议**：对所有使用 Anthropic Claude 的 Agent 开启此功能，尤其是 system prompt 超过 2000 tokens 的场景
+
+### `nodeLLMModerateText` 内容审核节点
+
+> [!note] What
+> 新增 `nodeLLMModerateText` 节点，接受纯 String 输入，调用 LLM Provider 的 moderation API 进行内容审核，支持插入到 Graph DSL 的任意位置。
+
+> [!question] Why
+> 之前内容审核需要开发者自行封装 API 调用。内置节点让**内容安全成为工作流的标准化环节**，而非事后补丁。
+
+> [!tip] How
+> - 生产环境 Agent 建议在 `nodeStart` 和 `nodeLLMRequest` 之间插入 `nodeLLMModerateText`
+> - 对面向 C 端用户的 Agent，这是**合规必备**而非可选项
+
+## 0.1.5 工具生态：ToolCallMetadata + Planner 独立化
+
+### `ToolCallMetadata` 侧通道
+
+> [!note] What
+> 工具调用新增 `ToolCallMetadata` 侧通道，携带 trace ID、correlation ID、feature flags 等元数据，与工具的实际参数分离传递。
+
+> [!question] Why
+> 之前工具只能通过 `Args` 获取业务参数，跨工具的关联追踪（如「这次搜索是为哪个审批流服务的」）需要开发者自行通过 `AIAgentStorage` 传递。Metadata 侧通道让**可观测性数据与业务数据解耦**。
+
+> [!tip] How
+> - 在自定义工具的 `execute()` 方法中，可以通过 `metadata` 获取当前 trace ID，输出结构化日志
+> - Feature flags 可用于工具的灰度发布——同一个 tool 根据 flag 走不同逻辑
+
+### Planners 独立模块 + `RetrieveFactsFromHistory` 提取
+
+> [!note] What
+> - Planner Agent 从核心模块移至独立的 `agents:agents-planners` 模块
+> - `RetrieveFactsFromHistory` 从 `AgentMemory` 提取为独立的 `HistoryCompressionStrategy`
+> - Planner agent 支持 checkpoint/restore
+
+> [!question] Why
+> Planner 是重型组件（依赖 graph traversal + LLM 多轮推理），并非所有 Agent 都需要。独立模块后：
+> - 不使用 Planner 的项目减少约 15% 的依赖体积
+> - `HistoryCompressionStrategy` 的独立化让「从历史中提取关键事实」成为可组合的通用能力
+
+> [!tip] How
+> - 简单 Agent（如客服机器人）不需要引入 `agents-planners`
+> - 复杂多阶段 Agent（如自动化运维）应使用 Planner + Checkpoint 组合
+
+### `AIAgentStorage` Checkpoint 持久化
+
+> [!note] What
+> `AIAgentStorage`（节点间键值传递机制）支持 checkpoint 持久化，并暴露 `runFromCheckpoint` API，允许 Agent 从任意历史快照恢复执行。Amazon Bedrock AgentCore 作为 `LongTermMemory` 后端，为跨会话记忆提供了云原生方案。
+
+> [!question] Why
+> 之前 Agent 状态只存在于内存中，进程重启即丢失。长周期任务（如多轮调研、审批流）必须从头重跑。Checkpoint 机制让 Agent 具备了**断点续传**能力。
+
+> [!tip] How
+> - 长周期 Agent（>5 分钟）应默认开启 checkpoint
+> - 配合 Planner agent 的 checkpoint/restore，可以实现「人类在环」的审批模式——Agent 执行到关键节点暂停，等人类审批后恢复
+
+---
+
 # 1. Koog 入门
 ## 1.1 使用前提
 > [!note] 配置必要的依赖项
@@ -47,7 +260,7 @@ tags:
 > 1. Gradle（Kotlin DSL）
 > 	- 将依赖项添加到`build.gradle.kts`文件中：
 > 	```kotlin
-> 	val koogVersion = "0.7.1"
+> 	val koogVersion = "1.0.0"
 >
 > 	dependencies{
 > 		implementation("ai.koog:koog-agents:$koogVersion")
@@ -62,7 +275,7 @@ tags:
 > 2. Gradle（Groovy DSL）
 > 	- 将依赖项添加到`build.gradle`文件中：
 > 	```groovy
-> 	def koogVersion = '0.7.1'
+> 	def koogVersion = '1.0.0'
 >
 > 	dependencies{
 > 		implementation "ai.koog:koog-agents:$koogVersion"
@@ -1168,6 +1381,17 @@ val setupContext by nodeAppendPrompt<Output>("setupContext") {
 edge(firstNode forwardTo setupContext)
 edge(setupContext forwardTo secondNode)
 ```
+
+> [!important] 1.0 节点命名规范
+> Koog 1.0 对 LLM 节点命名进行了正式定型，形成两套体系：
+> - **String-input 节点**（接受纯 String 输入）：保留原名，如 `nodeLLMRequest`、`nodeLLMRequestOnlyCallingTools`、`nodeLLMRequestWithoutTools`、`nodeLLMRequestMultiple` 等
+> - **`Message.User`-input 节点**（接受构造好的消息对象）：统一使用 `nodeLLMSendMessage*` 前缀
+>
+> 此外：
+> - `nodeExecuteTools` 直接返回 `ReceivedToolResults`（非 raw JSON），类型安全到位
+> - 新增 `nodeLLMModerateText` 支持纯 String 输入的内容审核
+>
+> 升级时需做一次节点名称迁移，IDE 的 `Find and Replace` 可批量处理。
 
 ##### `nodeLLMSendMessageOnlyCallingTools`
 > [!note] 概述
@@ -2504,6 +2728,25 @@ edge(
 > }
 > ```
 
+> [!important] 1.0 HTTP 传输层解耦（Ktor 集成的重大变化）
+> Koog 1.0 引入了 `KoogHttpClient.Factory` 可插拔机制，HTTP 客户端不再硬编码为 Ktor HttpClient。这对 Ktor 集成有以下影响：
+>
+> - **Ktor 仍然是默认实现**：当 classpath 中存在 Ktor 依赖时，Koog 会自动发现并使用 Ktor HttpClient 作为默认传输层，**现有 Ktor 项目的代码无需任何修改**
+> - **可替换为其他 HTTP 客户端**：如果项目需要，可以显式注入 Java HttpClient / OkHttp / Spring RestClient 替代 Ktor
+> - **Ollama 也通过同一抽象层路由**：本地模型和远程模型使用统一的 HTTP 通道，切换只需改配置
+>
+> ```kotlin
+> // 1.0 中，可以显式指定 HTTP 客户端（可选，Ktor 项目不需要）
+> install(Koog) {
+>     llm {
+>         anthropic(
+>             apiKey = System.getenv("ANTHROPIC_API_KEY"),
+>             httpClient = KoogHttpClient.from(myCustomHttpClient) // 可选：注入自定义客户端
+>         )
+>     }
+> }
+> ```
+
 ## 2.2 Spring 集成
 
 
@@ -2511,3 +2754,45 @@ edge(
 # 3. 深度剖析
 > [!tip] 关联内容
 > 由于这部分篇幅会过长，且不是针对于常规开发流程编写。如果想要详细了解 Koog 的底层与 API 原理，请移步[[Koog 源代码分析]]
+
+## 3.1 Koog Graph DSL vs LangGraph vs CrewAI
+
+> [!compare] Kotlin Agent 框架的差异化定位
+
+| 维度 | **Koog Graph DSL** | **LangGraph (Python)** | **CrewAI (Python)** |
+|:---:|:---:|:---:|:---:|
+| **语言** | Kotlin/JVM + KMP | Python | Python |
+| **编排模型** | 类型安全的有向状态图 | 有向状态图（类似） | 角色扮演 + 任务委派 |
+| **类型系统** | 编译期泛型约束 `node<String, Int>` | 运行时 dict 传递 | 运行时字符串 |
+| **多平台** | JVM/JS/iOS/Android/Native | Python-only | Python-only |
+| **持久化** | 内置 checkpoint/restore + `AIAgentStorage` | 需要外部 state backend | 无原生支持 |
+| **可观测性** | OpenTelemetry KMP 全平台 | LangSmith（绑定） | 第三方集成 |
+| **工具生态** | MCP 0.11.1 + ToolRegistry | MCP + LangChain tools | 自定义工具 |
+
+> [!summary] 核心差异
+> - **LangGraph** 的优势在于 Python 生态的 LLM 库丰富度，但类型安全弱、仅限 Python
+> - **CrewAI** 适合快速原型，但对复杂状态管理力不从心
+> - **Koog Graph DSL** 的独特价值在于：**编译期类型安全 + KMP 多平台 + JVM 企业级集成**。同一个 Agent 逻辑可以编译到服务端（JVM）、移动端（Android/iOS）、甚至浏览器（JS），且在编译期就能捕获节点间的数据类型不匹配
+>
+> **选型建议**：
+> - 纯 Python 团队 + 快速迭代 → LangGraph
+> - Kotlin/JVM 团队 + 多平台部署 + 企业级需求 → **Koog Graph DSL**
+> - 快速 POC + 不关心类型安全 → CrewAI
+
+## 3.2 Prompt Caching 成本量化
+
+> [!note] 以 Anthropic Claude Sonnet 4 为例
+> 构建不同复杂度 Agent 的月度成本对比：
+
+| 场景 | System Prompt | 每次调用 Input Tokens | 日调用次数 | 月成本（无缓存） | 月成本（有缓存） | 节省 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 简单客服 | 800 tokens | 1,200 | 1,000 | $10.80 | $9.72 | 10% |
+| 代码审查 | 4,000 tokens | 6,000 | 500 | $27.00 | $10.80 | **60%** |
+| 企业知识库 | 12,000 tokens | 15,000 | 200 | $27.00 | $8.10 | **70%** |
+
+*计算假设：Input $3/M tokens, Cached Read $0.30/M tokens, Cache Write $3.75/M tokens*
+
+> [!tip] 关键结论
+> - **System prompt 越长，缓存收益越大**——这恰好是 Agent 场景的典型特征（系统指令 + 工具描述 + Few-shot examples 通常 >3000 tokens）
+> - **调用频次越高，摊薄的 cache write 成本越低**——首次调用多付约 12.5% 的 cache write 费用，第 2 次调用即开始回本
+> - 在 Grafana 中创建 `cache_hit_ratio` 面板，目标值 >80%。低于此值说明 system prompt 频繁变更导致缓存失效

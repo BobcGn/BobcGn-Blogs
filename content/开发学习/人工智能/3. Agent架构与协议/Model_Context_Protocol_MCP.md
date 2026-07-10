@@ -978,6 +978,616 @@ await server.connect(transport);
 
 ---
 
+## 9. 协议演进与深度解析（2025-06-18 更新）
+
+### 9.1 MCP 协议演进时间线
+
+> [!info] 从诞生到 2025-06-18 的关键里程碑
+> MCP 协议经历了从实验性项目到行业标准的快速演进。以下是关键版本和里程碑：
+
+```mermaid
+timeline
+    title MCP 协议演进时间线
+    2023-11 : Anthropic 发布 MCP 初始版本
+             : 基于 JSON-RPC 2.0
+             : 支持 stdio 传输
+    2024-03 : MCP 0.1.0 发布
+             : 定义三大核心原语
+             : 支持 SSE 传输
+    2024-11 : MCP 2024-11-05 版本
+             : 引入 HTTP+SSE 传输
+             : 完善 OAuth 认证
+    2025-03 : MCP 2025-03-26 版本
+             : Streamable HTTP 成为推荐传输
+             : 引入 Elicitation 机制
+    2025-06 : MCP 2025-06-18 版本
+             : 五大原语规范化
+             : Authorization 框架完善
+             : 生态爆发期
+```
+
+> [!tip] 关键转折点
+> - **2024-11-05**：引入 HTTP+SSE，MCP 从"本地工具"走向"远程服务"
+> - **2025-03-26**：Streamable HTTP 取代 SSE，传输层标准化完成
+> - **2025-06-18**：五大原语定型，生态成熟，进入企业级应用阶段
+
+---
+
+### 9.2 五大原语深度解析
+
+> [!info] MCP 五大原语：从"是什么"到"解决什么问题"
+> 五大原语是 MCP 协议的核心构建块，每个原语解决特定的集成问题：
+
+#### 9.2.1 Roots（根节点）
+
+> [!note] Roots 解决的问题：**上下文边界定义**
+> **场景**：AI 编码助手在你的项目目录中工作，但不应该访问系统文件或私人文件夹。
+>
+> **Roots 的作用**：
+> - Client 告诉 Server："你只能在 `/Users/bobcgn/project` 目录下操作"
+> - Server 理解工作边界，避免越界访问
+> - 提供文件系统上下文的元数据（如项目名称、类型）
+
+```mermaid
+sequenceDiagram
+    participant Client as AI IDE (Client)
+    participant Server as Filesystem Server
+
+    Note over Client,Server: 初始化时声明 Roots
+    Client->>Server: initialize (capabilities.roots)
+    Server-->>Client: 确认支持 Roots
+
+    Note over Client,Server: Client 提供工作边界
+    Client->>Server: roots/list
+    Server-->>Client: [{uri: "file:///project", name: "MyProject"}]
+
+    Note over Server: Server 在 Roots 范围内操作
+```
+
+> [!tip] 实际价值
+> - **安全性**：防止 AI 访问敏感目录（如 `~/.ssh`、`/etc`）
+> - **效率**：Server 只需索引 Roots 范围内的文件，减少资源消耗
+> - **用户体验**：AI 理解"我在哪个项目工作"，提供更精准的帮助
+
+---
+
+#### 9.2.2 Sampling（采样）
+
+> [!note] Sampling 解决的问题：**Server 需要 AI 能力但不想集成 LLM SDK**
+> **场景**：代码审查 Server 在检查代码时，需要 AI 帮忙判断"这段代码是否有潜在的性能问题"。
+>
+> **传统方式**：Server 直接调用 OpenAI/Claude API → 需要 API Key、SDK 依赖、模型选择逻辑
+>
+> **MCP Sampling**：Server 说"Client，帮我问问 AI" → Client 转发请求给 Host 的 LLM
+
+```mermaid
+flowchart LR
+    subgraph Server["代码审查 MCP Server"]
+        S1["检测到复杂循环"]
+        S2["需要 AI 分析"]
+    end
+
+    subgraph Client["AI IDE (Client)"]
+        C1["收到 Sampling 请求"]
+        C2["转发给 Host LLM"]
+    end
+
+    subgraph Host["Host LLM"]
+        L1["分析代码"]
+        L2["返回建议"]
+    end
+
+    S1 --> S2
+    S2 -->|"sampling/createMessage"| C1
+    C1 --> C2
+    C2 --> L1
+    L1 --> L2
+    L2 -->|"优化建议"| S2
+```
+
+> [!tip] 为什么 Sampling 很重要？
+> - **模型无关**：Server 不绑定特定 LLM，Client/Host 可以自由切换模型
+> - **成本透明**：API 调用由 Client/Host 控制，Server 不承担成本
+> - **安全审计**：Client 可以在转发前审查请求，防止恶意 Prompt
+> - **简化开发**：Server 开发者只需关注业务逻辑，AI 能力"借用"自 Host
+
+---
+
+#### 9.2.3 Prompts（提示模板）
+
+> [!note] Prompts 解决的问题：**标准化交互模式，降低使用门槛**
+> **场景**：一个 Git MCP Server 提供了多种操作，但用户不知道如何正确使用。
+>
+> **Prompts 的作用**：Server 提供预定义的"对话模板"，用户选择后自动填充参数
+
+**示例：Git Server 的 Prompts**
+
+```json
+{
+  "prompts": [
+    {
+      "name": "commit-with-message",
+      "description": "提交当前更改并生成提交信息",
+      "arguments": [
+        {
+          "name": "files",
+          "description": "要提交的文件列表",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "resolve-conflict",
+      "description": "帮助解决 Git 合并冲突",
+      "arguments": [
+        {
+          "name": "conflict-file",
+          "description": "冲突文件路径",
+          "required": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+> [!tip] Prompts 的实际价值
+> - **降低学习成本**：用户不需要记住复杂的 Tool 参数
+> - **最佳实践引导**：Server 可以推荐正确的使用方式
+> - **上下文感知**：Prompts 可以根据当前状态动态调整参数选项
+
+---
+
+#### 9.2.4 Resources（资源）
+
+> [!note] Resources 解决的问题：**结构化数据访问，非破坏性读取**
+> **场景**：AI 需要查看数据库 Schema、读取配置文件、获取 API 文档。
+>
+> **Resources 的特点**：只读、无副作用、可缓存、可订阅变更
+
+**Resources vs Tools 的关键区别：**
+
+```mermaid
+flowchart TB
+    subgraph Resources["Resources（只读）"]
+        R1["📄 文件内容"]
+        R2["🗄️ 数据库 Schema"]
+        R3["📋 配置信息"]
+        R4["📊 日志数据"]
+    end
+
+    subgraph Tools["Tools（可写）"]
+        T1["✏️ 写入文件"]
+        T2["🔄 执行 SQL"]
+        T3["🚀 部署应用"]
+        T4["📧 发送通知"]
+    end
+
+    Resources -->|"安全：无副作用"| Safe["✅ 可放心调用"]
+    Tools -->|"风险：有副作用"| Risk["⚠️ 需要确认"]
+```
+
+> [!tip] Resources 的设计哲学
+> - **URI 寻址**：每个资源有唯一 URI（如 `file:///path`、`db://schema`），支持直接访问
+> - **MIME 类型**：声明内容格式（`text/plain`、`application/json`），Client 自动适配渲染
+> - **订阅机制**：通过 `resources/subscribe` 订阅变更，Server 主动推送更新
+> - **模板化**：支持动态 URI（如 `weather://forecast/{city}/{date}`），灵活查询
+
+---
+
+#### 9.2.5 Tools（工具）
+
+> [!note] Tools 解决的问题：**可执行的操作，模型主动调用**
+> **场景**：AI 需要创建文件、发送邮件、调用 API、执行数据库操作。
+>
+> **Tools 的核心特征**：模型控制、有副作用、Schema 驱动、可动态发现
+
+**Tools 的控制流：**
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant LLM as LLM 模型
+    participant Agent as AI Agent
+    participant Server as MCP Server
+
+    User->>LLM: "帮我创建一个 README.md"
+    LLM->>Agent: 决定调用 write_file Tool
+    Agent->>Server: tools/call write_file
+    Server-->>Agent: 文件创建成功
+    Agent-->>LLM: Tool 执行结果
+    LLM-->>User: "已创建 README.md"
+```
+
+> [!tip] Tools 的设计要点
+> - **模型控制**：LLM 根据用户意图自主决定调用哪个 Tool
+> - **JSON Schema**：严格的输入参数定义，支持自动校验
+> - **人机协作**：敏感操作（如删除文件）可以要求用户确认
+> - **动态发现**：Client 通过 `tools/list` 获取最新工具列表，无需硬编码
+
+---
+
+### 9.3 Elicitation 机制详解
+
+> [!info] Elicitation：让 Server 在执行过程中"问用户问题"
+> 2025-03-26 引入的 Elicitation 机制，是 MCP 协议的重大创新。它解决了传统 Tool Call 的一个核心痛点：**Server 无法在执行过程中与用户交互**。
+
+#### 9.3.1 传统 Tool Call vs Elicitation
+
+> [!compare] 两种交互模式的对比
+
+| 维度 | 传统 Tool Call | Elicitation |
+| :--- | :--- | :--- |
+| **交互时机** | 调用前：用户必须提供所有参数 | 执行中：Server 可以动态请求信息 |
+| **参数来源** | 用户手动输入或 LLM 推断 | Server 根据执行上下文动态生成问题 |
+| **交互轮次** | 单次调用，参数固定 | 多轮交互，逐步收集信息 |
+| **用户体验** | 需要预知所有参数 | 渐进式，按需提供信息 |
+| **典型场景** | 简单查询、无状态操作 | 复杂流程、需要确认的操作 |
+
+**传统 Tool Call 流程：**
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant LLM as LLM
+    participant Server as Server
+
+    User->>LLM: "帮我订一张机票"
+    Note over LLM: 缺少出发地、目的地、日期
+    LLM->>User: "请提供出发城市、目的地和日期"
+    User->>LLM: "北京到上海，明天"
+    LLM->>Server: searchFlights(origin, destination, date)
+    Server-->>LLM: 航班列表
+```
+
+**Elicitation 流程：**
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Client as Client
+    participant Server as Server
+
+    User->>Client: "帮我订一张机票"
+    Client->>Server: searchFlights(部分参数)
+    Server->>Client: elicitation/create: "请选择出发城市"
+    Client->>User: 显示城市列表
+    User->>Client: 选择"北京"
+    Client->>Server: 返回选择
+    Server->>Client: elicitation/create: "请选择日期"
+    Client->>User: 显示日期选择器
+    User->>Client: 选择"明天"
+    Client->>Server: 返回选择
+    Server-->>Client: 航班列表
+```
+
+---
+
+#### 9.3.2 Elicitation 对交互式 Agent 的价值
+
+> [!tip] 三大核心价值
+
+**1. 代码审查 Agent**
+
+> **场景**：AI 审查代码时发现潜在问题，需要开发者确认是否修复。
+
+```mermaid
+flowchart TB
+    A["Agent 发现可疑代码"] --> B["通过 Elicitation 询问"]
+    B --> C{"用户选择"}
+    C -->|"自动修复"| D["Agent 提交修复"]
+    C -->|"手动处理"| E["Agent 标记待办"]
+    C -->|"忽略"| F["Agent 跳过"]
+```
+
+**2. 表单填写 Agent**
+
+> **场景**：AI 帮助填写复杂表单（如注册、申请、配置），逐步收集信息。
+
+```mermaid
+flowchart TB
+    A["Agent 开始填写表单"] --> B["检测必填字段"]
+    B --> C["通过 Elicitation 逐项询问"]
+    C --> D["用户实时回答"]
+    D --> E["Agent 自动填充"]
+    E --> F{"所有字段完成？"}
+    F -->|"否"| C
+    F -->|"是"| G["提交表单"]
+```
+
+**3. 确认操作 Agent**
+
+> **场景**：AI 执行高风险操作前，需要用户明确确认。
+
+```mermaid
+flowchart TB
+    A["Agent 准备删除 10 个文件"] --> B["通过 Elicitation 展示文件列表"]
+    B --> C{"用户确认"}
+    C -->|"确认删除"| D["执行删除"]
+    C -->|"取消"| E["中止操作"]
+    C -->|"选择性删除"| F["用户勾选要删除的文件"]
+    F --> D
+```
+
+---
+
+#### 9.3.3 在 Koog 中使用 Elicitation
+
+> [!info] JetBrains Koog 1.0 已支持 MCP 0.11.1，包括 Elicitation 机制
+> Koog 是 JetBrains 推出的 Kotlin Agent 框架，内置 MCP Client/Server 支持。
+
+**Koog 中配置 Elicitation：**
+
+```kotlin
+import ai.koog.agents.mcp.MCPClient
+import ai.koog.agents.mcp.elicitation.ElicitationHandler
+
+// 1. 创建 MCP Client 并配置 Elicitation
+val mcpClient = MCPClient(
+    transport = StreamableHttpTransport("https://mcp-server.example.com"),
+    elicitationHandler = object : ElicitationHandler {
+        override fun onRequest(request: ElicitationRequest): ElicitationResponse {
+            // 展示 UI 让用户回答
+            val userAnswer = showElicitationUI(request.message, request.options)
+            return ElicitationResponse(
+                action = ElicitationAction.ACCEPT,
+                content = userAnswer
+            )
+        }
+    }
+)
+
+// 2. 在 Agent 中使用
+val agent = Agent(
+    llm = OpenAI,
+    tools = mcpClient.getTools(),
+    // Agent 会在需要时自动触发 Elicitation
+)
+
+// 3. 执行任务（Elicitation 会自动处理）
+agent.run("帮我预订明天北京到上海的机票")
+```
+
+> [!tip] Koog 的 Elicitation 优势
+> - **类型安全**：Kotlin 的强类型系统确保 Elicitation 请求/响应的正确性
+> - **协程支持**：异步 Elicitation 不阻塞 Agent 执行
+> - **UI 集成**：可轻松对接 Compose/Swing/JavaFX 等 UI 框架
+> - **MCP 0.11.1**：支持最新的 Elicitation 规范（form/url 两种模式）
+
+---
+
+### 9.4 Streamable HTTP vs SSE vs stdio 对比
+
+> [!info] 三种传输方式的全面对比
+> 2025-06-18 规范明确推荐 Streamable HTTP 作为远程传输标准，取代早期的 SSE 方案。
+
+| 维度 | stdio | SSE (Server-Sent Events) | Streamable HTTP |
+| :--- | :--- | :--- | :--- |
+| **传输方向** | 双向（stdin/stdout） | 单向（Server → Client） | 双向（HTTP POST/GET + SSE） |
+| **延迟** | ⭐⭐⭐ 极低（本地进程） | ⭐⭐ 中等（长连接） | ⭐⭐ 中等（HTTP + SSE） |
+| **连接模型** | 1:1（一个 Client 对应一个 Server 进程） | 1:N（一个 SSE 连接服务多个请求） | 1:N（HTTP 会话 + SSE 流） |
+| **会话管理** | 进程生命周期 | 通过 Connection ID | `MCP-Session-Id` Header |
+| **断线重连** | 不适用（进程终止） | `Last-Event-ID` 恢复 | `Last-Event-ID` + 会话恢复 |
+| **浏览器兼容** | ❌ 不支持 | ✅ 原生支持 | ✅ 原生支持（HTTP + EventSource） |
+| **防火墙友好** | ✅ 无网络 | ⚠️ 长连接可能被拦截 | ✅ 标准 HTTP，最友好 |
+| **认证支持** | 进程级权限 | Bearer Token / API Key | OAuth 2.1 / Bearer Token / API Key |
+| **适用场景** | 本地开发工具、桌面应用 | 已废弃（2024-11-05 版本） | 远程 Server、云服务、企业部署 |
+| **推荐程度** | ⭐⭐⭐ 本地首选 | ⚠️ 已被取代 | ⭐⭐⭐ 远程首选 |
+
+> [!tip] 选择建议
+> - **本地开发**：使用 **stdio**——零网络开销，调试简单，安全性高
+> - **远程部署**：使用 **Streamable HTTP**——标准化、支持认证、断线重连
+> - **浏览器环境**：必须使用 **Streamable HTTP**——SSE 仅支持单向，无法满足完整 MCP 需求
+> - **遗留系统**：如果已使用 SSE，建议迁移到 Streamable HTTP——规范已明确 SSE 为过渡方案
+
+**Streamable HTTP 的核心优势：**
+
+```mermaid
+flowchart TB
+    subgraph StreamableHTTP["Streamable HTTP 特性"]
+        A["统一端点"] --> B["单个 HTTP 端点处理所有请求"]
+        C["会话管理"] --> D["MCP-Session-Id 维持状态"]
+        E["流式支持"] --> F["SSE 实现 Server 推送"]
+        G["断线恢复"] --> H["Last-Event-ID 恢复上下文"]
+    end
+```
+
+---
+
+### 9.5 MCP Registry 生态分析
+
+> [!info] MCP Registry：AI 工具的"包管理器"
+> 2025 年，GitHub 推出 MCP Registry，标志着 MCP 生态进入成熟期。
+
+#### 9.5.1 Registry 定位：类比传统包管理器
+
+> [!compare] MCP Registry vs npm / Maven Central / PyPI
+
+| 维度 | npm / Maven / PyPI | MCP Registry |
+| :--- | :--- | :--- |
+| **托管内容** | 代码包、二进制文件 | MCP Server 元数据（指向包的指针） |
+| **发现方式** | 包名搜索 | REST API + DNS 命名空间验证 |
+| **安装方式** | `npm install` / `mvn dependency` | Client 自动发现并连接 |
+| **版本管理** | 语义化版本（SemVer） | `server.json` 中的版本声明 |
+| **安全验证** | 包签名、漏洞扫描 | DNS 验证 + OAuth 认证 |
+| **生态规模** | 百万级包 | 数千个 MCP Server（快速增长） |
+
+> [!tip] 关键区别
+> - **npm 等**：托管**代码**，开发者下载并集成
+> - **MCP Registry**：托管**元数据**，Client 自动发现并连接 Server
+> - **互补关系**：MCP Server 的代码仍托管在 npm/PyPI/Docker Hub，Registry 只是指向它们
+
+---
+
+#### 9.5.2 对 Kotlin 开发者的机会
+
+> [!info] Kotlin 生态在 MCP 领域的独特优势
+> JetBrains 官方维护的 MCP kotlin-sdk，让 Kotlin 开发者可以无缝参与 MCP 生态。
+
+**三大机会：**
+
+**1. 使用 Koog 构建 MCP Server**
+
+```kotlin
+import ai.koog.agents.mcp.server.MCPServer
+import ai.koog.agents.mcp.server.ToolDefinition
+
+// 定义一个天气查询 Tool
+val weatherTool = ToolDefinition(
+    name = "get_weather",
+    description = "获取指定城市的天气",
+    inputSchema = JsonSchema {
+        property("city", JsonType.STRING, description = "城市名称")
+    }
+) { params ->
+    val city = params["city"].asString()
+    // 调用天气 API
+    val weather = WeatherAPI.getWeather(city)
+    ToolResult(weather.toJson())
+}
+
+// 启动 MCP Server
+val server = MCPServer(
+    name = "kotlin-weather-server",
+    version = "1.0.0",
+    tools = listOf(weatherTool),
+    transport = StreamableHttpTransport(port = 8080)
+)
+
+server.start()
+```
+
+**2. 发布到 MCP Registry**
+
+```json
+// server.json - 发布到 MCP Registry
+{
+  "name": "com.example/kotlin-weather-server",
+  "version": "1.0.0",
+  "description": "基于 Kotlin 的天气查询 MCP Server",
+  "author": "Your Name",
+  "license": "MIT",
+  "packages": [
+    {
+      "registry": "maven-central",
+      "identifier": "com.example:kotlin-weather-server:1.0.0",
+      "runtime": "jvm"
+    }
+  ],
+  "transport": {
+    "type": "streamable-http",
+    "endpoint": "https://mcp.example.com/weather"
+  }
+}
+```
+
+**3. 复用社区 MCP Server**
+
+> [!tip] Kotlin 开发者可以消费的 MCP Server
+> - **GitHub MCP Server**：在 Koog Agent 中集成 GitHub 操作
+> - **Filesystem MCP Server**：文件系统操作
+> - **Database MCP Server**：数据库查询（支持 SQLDelight 等 Kotlin ORM）
+> - **Sentry MCP Server**：错误日志分析
+
+---
+
+#### 9.5.3 当前生态中值得关注的 MCP Server
+
+> [!info] 精选高价值 MCP Server
+
+| Server | 功能 | 适用场景 | 语言 | 推荐指数 |
+| :--- | :--- | :--- | :--- | :--- |
+| **@modelcontextprotocol/server-github** | GitHub 全功能操作 | 代码管理、Issue/PR 自动化 | TypeScript | ⭐⭐⭐⭐⭐ |
+| **@modelcontextprotocol/server-filesystem** | 安全文件操作 | 本地开发、文档处理 | TypeScript | ⭐⭐⭐⭐⭐ |
+| **@modelcontextprotocol/server-memory** | 知识图谱记忆 | 长期记忆系统 | TypeScript | ⭐⭐⭐⭐ |
+| **sentry-mcp-server** | 错误日志分析 | 生产问题排查 | Python | ⭐⭐⭐⭐ |
+| **mcp-server-postgres** | PostgreSQL 操作 | 数据库查询、Schema 管理 | TypeScript | ⭐⭐⭐⭐ |
+| **mcp-server-slack** | Slack 集成 | 团队协作、通知 | TypeScript | ⭐⭐⭐ |
+| **mcp-server-notion** | Notion 文档操作 | 知识库管理 | Python | ⭐⭐⭐ |
+
+> [!tip] Kotlin 开发者首选
+> - **优先选择 TypeScript/Python Server**：生态最成熟，文档最完善
+> - **关注 JetBrains 官方**：Koog 团队可能会推出 Kotlin 原生的高质量 Server
+> - **参与社区**：用 kotlin-sdk 开发 Server 并发布到 Registry，建立个人影响力
+
+---
+
+### 9.6 MCP vs OpenAPI / Function Calling：协议层面的本质区别
+
+> [!info] 三者解决不同层次的问题，互补而非竞争
+> 理解它们的区别，才能在正确的场景选择正确的工具。
+
+| 维度 | OpenAPI | Function Calling | MCP |
+| :--- | :--- | :--- | :--- |
+| **定义层面** | API 规范（描述 REST API） | LLM 能力（结构化输出） | 集成协议（AI 与外部系统） |
+| **抽象级别** | 接口定义（Endpoint + Schema） | 函数签名（Name + Params） | 完整协议（发现 + 调用 + 通知） |
+| **控制方** | 开发者手动集成 | 模型自主调用 | 模型 + 应用 + 用户协同 |
+| **发现机制** | Swagger/OpenAPI 文档 | 无（需手动注入 Prompt） | `*/list` 自动发现 |
+| **运行时行为** | 静态（编译时确定） | 静态（Prompt 注入后固定） | 动态（运行时发现 + 通知） |
+| **传输层** | HTTP/HTTPS | 无（嵌入 LLM 推理） | stdio / Streamable HTTP |
+| **认证** | OAuth / API Key / Basic | 无（由调用方处理） | OAuth 2.1 统一框架 |
+| **适用场景** | 传统 API 集成 | 简单的单次工具调用 | 复杂的 AI Agent 系统 |
+
+> [!tip] 三者如何协同工作
+> 在实际 AI Agent 系统中，三者往往**同时存在**：
+
+```mermaid
+flowchart TB
+    subgraph Agent["AI Agent 系统"]
+        LLM["🧠 LLM"]
+        FC["Function Calling<br/>模型调用函数的能力"]
+    end
+
+    subgraph Integration["集成层"]
+        OA["OpenAPI<br/>传统 API 集成"]
+        MCP["MCP 协议<br/>标准化工具接入"]
+    end
+
+    subgraph External["外部系统"]
+        API1["REST API (GitHub)"]
+        API2["MCP Server (文件系统)"]
+        API3["MCP Server (数据库)"]
+    end
+
+    LLM --> FC
+    FC --> OA
+    FC --> MCP
+    OA -->|"OpenAPI Client"| API1
+    MCP -->|"MCP Client"| API2
+    MCP -->|"MCP Client"| API3
+```
+
+> [!note] 实际工作流
+> 1. **MCP Client** 通过 `tools/list` 获取所有可用工具
+> 2. 将工具描述注入 LLM 的 System Prompt
+> 3. **LLM** 使用 **Function Calling** 能力决定调用哪个工具
+> 4. **MCP Client** 通过 MCP 协议将调用转发到对应的 Server
+> 5. **Server** 执行操作并返回结果
+>
+> **OpenAPI** 在这个流程中用于连接**传统 REST API**（如 GitHub API），而 **MCP** 用于连接**原生 MCP Server**。两者互补，共同构建完整的工具生态。
+
+---
+
+### 9.7 2025-06-18 更新要点总结
+
+> [!summary] MCP Spec 2025-06-18 的五大更新
+
+| 更新要点 | 详细说明 | 影响 |
+| :--- | :--- | :--- |
+| **Streamable HTTP 成为推荐传输** | 取代 SSE，统一远程传输标准 | 简化部署，提升兼容性 |
+| **Elicitation 机制引入** | Server 可在执行期间向用户请求信息 | 支持复杂交互式 Agent |
+| **五大原语规范化** | Roots/Sampling/Prompts/Resources/Tools 定型 | 协议稳定性提升 |
+| **Authorization 框架完善** | 支持 OAuth 2.0，企业级安全 | 企业采用门槛降低 |
+| **GitHub MCP Registry 上线** | 平台级 Server 发现和集成入口 | 生态爆发，Kotlin 机会 |
+
+> [!tip] 对 Kotlin 开发者的启示
+> - **Koog 1.0** 已支持 MCP 0.11.1，Streamable HTTP 为首选传输
+> - **MCP kotlin-sdk** 是 JetBrains 官方维护的实现，质量有保障
+> - **发布 MCP Server 到 GitHub Registry**，是提升个人技术影响力的好机会
+> - **Elicitation 机制** 让 Kotlin Agent 可以构建更智能的交互式应用
+
+---
+
 ## 结语：AI 的"USB-C 时刻"
 
 > [!quote] 核心观点
