@@ -8,7 +8,6 @@ export const sharedPageComponents: SharedLayout = {
   afterBody: [
     Component.Feedback({
       repo: "BobcGn/quartz-myblogs" as `${string}/${string}`,
-      repoId: "",
     }),
     Component.ChatWidget(),
   ],
