@@ -57,7 +57,9 @@ const config: QuartzConfig = {
     transformers: [
       Plugin.FrontMatter(),
       Plugin.CreatedModifiedDate({
-        priority: ["frontmatter", "git", "filesystem"],
+        // git 优先:修改时间 = 内容最后一次提交时间,随发布自动更新,
+        // 避免 frontmatter 的 date(创建日期)被当成"修改时间"导致死数据
+        priority: ["git", "frontmatter", "filesystem"],
       }),
       Plugin.SyntaxHighlighting({
         theme: {
