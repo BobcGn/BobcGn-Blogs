@@ -13,9 +13,11 @@ tags:
 ---
 
 > [!abstract] 全文摘要
-> [[AI]] 正在以前所未有的速度重塑代码生成的成本曲线——[[LLM]] 可以在数秒内输出数百行语法正确的代码，[[AI Agent]] 能自主分解任务、调用工具链、迭代修复。但一个尖锐的悖论随之浮现：**代码生成越快，交付反而越容易失控**。因为概率性输出的本质没有改变，而生成速度的提升成倍放大了选择、验证、整合与追溯的压力。
+> [[重新认识AI|AI]] 正在以前所未有的速度重塑代码生成的成本曲线——[[重新认识AI|LLM]] 可以在数秒内输出数百行语法正确的代码，[[重新认识AI|AI Agent]] 能自主分解任务、调用工具链、迭代修复。但一个尖锐的悖论随之浮现：**代码生成越快，交付反而越容易失控**。因为概率性输出的本质没有改变，而生成速度的提升成倍放大了选择、验证、整合与追溯的压力。
 >
-> 本文从工程哲学的高度，重新审视 AI 时代的编程范式。我们引入 [[AI-DLC]]（AI Development Lifecycle）框架——**`AI-DLC = Ɛ (人的判断 + AI 能力) = Engineering with Exsecutio`**——作为核心论点：人的判断是方向，AI 能力是加速度，工程化执行（Exsecutio）是保交付的确定性闭环。文章将完整梳理从 [[AI-Assisted]] → [[AI-Driven]] → [[Agentic]] 的范式转移，剖析"人的五件套"（意图、边界、不可委托判断、检查点、责任），并展示如何用 Exsecutio 的五步闭环（Plan → Execute → Verify → Repair → Walkthrough）将概率智能锁进确定性交付的轨道。
+> 本文从工程哲学的高度，重新审视 AI 时代的编程范式。我们引入 AI-DLC（AI Development Lifecycle）框架——**`AI-DLC = Ɛ (人的判断 + AI 能力) = Engineering with Exsecutio`**——作为核心论点：人的判断是方向，AI 能力是加速度，工程化执行（Exsecutio）是保交付的确定性闭环。文章将完整梳理从 AI-Assisted → AI-Driven → Agentic 的范式转移，剖析"人的五件套"（意图、边界、不可委托判断、检查点、责任），并展示如何用 Exsecutio 的五步闭环（Plan → Execute → Verify → Repair → Walkthrough）将概率智能锁进确定性交付的轨道。
+>
+> 在此基础上，文章进一步沿着书的完整工程链路展开：**Inception 分解链**（Intent → Requirements → Units → Stories → Bolt Plan）把意图变成可执行的轨道，**Memory Bank & Standards** 为 AI 装上跨会话记忆，**Bolt** 按风险选择执行批次轨道，**分层验证证据链**（确定性检查 → 独立测试 → 模型评审 → 人工判断）完成四层验证，**Operations 运行闭环**（Build → Deploy → Runtime Verify → Monitor → Recover）让交付在运行时持续成立，最终由证据回写更新下一轮人的判断——形成一条从意图到运行、再到下一轮意图的**可回环的确定性工程系统**。
 >
 > 核心思想与工程框架深度参考并总结自开源图书《深入理解 AI-DLC》。
 
@@ -25,7 +27,7 @@ tags:
 
 ## 1.1 代码变得廉价了，但交付并没有
 
-2024 年之后，任何一个使用过 [[Cursor]]、[[Copilot]] 或 [[Claude Code]] 的开发者都体验过那种令人眩晕的效率飙升：一个模糊的意图描述，[[LLM]] 就能生成完整的函数实现、甚至整个模块的骨架代码。过去需要数小时的"打字劳动"，现在被压缩到了秒级。
+2024 年之后，任何一个使用过 Cursor、Copilot 或 Claude Code 的开发者都体验过那种令人眩晕的效率飙升：一个模糊的意图描述，[[重新认识AI|LLM]] 就能生成完整的函数实现、甚至整个模块的骨架代码。过去需要数小时的"打字劳动"，现在被压缩到了秒级。
 
 但紧接着，你会发现自己陷入了另一个泥潭：
 
@@ -39,11 +41,11 @@ tags:
 >
 > 代码生成的速度从"人手打字"跃迁到了"AI 喷涌"，但人类大脑理解代码、验证逻辑、判断正确性的带宽没有任何变化。**瓶颈没有消失，它只是从"生成"迁移到了"验证与整合"。**
 
-这不是一个可以用"更好的 [[Prompt Engineering]]"来解决的问题。Prompt 优化能提高单次生成的命中率，但它无法解决系统级的确定性问题——因为你无法通过更精确的描述来消除概率模型的内在随机性。
+这不是一个可以用"更好的 [[提示词工程|Prompt Engineering]]"来解决的问题。Prompt 优化能提高单次生成的命中率，但它无法解决系统级的确定性问题——因为你无法通过更精确的描述来消除概率模型的内在随机性。
 
 ## 1.2 真正的问题不是"AI 能不能写代码"，而是"如何把概率输出工程化"
 
-LLM 的本质是一个概率模型。给定相同的输入，它在不同温度参数下会输出不同的代码；即使在零温度下，它的输出也受限于训练数据的分布和 Context Window（上下文窗口） 的约束。这意味着：
+LLM 的**本质是一个概率模型**。给定相同的输入，它在不同温度参数下会输出不同的代码；即使在零温度下，它的输出也受限于训练数据的分布和 Context Window（上下文窗口） 的约束。这意味着：
 
 > [!warning] 概率智能的工程债务
 > **没有经过工程化闭环验证的 AI 输出，本质上是一个"未经测试的第三方库"**——你不知道它的边界条件、异常行为和隐式假设。盲目信任它的输出，和盲目引入一个未经审计的开源依赖，风险等级完全相同。
@@ -106,7 +108,7 @@ flowchart LR
 
 进入 AI-Driven 阶段，开发者不再逐行指挥，而是给出**高层意图**（比如"实现一个支持分页和过滤的 REST API"），让 LLM 自主完成任务分解、模块设计和代码生成。人的角色从"编写者"转变为**"验证者"和"集成者"**。
 
-这个阶段的关键变化是：[[AI]] 开始具备**任务分解能力**——它不再只是补全当前行，而是能把一个模糊的目标拆解成多个子任务并逐一执行。但问题也随之暴露：AI 的分解策略可能不是最优的，生成的代码可能满足字面要求但违反隐式约束（比如团队的编码规范、项目的架构约定），而**人必须逐一检查每一个产出**。
+这个阶段的关键变化是：[[重新认识AI|AI]] 开始具备**任务分解能力**——它不再只是补全当前行，而是能把一个模糊的目标拆解成多个子任务并逐一执行。但问题也随之暴露：AI 的分解策略可能不是最优的，生成的代码可能满足字面要求但违反隐式约束（比如团队的编码规范、项目的架构约定），而**人必须逐一检查每一个产出**。
 
 ### 2.1.3 Agentic：多 Agent 沿工程轨道协作
 
@@ -396,9 +398,344 @@ Walkthrough 不一定意味着"通过"。如果人在走查过程中发现了 AI
 
 ---
 
-# 5. 总结与展望：未来的开发者形态
+# 5. 从意图到执行批次：Inception 分解链
 
-## 5.1 开发者的身份转型
+## 5.1 为什么意图不能直接进入执行
+
+在 AI-DLC 的完整链路里，人的意图不是直接丢给编码 Agent 的。书里在第 3 章提出了一个关键问题：**"为什么一个 Intent 不能直接让 AI 自主执行？"**
+
+> [!question] Inception 的必要性
+> 一个模糊的意图（比如"把这本书发布成一个可维护的 GitHub 系统"）直接交给 AI，得到的往往是一堆不可验证的"一次性大段落"——没有需求、没有验收标准、没有执行边界。**意图是方向，不是可执行的工程单元。**
+>
+> 书中给出的答案是 **Inception**：在动手之前，把 Intent 逐级分解为 Requirements → System Context → Units → Stories → Bolt Plan，让每一个层级都对应仓库中可验证的证据路径。**没有 Inception，执行越快，偏差越大。**
+
+## 5.2 五级分解链：向下分解，向上追踪
+
+Inception 的产物是一棵"追踪树"——每一层都可以向上回链到意图、向下追溯到执行批次：
+
+```mermaid
+flowchart TD
+    I["🎯 Intent<br/>目标结果，非动作<br/>（如：发布一个可维护的 GitHub 写作系统 v0.1）"]
+    R["📋 Requirements<br/>FR / NFR / 验收标准<br/>（如：FR-001 章节发布、NFR-001 可复现）"]
+    C["🌐 System Context<br/>接口、事实源与约束<br/>（如：Git 仓库、tasks.json、CI 事实源）"]
+    U["🧩 Units<br/>独立交付边界<br/>每个 Unit 有输入、输出、验证"]
+    S["📖 Stories<br/>用户价值 + 二元验收<br/>每个 Story 挂钩 1 个 Requirement 的 done"]
+    B["🔩 Bolt Plan<br/>执行批次与检查点<br/>每批可独立走完 Exsecutio"]
+    H["🔍 Human Checkpoints<br/>每级分解后的门禁审批"]
+
+    I --> R --> C --> U --> S --> B --> H
+    H -.->|"驳回则回退修正"| I
+
+    style I fill:#fdedec,stroke:#e74c3c,stroke-width:2px
+    style B fill:#f5e6ff,stroke:#8e44ad,stroke-width:2px
+    style H fill:#fef9e7,stroke:#f1c40f,stroke-width:2px
+```
+
+> [!tip] 向下分解 · 向上追踪
+> 书的经验法则：**一个 Intent 通常产出 2 个 Unit、3~5 个 Story；每个 Story 必须挂钩一个 Requirement 的验收，且验收是二元的（done / not done）**。
+>
+> 追踪链的核心价值在于**避免"装饰性分解"**——每一层都必须对应仓库中真实的证据路径（如 `requirements.md`、`story-index.md`、`bolt.md`、`events.jsonl`）。不能追踪到证据的分解，只是看起来专业。
+
+| 层级 | 回答的问题 | 证据落点 |
+|:----:|:----------|:--------|
+| **Intent** | 目标结果是什么？（非动作描述） | `memory-bank/intents/*/requirements.md` |
+| **Requirements** | 功能与非功能验收标准是什么？ | FR / NFR / Acceptance |
+| **System Context** | 接口、事实源、约束在哪里？ | 仓库结构、CI、任务状态文件 |
+| **Units** | 哪些是独立的交付边界？ | `units.md` |
+| **Stories** | 每个用户价值如何二元验收？ | `story-index.md` |
+| **Bolt Plan** | 执行批次与检查点如何编排？ | `bolts/*/bolt.md` |
+
+## 5.3 Memory Bank & Standards：AI 的跨会话记忆系统
+
+Inception 解决了"这一轮怎么做"，但 AI 还有一个更隐蔽的问题：**每次会话都是冷启动**。
+
+> [!warning] 冷启动陷阱
+> 书中的实验（EXP-04-01）给出了一个扎心的对比：**有 Memory Bank 的 Agent 上下文恢复率 100%、首动作零错误、无需澄清问题；没有 Memory Bank 的 Agent 上下文恢复率 0%，第一轮就问 3 个澄清问题。**
+>
+> AI 没有"上个月我们讨论过"的记忆——它每次都在"失忆地重新开始"。Memory Bank 就是给 AI 装上**跨会话的长期记忆**。
+
+Memory Bank 不是"资源池"也不是"垃圾场"，它是**决策层**——让下一个会话从"事实源"恢复，而不是从零推理。它由五要素构成：
+
+| 要素 | 内容 | 示例 |
+|:----:|:-----|:-----|
+| **Current State** | 当前进行中 / 已完成 / 已阻塞的任务状态 | `tasks.json`、`current.json`、`cycles.json` |
+| **Intent & Scope** | 目标与边界（含"不做什么"） | `requirements.md`、`story-index.md` |
+| **Standards** | 术语、风格、门禁（DoD） | `coding-standards.md`、`tech-stack.md` |
+| **Evidence Links** | 证据索引：events、reviews、snapshots | `events.jsonl`、`planning/reviews/` |
+| **Update Protocol** | 如何执行并写回事实源 | `validate_project.py`、`ci_check.py` |
+
+它的运作方式是"恢复栈"——每个新会话都从事实源恢复，而不是从零开始：
+
+```mermaid
+flowchart TD
+    NS["🆕 新 Agent 会话<br/>冷启动"]
+    READ["📖 读取事实源<br/>Current State · Intent & Scope<br/>Standards · Evidence Links"]
+    NSA["🚦 推导 Next Safe Action<br/>从事实源推导下一步安全动作"]
+    EXE["⚙️ 执行并写回事实源<br/>按 Update Protocol"]
+    EV["📊 Events · Snapshots · Dashboard"]
+    NEXT["🔁 下一会话从更新后的事实源恢复"]
+
+    NS --> READ --> NSA --> EXE --> EV --> NEXT
+    NEXT -.->|"不再冷启动"| READ
+
+    style NS fill:#fef9e7,stroke:#f1c40f,stroke-width:2px
+    style READ fill:#ebf5fb,stroke:#3498db,stroke-width:2px
+    style NEXT fill:#d5f5e3,stroke:#27ae60,stroke-width:2px
+```
+
+> [!note] Standards：把"团队默认值"固化为 AI 的行为约束
+> 如果说 Memory Bank 是记忆，Standards 就是**行为准则**：技术栈、编码规范、术语表、门禁（Definition of Done）。书里的立场很明确：**AI 越自主，Standards 越必须显式化**——不能指望模型"自觉"遵守团队的隐式约定。团队约定一旦只在人脑中，AI 每轮都会以不同的方式"猜"它。
+
+## 5.4 Bolt：执行批次与轨道选择
+
+分解完成后，Stories 被组织成 **Bolt（执行批次）**。Bolt 既不是普通任务，也不是 Sprint：
+
+> [!compare] Bolt vs 任务 vs Sprint
+> | 维度 | 任务 | Sprint | Bolt |
+> |:----:|:----:|:------:|:----:|
+> | 描述方式 | 只说"做什么" | 固定周期 | 最小完成证据 |
+> | 边界 | 模糊 | 时间盒 | 一个或多个 Story 的明确范围 |
+> | 完成标准 | 人说了算 | 周期结束 | 四种证据齐备 |
+> | 门禁 | 无 | 计划会 / 回顾会 | 由人审批的 Gates |
+
+Bolt 有四个必备要素：**Scope（范围）**、**Type（轨道类型）**、**Gates（人审批的门禁）**、**Evidence（完成证据）**。其中每个 Bolt 都必须沿一条"轨道"执行——Simple 或 DDD：
+
+```mermaid
+flowchart LR
+    Q{"复杂度 / 风险 / 可逆性？"}
+
+    subgraph Simple["🟢 Simple Construction<br/>低复杂 · 低风险 · 可逆"]
+        S1["Plan"] --> S2["Implement"] --> S3["Test"]
+    end
+
+    subgraph DDD["🔴 DDD Construction<br/>高领域复杂 · 跨边界 · 难逆"]
+        D1["Model"] --> D2["Design"] --> D3["ADR"] --> D4["Implement"] --> D5["Test"]
+    end
+
+    Q -->|"低 · 低 · 可逆"| Simple
+    Q -->|"高 · 高 · 难逆"| DDD
+    Q -.->|"灰区：先拆分 Bolt<br/>而不是硬选"| SPLIT["✂️ 拆出高风险部分<br/>各自独立成 Bolt"]
+
+    style Simple fill:#d5f5e3,stroke:#27ae60,stroke-width:2px
+    style DDD fill:#fdedec,stroke:#e74c3c,stroke-width:2px
+    style SPLIT fill:#fef9e7,stroke:#f1c40f,stroke-width:2px
+```
+
+> [!important] 灰区先拆分，而不是硬选
+> 书中的 Bolt 选择矩阵给出的不是"二选一"，而是一条决策规则：**低复杂、低风险、可逆 → Simple；高领域复杂、跨边界、难逆 → DDD；不确定时，先拆出高风险的部分，而不是硬选一条轨道。**
+>
+> 轨道不是惩罚，而是**与风险匹配的仪式**——Simple 省掉的每个步骤，都是 DDD 在同等风险下不敢省的。把一个"可逆的小改动"塞进 DDD 是仪式过剩；把一个"跨支付模块的核心变更"塞进 Simple 则是玩火。
+
+---
+
+# 6. 验证与运行：从证据链到持续运营
+
+## 6.1 分层验证证据链：验证不是单一动作
+
+现在把视角拉回第 4 章的 Exsecutio。书中对 Verify 这一步做了更精细的拆解：**验证不是 pass/fail，而是一条四层证据链**：
+
+```mermaid
+flowchart TD
+    CAND["🧪 候选（Candidate）<br/>待验证的 AI 产出"]
+    DC["🤖 Deterministic Checks<br/>确定性检查 → 机器证据<br/>CI · schema · lint · dry-run"]
+    IT["🧩 Independent Tests<br/>独立测试 → 行为证据<br/>独立编写的测试，不依赖 AI 自评"]
+    MR["🔎 Model Review<br/>模型评审 → 风险线索<br/>AI 互查，找出值得关注的候选问题"]
+    HJ["🧑 Human Judgment<br/>人工判断 → 批准 / 拒绝<br/>accepts · rejects · escalates · defers"]
+    REL["✅ Release<br/>可批准发布"]
+    RW["🔧 Rework<br/>返回修复"]
+    ESC["🚨 Escalate<br/>升级风险"]
+
+    CAND --> DC --> IT --> MR --> HJ
+    HJ --> REL
+    HJ --> RW
+    HJ --> ESC
+    RW -.->|"反馈回候选"| CAND
+    ESC -.->|"反馈回约束"| CAND
+
+    style DC fill:#ebf5fb,stroke:#3498db,stroke-width:2px
+    style IT fill:#d5f5e3,stroke:#27ae60,stroke-width:2px
+    style MR fill:#fef9e7,stroke:#f1c40f,stroke-width:2px
+    style HJ fill:#fdedec,stroke:#e74c3c,stroke-width:2px
+```
+
+> [!important] Model Review 与 Human Judgment 的分工
+> 书中用一句话定义了二者的边界：**Model Review finds candidates for concern. Human Judgment accepts, rejects, escalates, or defers them.**（模型评审找出值得关注的候选，人工判断负责接受、拒绝、升级或推迟。）
+>
+> 模型评审（包括 AI 互查）只是"找出候选问题"——它**服务而不替人盖章**。最终裁决权始终在人的手上。这与第 3 章"不可委托判断"完全同构：**机器提供风险线索，人承担决策后果。**
+
+## 6.2 Verification Strength：按风险选择验证强度
+
+书里没有要求"所有变更都用同一套重型验证"，而是给出一个按风险分级的验证强度表：
+
+| 风险等级 | 典型场景 | 最低验证组合 |
+|:------:|:--------|:------------|
+| **Low** | 简单 Markdown / 状态更新 | 检查 + 快速浏览 |
+| **Medium** | 流程 / 生成脚本 | 检查 + 独立测试 / 快照 |
+| **High** | 数据 / 状态复杂 | 全流程测试 + 领域专家审查 / Runbook |
+| **Critical** | 不可逆决策 | 独立测试 + 审查 + 明确的人工批准 |
+
+> [!tip] 验证强度的经济学
+> 验证强度应该与**复杂度、可逆性、安全影响、数据/状态**匹配：改一个说明文档不需要全量 CI；改支付流程的核心路径，每一层证据都不可省。**"验证过度"和"验证不足"一样是工程债**——前者烧时间，后者烧事故。
+
+## 6.3 Operations 运行闭环：交付不是终点
+
+Exsecutio 结束于"候选被批准"——但软件的生命在于运行。书的第 8 章提出一个关键区分：
+
+> [!question] CH-07 Verify vs CH-08 Operations
+> - **CH-07 Verify**：Should this candidate be approved?（这个候选该不该批准？）
+> - **CH-08 Operations**：Can this approved candidate run, be observed, and be recovered?（这个被批准的候选能运行、能被观测、能被恢复吗？）
+>
+> CI 全绿只是"候选合格"，**不等于"线上稳定"**。从交付到运行，还有一整条闭环。
+
+```mermaid
+flowchart TD
+    VC["✅ 已验证候选<br/>CH-07 已批准"]
+    B["🏗️ Build<br/>从生成到可追溯产物<br/>manifest · source identity · artifact hash"]
+    D["🚀 Deploy<br/>受控发布<br/>环境 · 权限 · 并发 · 回退策略"]
+    RV["🔬 Runtime Verify<br/>运行时核验<br/>产物与 source commit 一致性校验"]
+    M["📡 Monitor<br/>观测与告警<br/>技术信号 · 产品信号 · 治理信号"]
+    SR["🔄 Sustainable Runtime<br/>稳定运行态"]
+    REC["🛟 Recover / Rebuild<br/>恢复不是补丁<br/>是运行闭环的一部分"]
+
+    VC --> B --> D --> RV --> M --> SR
+    M -->|"异常触发"| REC
+    REC -->|"回到运行输入"| VC
+
+    style B fill:#ebf5fb,stroke:#3498db,stroke-width:2px
+    style D fill:#fef9e7,stroke:#f1c40f,stroke-width:2px
+    style REC fill:#fdedec,stroke:#e74c3c,stroke-width:2px
+    style SR fill:#d5f5e3,stroke:#27ae60,stroke-width:3px
+```
+
+> [!danger] 没有 Recover 的交付是"信仰型交付"
+> 书里的 Operations 模式把 **Recover 内建进运行闭环**：每个 Runbook 必须回答六个问题——**Trigger**（什么触发恢复）、**Owner**（谁负责）、**Scope**（影响范围）、**Steps**（怎么恢复）、**Verification**（怎么确认恢复完成）、**Communication**（怎么同步干系人）。
+>
+> 没有 Runbook 的"回滚方案"，在事故现场往往只是三行没有人敢执行的注释。**Build 的可追溯性（manifest 与 source identity）是 Recover 的前提**——你无法恢复一个说不清来源的产物。
+
+---
+
+# 7. 规模化：Flow 与 Agent 工作系统
+
+## 7.1 风险-仪式矩阵：不是所有项目都要全套 AI-DLC
+
+书的第 9 章提出一个反直觉的立场：**AI-DLC 不是唯一正确的流程，它是"高风险 × 高仪式"象限的选择。**
+
+```mermaid
+flowchart LR
+    subgraph M1["🟢 低风险 → 最小仪式"]
+        S["Simple Flow<br/>Requirements → Design → Tasks"]
+    end
+    subgraph M2["🟡 中风险 → 焦点增量"]
+        F["FIRE Flow<br/>Autopilot · Confirm · Validate<br/>+ 快速 Run（适合 Brownfield / Monorepo）"]
+    end
+    subgraph M3["🔴 高风险 → 完整治理"]
+        A["AI-DLC Flow<br/>Intent → Units → Stories → Bolts<br/>→ Memory Bank → Verify → Operations"]
+    end
+    R["五个风险维度<br/>Complexity · Codebase State<br/>Compliance · Team Scale · Reversibility"]
+    C["仪式预算<br/>Checkpoints · Artifacts<br/>Approvals · Traceability · Runtime Scope"]
+
+    R --> M1 & M2 & M3
+    C --> M1 & M2 & M3
+
+    style M1 fill:#d5f5e3,stroke:#27ae60,stroke-width:2px
+    style M2 fill:#fef9e7,stroke:#f1c40f,stroke-width:2px
+    style M3 fill:#fdedec,stroke:#e74c3c,stroke-width:2px
+```
+
+> [!compare] 三种 Flow 的取舍
+> | 维度 | Simple | FIRE | AI-DLC |
+> |:----:|:------:|:----:|:------:|
+> | 适用 | 低风险 · 最小仪式 | 中风险 · 焦点增量 | 高风险 · 完整治理 |
+> | 流程 | Requirements → Design → Tasks | Autopilot / Confirm / Validate + Run | Intent → Units → Stories → Bolts → Memory Bank → Verify → Operations |
+> | 升级触发 | 跨边界 · 难逆 · 合规上升 | 同左 | — |
+> | 降级触发 | — | 范围收缩 · 风险已隔离 | 同左 |
+
+> [!tip] Swap Test：检验你的 Flow 选择
+> 书里给出了一个验证流程选择的技巧——**把任务与流程交叉组合**：把低风险任务放进 AI-DLC 会怎样（仪式过剩）？把高风险任务放进 Simple 会怎样（验证不足）？如果任何一组组合明显荒谬，说明你的选择可能只是**惯性**，而不是基于风险判断。
+>
+> 每个 Flow 选择都应留下一份 **Decision Record**：Top risks、Chosen flow、Why not the other two、Checkpoint budget、Runtime scope、Upgrade/downgrade trigger。**流程选择本身也要可追溯、可复盘。**
+
+## 7.2 Agent 工作系统：RACI、Mob 与价值记分卡
+
+当 AI-DLC 运行在团队规模时，人机协作需要一个**组织形态**。书的第 10 章给出的答案是"研发操作系统三层图"：
+
+```mermaid
+flowchart TD
+    subgraph L1["① 责任层 Responsibility"]
+        R1["RACI 矩阵<br/>Accountable 必须是人<br/>Agent 可以是 Responsible<br/>（Master / Inception / Construction / Operations）"]
+    end
+    subgraph L2["② 节奏层 Cadence"]
+        C1["Mob Elaboration（规划周期）<br/>+ Mob Construction（构建周期）<br/>+ Artifact-driven 异步审阅 · Handoff log"]
+    end
+    subgraph L3["③ 价值层 Scorecard"]
+        S1["Cycle Time（周期）<br/>Quality（质量）<br/>Cost / Attention（成本）<br/>Reproducibility（可复现）<br/>Business Result（业务结果）"]
+    end
+    DASH["📊 Dashboard<br/>只是观测面，不是决策指标"]
+
+    L1 --> L2 --> L3
+    L3 -.->|"记分卡回流<br/>责任与节奏"| L1
+    DASH -.->|"只观测 · 不决策"| L3
+
+    style L1 fill:#fdedec,stroke:#e74c3c,stroke-width:2px
+    style L2 fill:#ebf5fb,stroke:#3498db,stroke-width:2px
+    style L3 fill:#d5f5e3,stroke:#27ae60,stroke-width:2px
+    style DASH fill:#fef9e7,stroke:#f1c40f,stroke-width:2px
+```
+
+> [!important] Accountable 属于人
+> 书里的责任规则极其明确：**AI 可以是 Responsible（负责执行），但 Accountable（最终负责）必须是人**；Dashboard 只是观测面，永远不是决策指标。
+>
+> 这正是第 3 章"责任不可委托"在组织层面的落地——**Agent 越多，RACI 越要写在明处，否则"每个人都负责"会退化成"没有人负责"。** 规模化不是把人撤下来，而是把人的责任放到更精确的位置上。
+
+## 7.3 整条思维链路总览
+
+现在把全书串起来——从人的意图到下一轮意图，AI-DLC 是一条完整的、可回环的工程链路：
+
+```mermaid
+flowchart LR
+    subgraph P1["① 人的判断层"]
+        J["🎯 Intent · Boundary<br/>⚖️ Judgment · 🔍 Checkpoint<br/>📋 Accountability"]
+    end
+    subgraph P2["② Inception 分解层"]
+        INC["Intent → Requirements<br/>→ System Context → Units<br/>→ Stories → Bolt Plan"]
+        MB["🧠 Memory Bank & Standards<br/>跨会话记忆 · 行为准则"]
+    end
+    subgraph P3["③ Construction 执行层"]
+        BOLT["🔩 Bolt（Simple / DDD）"]
+        EXE["Exsecutio<br/>Plan → Execute → Verify<br/>→ Repair → Walkthrough"]
+    end
+    subgraph P4["④ 验证层"]
+        VER["四层证据链<br/>Deterministic → Independent<br/>→ Model Review → Human"]
+    end
+    subgraph P5["⑤ Operations 运行层"]
+        OPS["Build → Deploy<br/>→ Runtime Verify → Monitor<br/>→ Recover"]
+    end
+    subgraph P6["⑥ 反馈演进层"]
+        FB["Events → Snapshots<br/>→ Changelog → Next Intent"]
+    end
+
+    J --> INC --> BOLT --> EXE --> VER --> OPS
+    MB -.->|"贯穿"| INC & BOLT
+    OPS --> FB -->|"证据回写<br/>更新判断与约束"| J
+
+    style P1 fill:#fdedec,stroke:#e74c3c,stroke-width:2px
+    style P2 fill:#fef9e7,stroke:#f1c40f,stroke-width:2px
+    style P3 fill:#ebf5fb,stroke:#3498db,stroke-width:2px
+    style P4 fill:#f5e6ff,stroke:#8e44ad,stroke-width:2px
+    style P5 fill:#d5f5e3,stroke:#27ae60,stroke-width:2px
+    style P6 fill:#e8f8f5,stroke:#1abc9c,stroke-width:2px
+```
+
+> [!abstract] 一句话总结整条链路
+> **人的判断设方向，Inception 把它分解成可执行的轨道，Memory Bank 保证 AI 不"失忆"，Bolt + Exsecutio 把执行锁进闭环，四层证据链完成验证，Operations 让它稳定运行，最终证据回写，更新下一轮人的判断。**
+>
+> 这就是 `AI-DLC = Ɛ(人的判断 + AI 能力)` 的完整展开——**Ɛ（Engineering with Exsecutio）不是某个步骤，而是贯穿②到⑥的整条工程轨道。**
+
+---
+
+# 8. 总结与展望：未来的开发者形态
+
+## 8.1 开发者的身份转型
 
 AI 时代正在倒逼开发者完成一次身份的根本转型。这不是渐进式的技能升级，而是一次角色定义的范式重写：
 
@@ -411,7 +748,7 @@ AI 时代正在倒逼开发者完成一次身份的根本转型。这不是渐�
 | **责任范围** | 自己写的代码 | 系统的全部产出（含 AI 生成） |
 | **身份隐喻** | 建筑工人 | 建筑师 + 质检总监 |
 
-## 5.2 三个不可逆的趋势
+## 8.2 三个不可逆的趋势
 
 1. **代码生成的商品化**：代码本身正在变成大宗商品——LLM 让代码生成的成本趋近于零，就像云计算让服务器变成了按需付费的资源。**纯编码能力的护城河正在以指数级速度消失。**
 
@@ -419,7 +756,7 @@ AI 时代正在倒逼开发者完成一次身份的根本转型。这不是渐�
 
 3. **Agent 协作的常态化**：未来的开发团队不再是"五个人类开发者"，而是"两个人类 + 若干专业 Agent"。人类负责目标定义、边界设定和最终裁决；Agent 负责分解执行、自动化验证和持续交付。**能否高效地编排 Agent 而非事必躬亲，将成为区分普通开发者和架构师的关键分水岭。**
 
-## 5.3 最终的哲学命题
+## 8.3 最终的哲学命题
 
 > [!abstract] 从概率到确定性的工程哲学
 > [[重新认识AI|AI]] 时代的一切工程挑战，归根结底都指向同一个命题：**如何把概率性的智能输出，转化为确定性的工程交付？**
@@ -432,7 +769,7 @@ AI 时代正在倒逼开发者完成一次身份的根本转型。这不是渐�
 
 ---
 
-# 6. 参考来源与致谢
+# 9. 参考来源与致谢
 
 > [!abstract] 参考来源与致谢
 > 本文的核心思想与工程框架深度参考并总结自开源图书《深入理解 AI-DLC》：
