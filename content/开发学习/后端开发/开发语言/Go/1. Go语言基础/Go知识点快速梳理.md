@@ -1665,7 +1665,7 @@ for i := range data {
 ## 8.2 中文资源
 - [Go语言中文网](https://studygolang.com/)
 - [Go语言教程](https://www.runoob.com/go/go-tutorial.html)
-- [Go语言圣经](https://books.studygolang.com/gopl-zh/)
+- [Go语言圣经](https://golang-china.github.io/gopl-zh/)
 
 ## 8.3 推荐书籍
 - 《Go程序设计语言》

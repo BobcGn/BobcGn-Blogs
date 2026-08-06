@@ -35,7 +35,7 @@ MySQL 是一个关系型数据库管理系统，由瑞典 MySQL AB 公司开发�
 
 ### 关系型数据库
 > [!note] 概述
-> 关系型数据库，是指采用了[关系模型](https://baike.baidu.com/item/%E5%85%B3%E7%B3%BB%E6%A8%A1%E5%9E%8B/3189329?fromModule=lemma_inlink)来组织数据的数据库，其以行和列的形式[存储数据](https://baike.baidu.com/item/%E5%AD%98%E5%82%A8%E6%95%B0%E6%8D%AE/14717603?fromModule=lemma_inlink)，以便于用户理解，关系型数据库这一系列的行和列被称为表，一组表组成了[数据库](https://baike.baidu.com/item/%E6%95%B0%E6%8D%AE%E5%BA%93/103728?fromModule=lemma_inlink)。用户通过查询来检索数据库中的数据，而查询是一个用于限定数据库中某些区域的执行代码。关系模型可以简单理解为[二维表格](https://baike.baidu.com/item/%E4%BA%8C%E7%BB%B4%E8%A1%A8%E6%A0%BC/645449?fromModule=lemma_inlink)模型，而一个关系型数据库就是**由[二维表](https://baike.baidu.com/item/%E4%BA%8C%E7%BB%B4%E8%A1%A8/2863955?fromModule=lemma_inlink)及其之间的关系组成的**一个[数据组](https://baike.baidu.com/item/%E6%95%B0%E6%8D%AE%E7%BB%84%E7%BB%87/5199063?fromModule=lemma_inlink)
+> 关系型数据库，是指采用了关系模型来组织数据的数据库，其以行和列的形式存储数据，以便于用户理解，关系型数据库这一系列的行和列被称为表，一组表组成了数据库。用户通过查询来检索数据库中的数据，而查询是一个用于限定数据库中某些区域的执行代码。关系模型可以简单理解为二维表格模型，而一个关系型数据库就是**由二维表及其之间的关系组成的**一个数据组
 
 
 ### MySQL数据库数据模型

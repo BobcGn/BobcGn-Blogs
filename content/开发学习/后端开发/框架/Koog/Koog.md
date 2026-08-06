@@ -27,7 +27,7 @@ tags:
 >
 > - **多平台支持**。您可以在 JVM、JS、WasmJS、Android 和 iOS 目标平台部署您的智能体应用程序。
 > - **广泛的 AI 集成**。Koog 集成了主要的 LLM 提供商，包括 OpenAI 和 Anthropic，以及 Bedrock 等企业级 AI 云。它还支持 Ollama 等本地模型。有关可用提供商的完整列表，请参阅[LLM 提供商](https://docs.koog.ai/llm-providers/)。
-> - **OpenTelemetry 支持**。Koog 提供与 [W&B Weave](https://wandb.ai/site/weave/) 和 [Langfuse](https://langfuse.com/) 等流行的可观测性提供商的开箱即用集成，用于监控和调试 AI 应用程序。借助原生 OpenTelemetry 支持，您可以使用系统中已有的相同工具来跟踪、记录和测量您的智能体。要了解更多信息，请参阅 [OpenTelemetry](https://docs.koog.ai/opentelemetry-support/)。
+> - **OpenTelemetry 支持**。Koog 提供与 [W&B Weave](https://wandb.ai/site/weave/) 和 [Langfuse](https://langfuse.com/) 等流行的可观测性提供商的开箱即用集成，用于监控和调试 AI 应用程序。借助原生 OpenTelemetry 支持，您可以使用系统中已有的相同工具来跟踪、记录和测量您的智能体。要了解更多信息，请参阅 [OpenTelemetry](https://docs.koog.ai/features/open-telemetry/)。
 > - **Spring Boot 和 Ktor 集成**。Koog 与广泛使用的企业环境集成。
 > 	- 如果您有 Ktor 服务器，您可以将 Koog 作为插件安装，使用配置文件配置提供商，并直接从任何路由调用智能体，而无需手动连接 LLM 客户端。
 > 	- 对于 Spring Boot，Koog 提供即用型 bean 和自动配置的 LLM 客户端，使您能够轻松开始构建 AI 驱动的工作流。
@@ -572,7 +572,7 @@ fun main() = runBlocking {
 > - `nodeExecuteMultipleTools`：执行多个工具调用并返回结果
 > - `nodeLLMSendToolResult`：向 LLM 发送工具结果并返回响应
 > - `nodeLLMSendMultipleToolResults`：向 LLM 发送多个工具结果
-> 详情参考：[API Reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-multiple-tool-results.html)
+> 详情参考：[Koog Tools 文档](https://docs.koog.ai/tools/)
 > ### *将代理用作工具*
 > 该框架提供了将任意 AI 代理转换为工具的能力，该工具可供其他代理使用。这项强大的特性使您能够创建层次化代理架构，其中专门的代理可以作为工具被更高层级的编排代理调用
 > #### 将代理转换为工具

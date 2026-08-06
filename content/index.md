@@ -23,7 +23,7 @@ tags: []
 
 🚀 **近期在折腾什么？**
 
-* 为 2026 年下半年的实习做技术储备与沉淀 📚
+- 工作中......
 
 🤝 **联系与合作**
 我非常期待能与志同道合的开发者交流，如果您对知识花园中的文章有什么建议，请联系我：
@@ -34,8 +34,8 @@ tags: []
 ## 订阅更新
 
 <p>
-  <a href="https://github.com/BobcGn/quartz-myblogs" target="_blank">
-    <img src="https://img.shields.io/github/stars/BobcGn/quartz-myblogs?style=social" alt="GitHub Stars">
+  <a href="https://github.com/BobcGn/BobcGn-Blogs" target="_blank">
+    <img src="https://img.shields.io/github/stars/BobcGn/BobcGn-Blogs?style=social" alt="GitHub Stars">
   </a>
 </p>
 
@@ -49,4 +49,3 @@ tags: []
 
 > [!note] 数字花园
 > 数字花园（Digital Garden）不同于传统的博客，这里的笔记会像植物一样不断生长、修剪和更新。每一篇文章都是一个"活文档"。
-

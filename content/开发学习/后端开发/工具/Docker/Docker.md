@@ -260,7 +260,7 @@ tags:
 > 	use nacos_config;
 > 	```
 > 	通过这条链接获取完整的SQL语句并在创建数据表：
-> 	[nacos/distribution/conf/mysql-schema.sql at develop · alibaba/nacos](https://github.com/alibaba/nacos/blob/develop/distribution/conf/mysql-schema.sql)
+> 	[nacos/distribution/conf/mysql-schema.sql at master · alibaba/nacos](https://github.com/alibaba/nacos/blob/master/distribution/conf/mysql-schema.sql)
 > 	- 验证数据表无误后，即可开始部署
 
 > [!summary] 部署步骤
@@ -387,4 +387,3 @@ tags:
 > 	```
 > 	- 访问Web UI：访问 [http://localhost:8500](http://localhost:8500)
 > 	
-

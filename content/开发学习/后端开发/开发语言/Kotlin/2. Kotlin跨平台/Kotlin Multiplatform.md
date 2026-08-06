@@ -1006,4 +1006,4 @@ kotlin {
 > [!tip] 进阶关联笔记
 > - [[跨平台同步原理]] — 端云同步架构的完整拆解（离线优先、增量同步、冲突处理）
 > - [[Compose Multiplatform 混合渲染]] — 深入 CMP + UIKit/ArkUI 原生互操作
-> - [[Kotlin/Native 编译优化]] — 构建性能与包体积治理的详细方案
+> - [[Kotlin Multiplatform#8.3 Kotlin/Native 编译优化|Kotlin/Native 编译优化]] — 构建性能与包体积治理的详细方案

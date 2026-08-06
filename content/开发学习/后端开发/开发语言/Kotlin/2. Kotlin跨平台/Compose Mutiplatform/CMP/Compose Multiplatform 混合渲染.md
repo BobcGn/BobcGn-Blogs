@@ -7,7 +7,7 @@ tags:
 ---
 
 > [!tip] 相关内容
-> [[Compose Multiplatform]] · [[Kotlin Multiplatform]] · [[跨平台同步原理]] · [[Kotlin/Native 编译优化]]
+> [[Compose Multiplatform]] · [[Kotlin Multiplatform]] · [[跨平台同步原理]] · [[Kotlin Multiplatform#8.3 Kotlin/Native 编译优化|Kotlin/Native 编译优化]]
 >
 > 前置基础：先熟悉 [[Compose Multiplatform]] 的基础概念和 [[Kotlin Multiplatform]] 的 expect/actual 机制。
 
@@ -538,4 +538,4 @@ DisposableEffect(Unit) {
 > [!tip] 关联进阶内容
 > - [[Kotlin Multiplatform]] 的渲染管线章节 — 深入 CMP 重组与布局性能优化
 > - [[跨平台同步原理]] — 端云同步中的状态管理与离线架构
-> - [[Kotlin/Native 编译优化]] — 包体积治理与构建提速
+> - [[Kotlin Multiplatform#8.3 Kotlin/Native 编译优化|Kotlin/Native 编译优化]] — 包体积治理与构建提速
