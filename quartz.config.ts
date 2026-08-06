@@ -16,7 +16,7 @@ const config: QuartzConfig = {
       provider: "plausible",
     },
     locale: "zh-CN",
-    baseUrl: "bobcgn.github.io/quartz-myblogs",
+    baseUrl: "bobcgn.github.io/BobcGn-Blogs",
     ignorePatterns: ["private", "templates", ".obsidian"],
     defaultDateType: "modified",
     theme: {
