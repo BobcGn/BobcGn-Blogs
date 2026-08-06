@@ -332,7 +332,7 @@ tags:
   >-e "JAVA_OPTS=-Dserver.port=8858 -Dcsp.sentinel.dashboard.server=sentinel-dashboard:8858 -Dproject.name=sentinel-dashboard" `
   >bladex/sentinel-dashboard:1.8.7
 > ```
-> 启动成功后访问[http://localhost:8858]()，默认账密为 sentinel/sentinel 如果没有问题则部署完成
+> 启动成功后访问[http://localhost:8858](http://localhost:8858)，默认账密为 sentinel/sentinel 如果没有问题则部署完成
 
 ## 10.6 部署Consul
 > [!summary] 使用配置文件挂载的方式启动Consul
@@ -385,6 +385,6 @@ tags:
 > 	```powershell
 > 	docker logs consul
 > 	```
-> 	- 访问Web UI：访问 [http://localhost:8500]()
+> 	- 访问Web UI：访问 [http://localhost:8500](http://localhost:8500)
 > 	
 
