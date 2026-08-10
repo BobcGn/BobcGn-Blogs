@@ -17,6 +17,7 @@ tags: []
 🛠 **技术关注点**
 
 * **Kotlin & 跨平台：** 深度 Kotlin 爱好者，重点关注 Kotlin Multiplatform (KMP) 以及 Compose Multiplatform (CMP) 生态。
+* **Go & Rust：** 正在学习Go和Rust，适应新的服务端技术
 * **AI：** 正在积极探索 AI Agent 相关技术
 * **架构设计：** 追求高内聚、低耦合的系统设计，喜欢研究状态机、协程编排以及复杂系统的解耦方案。
 * **开发原理：** 积极学习各种实际开发业务流程中的组件与原理
