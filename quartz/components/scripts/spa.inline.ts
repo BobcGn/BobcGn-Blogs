@@ -57,6 +57,9 @@ function startLoading() {
 }
 
 let isNavigating = false
+// This records the document currently mounted by the SPA. It deliberately does
+// not include hash-only changes, which the browser handles without a page load.
+let currentRoute = new URL(window.location.toString())
 let p: DOMParser
 async function _navigate(url: URL, isBack: boolean = false) {
   isNavigating = true
@@ -126,6 +129,7 @@ async function _navigate(url: URL, isBack: boolean = false) {
     history.pushState({}, "", url)
   }
 
+  currentRoute = new URL(window.location.toString())
   notifyNav(getFullSlug(window))
   delete announcer.dataset.persist
 }
@@ -163,11 +167,17 @@ function createRouter() {
       navigate(url, false)
     })
 
-    window.addEventListener("popstate", (event) => {
-      const { url } = getOpts(event) ?? {}
-      if (window.location.hash && window.location.pathname === url?.pathname) return
-      navigate(new URL(window.location.toString()), true)
-      return
+    window.addEventListener("popstate", () => {
+      const url = new URL(window.location.toString())
+      // Going back and forward between TOC anchors must remain a native
+      // hash-navigation, so a second Back reaches the previously viewed page.
+      if (
+        url.origin === currentRoute.origin &&
+        url.pathname === currentRoute.pathname &&
+        url.search === currentRoute.search
+      )
+        return
+      navigate(url, true)
     })
   }
 

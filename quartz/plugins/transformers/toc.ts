@@ -1,7 +1,9 @@
 import { QuartzTransformerPlugin } from "../types"
 import { Root } from "mdast"
 import { visit } from "unist-util-visit"
-import { toString } from "mdast-util-to-string"
+import { toString as toMarkdownString } from "mdast-util-to-string"
+import { fromHtml } from "hast-util-from-html"
+import { toString as toHtmlString } from "hast-util-to-string"
 import Slugger from "github-slugger"
 
 export interface Options {
@@ -25,6 +27,13 @@ interface TocEntry {
 }
 
 const slugAnchor = new Slugger()
+
+// Smartypants and inline HTML can produce `html` nodes in Markdown headings.
+// Convert those nodes to their text content so the TOC label and slug match the
+// rendered heading instead of exposing escaped HTML in the sidebar.
+const headingToText = (node: Root["children"][number]) =>
+  toHtmlString(fromHtml(toMarkdownString(node)))
+
 export const TableOfContents: QuartzTransformerPlugin<Partial<Options>> = (userOpts) => {
   const opts = { ...defaultOptions, ...userOpts }
   return {
@@ -40,7 +49,7 @@ export const TableOfContents: QuartzTransformerPlugin<Partial<Options>> = (userO
               let highestDepth: number = opts.maxDepth
               visit(tree, "heading", (node) => {
                 if (node.depth <= opts.maxDepth) {
-                  const text = toString(node)
+                  const text = headingToText(node)
                   highestDepth = Math.min(highestDepth, node.depth)
                   toc.push({
                     depth: node.depth,
