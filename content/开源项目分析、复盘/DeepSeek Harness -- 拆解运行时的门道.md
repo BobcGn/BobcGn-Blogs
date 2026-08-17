@@ -14,6 +14,9 @@
 
 ## 1.0 引子：一个"没有核心"的产品长什么样
 
+> [!warning] 误区！
+> 这里说到的“没有核心”并不是真正意义上的完全没有核心，而是所有的内容都成为了插件，完成了去中心化，没有绝对意义上的核心。
+
 DeepSeek Harness 的 README 只有一句话值得先记住：**everything is a plugin（一切皆插件）**。多数项目说这句话时指的是"可以写插件"，但 dsh 是字面意义的：整个产品就是一个插件列表。
 
 打开 `packages/bundle/base/cordis.patch.yml`——每个 dsh profile 的第一层组合包——你会看到这样的内容：
